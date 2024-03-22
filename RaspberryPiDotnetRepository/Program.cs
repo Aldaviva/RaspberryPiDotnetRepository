@@ -7,8 +7,10 @@ using RaspberryPiDotnetRepository.Data;
 using RaspberryPiDotnetRepository.Unfucked.PGPCore;
 using RaspberryPiDotnetRepository.Unfucked.SharpCompress.Writers.Tar;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
+using SharpCompress.Writers.GZip;
 using SharpCompress.Writers.Tar;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -17,6 +19,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using CompressionMode = SharpCompress.Compressors.CompressionMode;
 using FileInfo = System.IO.FileInfo;
 using PGP = RaspberryPiDotnetRepository.Unfucked.PGPCore.PGP;
 
@@ -27,8 +30,8 @@ internal static class Program {
     private const string REPOSITORY_BASEDIR            = @"C:\Users\Ben\Desktop\dotnet rpi\raspbian";
     private const string DEBIAN_PACKAGE_VERSION_SUFFIX = "-0";
 
-    // private const CompressionLevel                                   GZ_COMPRESSION_LEVEL     = CompressionLevel.Optimal;
-    // private const SharpCompress.Compressors.Deflate.CompressionLevel TAR_GZ_COMPRESSION_LEVEL = SharpCompress.Compressors.Deflate.CompressionLevel.Default;
+    private const CompressionLevel                                   GZ_COMPRESSION_LEVEL     = CompressionLevel.Optimal;
+    private const SharpCompress.Compressors.Deflate.CompressionLevel TAR_GZ_COMPRESSION_LEVEL = SharpCompress.Compressors.Deflate.CompressionLevel.Default;
 
     private static readonly Encoding UTF8                 = new UTF8Encoding(false, true);
     private static readonly string   TEMPDIR              = Path.Combine(REPOSITORY_BASEDIR, @"..\temp");
@@ -52,19 +55,14 @@ internal static class Program {
         File.Copy(@"C:\Users\Ben\Desktop\dotnet rpi\dotnet-raspbian.gpg.pub", Path.Combine(REPOSITORY_BASEDIR, "aldaviva.gpg.key"), true);
         File.Copy(@"C:\Users\Ben\Desktop\dotnet rpi\dotnet-raspbian.gpg.pub.asc", Path.Combine(REPOSITORY_BASEDIR, "aldaviva.gpg.key.asc"), true);
 
-        DebianRelease[] debianReleases = Enum.GetValues<DebianRelease>();
-        // debianReleases = [DebianRelease.BOOKWORM];
+        DebianRelease[]   debianReleases   = Enum.GetValues<DebianRelease>();
         CpuArchitecture[] cpuArchitectures = Enum.GetValues<CpuArchitecture>();
-        // cpuArchitectures = [CpuArchitecture.ARM32];
-        DotnetRuntime[] dotnetRuntimes = Enum.GetValues<DotnetRuntime>();
-        // dotnetRuntimes = [DotnetRuntime.CLI, DotnetRuntime.RUNTIME, /*DotnetRuntime.ASPNETCORE_RUNTIME*/];
-        // ISet<string> dotnetVersionsAllowed = new HashSet<string> { "6.0", "7.0", "8.0" };
+        DotnetRuntime[]   dotnetRuntimes   = Enum.GetValues<DotnetRuntime>();
 
         JsonNode dotnetMinorVersionsManifest = (await HTTP_CLIENT.GetFromJsonAsync<JsonNode>(DOTNET_RELEASE_INDEX))!;
 
         DotnetRelease[] dotnetReleases = (await Task.WhenAll(dotnetMinorVersionsManifest["releases-index"]!.AsArray()
             .Where(release => release!["support-phase"]!.GetValue<string>() is "active" or "maintenance")
-            // .Where(release => dotnetVersionsAllowed.Contains(release!["channel-version"]!.GetValue<string>()))
             .Select(async minorVersion => {
                 string         minorVersionNumber = minorVersion!["channel-version"]!.GetValue<string>();
                 Uri            patchVersionUrl    = new(minorVersion["releases.json"]!.GetValue<string>());
@@ -145,55 +143,6 @@ internal static class Program {
         await Task.WhenAll(packageIndexFiles.Select(releaseFiles => generateReleaseIndexFiles(releaseFiles.Key, releaseFiles)));
         Console.WriteLine("Generated release index files");
 
-        // var generateDebPackageBlock = new TransformBlock<DotnetPackageRequest, DebianPackage>(generateDebPackage, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = PARALLELISM });
-
-        /*await Task.WhenAll(debianReleases.AsParallel().Select(async debianRelease => {
-            return Task.WhenAll(cpuArchitectures.AsParallel().Select(cpuArchitecture => {
-                return Task.WhenAll(dotnetReleases.AsParallel().SelectMany(dotnetRelease => {
-                    return dotnetRuntimes.AsParallel().Select(dotnetRuntime => {
-                        return generateDebPackage(new DotnetPackageRequest(dotnetRelease, dotnetRuntime, cpuArchitecture, debianRelease, dotnetRelease.downloadedSdkArchiveFilePaths[cpuArchitecture]));
-                    });
-                })).ContinueWith(result => { return generatePackageIndexFiles(debianRelease, cpuArchitecture, result.Result); }).Unwrap();
-            })).ContinueWith(result => { return generateReleaseIndexFiles(debianRelease, result.Result.AsParallel().SelectMany(x => x)); }).Unwrap();
-        }));*/
-
-        /*await Task.WhenAll(debianReleases.Select(async debianRelease => {
-
-            IEnumerable<string> packageIndexFilesRelativeToSuite = (await Task.WhenAll(cpuArchitectures.Select(async cpuArchitecture => {
-                IEnumerable<DebianPackage> debPackages = await Task.WhenAll(dotnetReleases.SelectMany(dotnetRelease => {
-                    return dotnetRuntimes.Select(async dotnetRuntime => {
-                        return await generateDebPackage(dotnetRelease.minorVersion, dotnetRelease.patchVersion, dotnetRuntime,
-                            dotnetRelease.downloadedSdkArchiveFilePaths[cpuArchitecture], cpuArchitecture, debianRelease);
-                    });
-                }));
-
-                return await generatePackageIndexFiles(debianRelease, cpuArchitecture, debPackages);
-            }))).SelectMany(results => results);
-
-            await generateReleaseIndexFiles(debianRelease, packageIndexFilesRelativeToSuite);
-        }));*/
-
-        /*foreach (DebianRelease debianRelease in debianReleases) {
-            Console.WriteLine(debianRelease.getCodename());
-            IList<string> packageIndexFilesRelativeToSuite = [];
-            foreach (CpuArchitecture cpuArchitecture in cpuArchitectures) {
-                Console.WriteLine($"{debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
-                IList<DebianPackage> debPackages = [];
-                foreach (DotnetRelease dotnetRelease in dotnetReleases) {
-                    Console.WriteLine($"{debianRelease.getCodename()} {cpuArchitecture.toDebian()} {dotnetRelease.minorVersion}");
-                    foreach (DotnetRuntime dotnetRuntime in dotnetRuntimes) {
-                        Console.WriteLine($"{debianRelease.getCodename()} {cpuArchitecture.toDebian()} {dotnetRelease.minorVersion} {dotnetRuntime.getPackageName()}");
-                        debPackages.Add(await generateDebPackage(dotnetRelease.minorVersion, dotnetRelease.patchVersion, dotnetRuntime,
-                            dotnetRelease.downloadedSdkArchiveFilePaths[cpuArchitecture], cpuArchitecture, debianRelease));
-                    }
-                }
-
-                packageIndexFilesRelativeToSuite.Add(await generatePackageIndexFiles(debianRelease, cpuArchitecture, debPackages));
-            }
-
-            await generateReleaseIndexFiles(debianRelease, packageIndexFilesRelativeToSuite);
-        }*/
-
         overallTimer.Stop();
         Console.WriteLine($"Finished in {overallTimer.Elapsed.TotalSeconds:N0} seconds at Default/Optimal compression.");
     }
@@ -259,7 +208,7 @@ internal static class Program {
         string                   compressedPackageFileRelativeToSuite = Path.ChangeExtension(packageFileRelativeToSuite, "gz");
         string                   compressedPackageFileAbsolutePath    = Path.ChangeExtension(packageFileAbsolutePath, "gz");
         await using FileStream   compressedPackageIndexFileStream     = File.Create(compressedPackageFileAbsolutePath);
-        await using GZipStream   gzipStream                           = new(compressedPackageIndexFileStream, CompressionLevel.Optimal);
+        await using GZipStream   gzipStream                           = new(compressedPackageIndexFileStream, GZ_COMPRESSION_LEVEL);
         await using StreamWriter compressedPackageIndexStreamWriter   = new(gzipStream, UTF8);
         await compressedPackageIndexStreamWriter.WriteAsync(packageFileContents);
         Console.WriteLine($"Wrote compressed Packages.gz index for Raspbian {debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
@@ -270,7 +219,6 @@ internal static class Program {
 
     private static async Task<DebianPackage> generateDebPackage(DotnetPackageRequest packageToGenerate) {
         Console.WriteLine($"Generating package for Debian {packageToGenerate.debian} {packageToGenerate.architecture} {packageToGenerate.runtime} {packageToGenerate.dotnetRelease.minorVersion}");
-        // await MAX_PACKAGE_PARALLELISM.WaitAsync();
         string packageName                 = packageToGenerate.runtime.getPackageName();
         string packageNameWithMinorVersion = packageToGenerate.runtime == DotnetRuntime.CLI ? packageName : $"{packageName}-{packageToGenerate.dotnetRelease.minorVersion}";
 
@@ -282,11 +230,11 @@ internal static class Program {
 
         await using Stream dataArchiveStream = new MemoryStream();
 
-        await using FileStream sdkArchiveStream = File.OpenRead(packageToGenerate.sdkArchivePath);
-        using IReader          downloadReader   = ReaderFactory.Open(sdkArchiveStream);
-        // await using SharpCompress.Compressors.Deflate.GZipStream dataGzipStream = new(NonDisposingStream.Create(dataArchiveStream), CompressionMode.Compress,
-        // TAR_GZ_COMPRESSION_LEVEL);
-        using (UnfuckedTarWriter dataArchiveWriter = new(dataArchiveStream, new TarWriterOptions(CompressionType.GZip, true))) {
+        await using (FileStream sdkArchiveStream = File.OpenRead(packageToGenerate.sdkArchivePath))
+        using (IReader downloadReader = ReaderFactory.Open(sdkArchiveStream))
+        await using (SharpCompress.Compressors.Deflate.GZipStream dataGzipStream = new(NonDisposingStream.Create(dataArchiveStream), CompressionMode.Compress,
+                         TAR_GZ_COMPRESSION_LEVEL))
+        using (UnfuckedTarWriter dataArchiveWriter = new(dataGzipStream, new TarWriterOptions(CompressionType.GZip, true))) {
             while (downloadReader.MoveToNextEntry()) {
                 IEntry entry = downloadReader.Entry;
                 if (entry.IsDirectory) continue;
@@ -337,19 +285,13 @@ internal static class Program {
                     }
 
                     foreach (string directoryToAdd in directoriesToAdd.Reverse()) {
-                        // Console.WriteLine(directoryToAdd + '/');
                         dataArchiveWriter.WriteDirectory(directoryToAdd, null, o(755));
                         installedSize += 1024;
                     }
 
-                    // Console.WriteLine(destinationPath);
                     installedSize += entry.Size;
                     // It is very important to dispose each EntryStream, otherwise the IReader will randomly throw an IncompleteArchiveException on a later file in the archive
                     await using EntryStream downloadedInnerFileStream = downloadReader.OpenEntryStream();
-                    // using MemoryStream      fileBuffer                = new();
-                    // await downloadedInnerFileStream.CopyToAsync(fileBuffer);
-                    // fileBuffer.Position = 0;
-
                     dataArchiveWriter.WriteFile(destinationPath, downloadedInnerFileStream, lastModified, entry.Size, fileMode);
 
                     if (destinationPath == "./usr/share/dotnet/dotnet") {
@@ -357,7 +299,6 @@ internal static class Program {
                         // can't figure out how to make absolute symlinks in deb packages, so making it relative
                         dataArchiveWriter.WriteSymLink(SYMLINK_PATH, "../share/dotnet/dotnet", lastModified);
                         installedSize += 1024;
-                        // Console.WriteLine(SYMLINK_PATH);
                     }
                 }
             }
@@ -381,7 +322,7 @@ internal static class Program {
                  """.ReplaceLineEndings("\n").Replace("\n\n", "\n");
 
         await using Stream controlArchiveStream = new MemoryStream();
-        using (IWriter controlArchiveWriter = WriterFactory.Open(controlArchiveStream, ArchiveType.Tar, new TarWriterOptions(CompressionType.GZip, true))) {
+        using (IWriter controlArchiveWriter = WriterFactory.Open(controlArchiveStream, ArchiveType.Tar, new GZipWriterOptions { CompressionLevel = TAR_GZ_COMPRESSION_LEVEL })) {
             await using Stream controlFileBuffer = (controlFileContents + '\n').ToStream();
             controlArchiveWriter.Write("./control", controlFileBuffer);
         }
