@@ -1,7 +1,7 @@
 Raspberry Pi OS .NET Repository
 ===
 
-![Latest .NET release: 8.0](https://img.shields.io/badge/Latest%20release-8.0-success?logo=dotnet) ![Latest Raspberry Pi OS release: Bookworm (12)](https://img.shields.io/badge/Latest%20release-Bookworm%20(12)-success?logo=raspberrypi)
+![.NET latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fdotnet.json&query=%24.latestVersion&logo=dotnet&label=latest%20version&color=success) ![Raspberry Pi OS latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fraspbian.json&query=%24.latestVersion&logo=raspberrypi&label=latest%20version&color=success)
 
 Public repository of ARM32 (armhf) and ARM64 .deb packages for [.NET](https://dotnet.microsoft.com/) runtimes and SDKs to install on [Raspberry Pis](https://www.raspberrypi.com) running [Raspberry Pi OS (Raspbian)](https://www.raspberrypi.com/software/operating-systems/).
 

@@ -17,6 +17,7 @@ using System.IO.Compression;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using CompressionMode = SharpCompress.Compressors.CompressionMode;
@@ -36,6 +37,7 @@ internal static class Program {
     private static readonly Encoding UTF8                 = new UTF8Encoding(false, true);
     private static readonly string   TEMPDIR              = Path.Combine(REPOSITORY_BASEDIR, @"..\temp");
     private static readonly string   PACKAGEDIR           = Path.Combine(REPOSITORY_BASEDIR, "packages");
+    private static readonly string   BADGEDIR             = Path.Combine(REPOSITORY_BASEDIR, "badges");
     private static readonly Uri      DOTNET_RELEASE_INDEX = new("https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json");
 
     private static readonly HttpClient HTTP_CLIENT = new(new SocketsHttpHandler { MaxConnectionsPerServer = Environment.ProcessorCount, AllowAutoRedirect = true })
@@ -51,6 +53,7 @@ internal static class Program {
         Directory.CreateDirectory(REPOSITORY_BASEDIR);
         Directory.CreateDirectory(TEMPDIR);
         Directory.CreateDirectory(PACKAGEDIR);
+        Directory.CreateDirectory(BADGEDIR);
 
         File.Copy(@"C:\Users\Ben\Desktop\dotnet rpi\dotnet-raspbian.gpg.pub", Path.Combine(REPOSITORY_BASEDIR, "aldaviva.gpg.key"), true);
         File.Copy(@"C:\Users\Ben\Desktop\dotnet rpi\dotnet-raspbian.gpg.pub.asc", Path.Combine(REPOSITORY_BASEDIR, "aldaviva.gpg.key.asc"), true);
@@ -142,6 +145,16 @@ internal static class Program {
         Console.WriteLine("Generating release index files");
         await Task.WhenAll(packageIndexFiles.Select(releaseFiles => generateReleaseIndexFiles(releaseFiles.Key, releaseFiles)));
         Console.WriteLine("Generated release index files");
+
+        string                 latestDotnetVersion = dotnetReleases.MaxBy(release => double.Parse(release.minorVersion))!.patchVersion;
+        var                    dotnetBadge         = new { latestVersion = latestDotnetVersion };
+        await using FileStream dotnetBadgeFile     = File.Create(Path.Combine(BADGEDIR, "dotnet.json"));
+        await JsonSerializer.SerializeAsync(dotnetBadgeFile, dotnetBadge);
+
+        DebianRelease          latestDebianVersion = debianReleases.Max();
+        var                    debianBadge         = new { latestVersion = $"{latestDebianVersion.getCodename()} ({latestDebianVersion.getMajorVersion():D})" };
+        await using FileStream debiantBadgeFile    = File.Create(Path.Combine(BADGEDIR, "raspbian.json"));
+        await JsonSerializer.SerializeAsync(debiantBadgeFile, debianBadge);
 
         overallTimer.Stop();
         Console.WriteLine($"Finished in {overallTimer.Elapsed.TotalSeconds:N0} seconds at Default/Optimal compression.");
