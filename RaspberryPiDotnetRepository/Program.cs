@@ -64,17 +64,18 @@ internal static class Program {
 
         JsonNode dotnetMinorVersionsManifest = (await HTTP_CLIENT.GetFromJsonAsync<JsonNode>(DOTNET_RELEASE_INDEX))!;
 
-        DotnetRelease[] dotnetReleases = (await Task.WhenAll(dotnetMinorVersionsManifest["releases-index"]!.AsArray()
+        IList<DotnetRelease> dotnetReleases = (await Task.WhenAll(dotnetMinorVersionsManifest["releases-index"]!.AsArray()
             .Where(release => release!["support-phase"]!.GetValue<string>() is "active" or "maintenance")
             .Select(async minorVersion => {
-                string         minorVersionNumber = minorVersion!["channel-version"]!.GetValue<string>();
-                Uri            patchVersionUrl    = new(minorVersion["releases.json"]!.GetValue<string>());
-                JsonNode       patchVersions      = (await HTTP_CLIENT.GetFromJsonAsync<JsonNode>(patchVersionUrl))!;
-                DotnetRelease? dotnetRelease      = null;
+                string         minorVersionNumber  = minorVersion!["channel-version"]!.GetValue<string>();
+                Uri            patchVersionUrl     = new(minorVersion["releases.json"]!.GetValue<string>());
+                bool           isSupportedLongTerm = minorVersion["release-type"]!.GetValue<string>() == "lts";
+                JsonNode       patchVersions       = (await HTTP_CLIENT.GetFromJsonAsync<JsonNode>(patchVersionUrl))!;
+                DotnetRelease? dotnetRelease       = null;
 
                 if (patchVersions["releases"]!.AsArray().FirstOrDefault(isStableVersion) is { } latestPatchVersion1) {
                     string patchVersionNumber = latestPatchVersion1["release-version"]!.GetValue<string>();
-                    dotnetRelease = new DotnetRelease(minorVersionNumber, patchVersionNumber);
+                    dotnetRelease = new DotnetRelease(minorVersionNumber, patchVersionNumber, isSupportedLongTerm);
 
                     await Task.WhenAll(cpuArchitectures.Select(async cpuArchitecture => {
                         string   rid                   = "linux-" + cpuArchitecture.toRuntimeIdentifierSuffix();
@@ -116,7 +117,18 @@ internal static class Program {
                 }
 
                 return dotnetRelease;
-            }))).Compact();
+            }))).Compact().OrderByDescending(release => double.Parse(release.minorVersion)).ToList();
+
+        DotnetRelease latestMinorVersion = dotnetReleases.First();
+        latestMinorVersion.isLatestMinorVersion = true;
+
+        if (dotnetReleases.FirstOrDefault(release => release.isSupportedLongTerm) is { } latestLongTerm) {
+            latestLongTerm.isLatestOfSupportTerm = true;
+        }
+
+        if (dotnetReleases.FirstOrDefault(release => !release.isSupportedLongTerm) is { } latestShortTerm) {
+            latestShortTerm.isLatestOfSupportTerm = true;
+        }
 
         IList<DotnetPackageRequest> packageRequests = [];
         foreach (DebianRelease debianRelease in debianReleases) {
@@ -130,7 +142,7 @@ internal static class Program {
         }
 
         Console.WriteLine("Generating packages");
-        DebianPackage[] generatedPackages = await Task.WhenAll(packageRequests.AsParallel().Select(generateDebPackage)); // maybe need .AsParallel() here
+        DebianPackage[] generatedPackages = await Task.WhenAll(packageRequests.AsParallel().Select(generateDebPackage));
         Console.WriteLine("Generated packages");
 
         Console.WriteLine("Generating package index files");
@@ -146,7 +158,7 @@ internal static class Program {
         await Task.WhenAll(packageIndexFiles.Select(releaseFiles => generateReleaseIndexFiles(releaseFiles.Key, releaseFiles)));
         Console.WriteLine("Generated release index files");
 
-        string                 latestDotnetVersion = dotnetReleases.MaxBy(release => double.Parse(release.minorVersion))!.patchVersion;
+        string                 latestDotnetVersion = latestMinorVersion.patchVersion;
         var                    dotnetBadge         = new { latestVersion = latestDotnetVersion };
         await using FileStream dotnetBadgeFile     = File.Create(Path.Combine(BADGEDIR, "dotnet.json"));
         await JsonSerializer.SerializeAsync(dotnetBadgeFile, dotnetBadge);
@@ -233,7 +245,8 @@ internal static class Program {
     private static async Task<DebianPackage> generateDebPackage(DotnetPackageRequest packageToGenerate) {
         Console.WriteLine($"Generating package for Debian {packageToGenerate.debian} {packageToGenerate.architecture} {packageToGenerate.runtime} {packageToGenerate.dotnetRelease.minorVersion}");
         string packageName                 = packageToGenerate.runtime.getPackageName();
-        string packageNameWithMinorVersion = packageToGenerate.runtime == DotnetRuntime.CLI ? packageName : $"{packageName}-{packageToGenerate.dotnetRelease.minorVersion}";
+        bool   isCliPackage                = packageToGenerate.runtime == DotnetRuntime.CLI;
+        string packageNameWithMinorVersion = isCliPackage ? packageName : $"{packageName}-{packageToGenerate.dotnetRelease.minorVersion}";
 
         DataSize installedSize = new();
         ISet<string> existingDirectories = new HashSet<string> {
@@ -245,14 +258,13 @@ internal static class Program {
 
         await using (FileStream sdkArchiveStream = File.OpenRead(packageToGenerate.sdkArchivePath))
         using (IReader downloadReader = ReaderFactory.Open(sdkArchiveStream))
-        await using (SharpCompress.Compressors.Deflate.GZipStream dataGzipStream = new(NonDisposingStream.Create(dataArchiveStream), CompressionMode.Compress,
-                         TAR_GZ_COMPRESSION_LEVEL))
+        await using (SharpCompress.Compressors.Deflate.GZipStream dataGzipStream = new(NonDisposingStream.Create(dataArchiveStream), CompressionMode.Compress, TAR_GZ_COMPRESSION_LEVEL))
         using (UnfuckedTarWriter dataArchiveWriter = new(dataGzipStream, new TarWriterOptions(CompressionType.GZip, true))) {
             while (downloadReader.MoveToNextEntry()) {
                 IEntry entry = downloadReader.Entry;
                 if (entry.IsDirectory) continue;
 
-                string   sourcePath      = Regex.Replace(entry.Key, @"^\./", string.Empty);
+                string   sourcePath      = entry.Key[2..]; // remove leading "./"
                 string   destinationPath = $"./usr/share/dotnet/{sourcePath}";
                 int?     fileMode        = null;
                 DateTime lastModified    = entry.LastModifiedTime ?? entry.CreatedTime ?? entry.ArchivedTime ?? DateTime.Now;
@@ -319,20 +331,33 @@ internal static class Program {
 
         dataArchiveStream.Position = 0;
 
+        IList<string> dependencies = getDependencies(packageToGenerate.runtime, packageToGenerate.dotnetRelease.minorVersion, packageToGenerate.dotnetRelease.patchVersion, packageToGenerate.debian)
+            .ToList();
+        string depends    = dependencies.Any() ? $"Depends: {string.Join(", ", dependencies)}" : string.Empty;
+        string recommends = isCliPackage ? $"Recommends: {DotnetRuntime.RUNTIME.getPackageName()}-{packageToGenerate.dotnetRelease.minorVersion}" : string.Empty;
+        IList<string> providing = new[] {
+            !isCliPackage && packageToGenerate.dotnetRelease.isLatestMinorVersion ? $"{packageName} (= {packageToGenerate.dotnetRelease.minorVersion})" : null,
+            !isCliPackage && packageToGenerate.dotnetRelease.isLatestOfSupportTerm
+                ? $"{packageName}-{(packageToGenerate.dotnetRelease.isSupportedLongTerm ? "lts" : "sts")} (= {packageToGenerate.dotnetRelease.minorVersion})"
+                : null
+        }.Compact();
+        string provides = providing.Any() ? $"Provides: {string.Join(", ", providing)}" : string.Empty;
+
         string controlFileContents =
-            $"""
-                 Package: {packageNameWithMinorVersion}
-                 Version: {packageToGenerate.dotnetRelease.patchVersion}-0
-                 Architecture: {packageToGenerate.architecture.toDebian()}
-                 Maintainer: Ben Hutchison <ben@aldaviva.com>
-                 Installed-Size: {Math.Round(installedSize.ConvertToUnit(Unit.Kilobyte).Quantity):F0}
-                 Depends: {string.Join(", ", getDependencies(packageToGenerate.runtime, packageToGenerate.dotnetRelease.minorVersion, packageToGenerate.dotnetRelease.patchVersion, packageToGenerate.debian))}
-                 {(packageToGenerate.runtime == DotnetRuntime.CLI ? $"Recommends: {DotnetRuntime.RUNTIME.getPackageName()}-{packageToGenerate.dotnetRelease.minorVersion}" : "")}
-                 Section: devel
-                 Priority: optional
-                 Homepage: https://dot.net
-                 Description: {getDescription(packageToGenerate.runtime, packageToGenerate.dotnetRelease.minorVersion)}
-                 """.ReplaceLineEndings("\n").Replace("\n\n", "\n");
+            Regex.Replace($"""
+                           Package: {packageNameWithMinorVersion}
+                           Version: {packageToGenerate.dotnetRelease.patchVersion}-0
+                           Architecture: {packageToGenerate.architecture.toDebian()}
+                           Maintainer: Ben Hutchison <ben@aldaviva.com>
+                           Installed-Size: {Math.Round(installedSize.ConvertToUnit(Unit.Kilobyte).Quantity):F0}
+                           {depends}
+                           {recommends}
+                           {provides}
+                           Section: devel
+                           Priority: optional
+                           Homepage: https://dot.net
+                           Description: {getDescription(packageToGenerate.runtime, packageToGenerate.dotnetRelease.minorVersion)}
+                           """.ReplaceLineEndings("\n"), @"\n{2,}", "\n");
 
         await using Stream controlArchiveStream = new MemoryStream();
         using (IWriter controlArchiveWriter = WriterFactory.Open(controlArchiveStream, ArchiveType.Tar, new GZipWriterOptions { CompressionLevel = TAR_GZ_COMPRESSION_LEVEL })) {
@@ -364,67 +389,62 @@ internal static class Program {
         }
 
         Console.WriteLine($"Wrote package {debFileAbsolutePath}");
-        // MAX_PACKAGE_PARALLELISM.Release();
         Console.WriteLine($"Generated package for Debian {packageToGenerate.debian} {packageToGenerate.architecture} {packageToGenerate.runtime} {packageToGenerate.dotnetRelease.minorVersion}");
         return new DebianPackage(packageNameWithMinorVersion, packageToGenerate.dotnetRelease.patchVersion, packageToGenerate.debian, packageToGenerate.architecture, packageToGenerate.runtime,
             controlFileContents, debFileAbsolutePath);
     }
 
+    // Subsequent lines in each of these strings will be prefixed with a leading space in the package control file because that indentation is how multi-line descriptions work.
+    //
+    // Except for the summary first line of every description string, each line that starts with ".NET" actually starts with U+2024 ONE DOT LEADER instead of U+002E FULL STOP (a normal period).
+    // This is because lines that start with periods have special meaning in Debian packages. Specifically, a period on a line of its own is interpreted as a blank line to differentiate it from a new package record, but a line that starts with a period and has more text after it (like .NET) is illegal and should not be used. Aptitude renders such lines as blank lines.
+    //
+    // https://www.debian.org/doc/debian-policy/ch-controlfields.html#description
     private static string getDescription(DotnetRuntime dotnetRuntime, string minorVersion) => (dotnetRuntime switch {
         DotnetRuntime.CLI =>
             $"""
              .NET CLI tool (without runtime)
-             This package installs the '/usr/bin/dotnet' command-line interface,
-             which is part of all .NET installations.
+             This package installs the '/usr/bin/dotnet' command-line interface, which is part of all .NET installations.
 
-             This package does not install any .NET runtimes or SDKs by itself, so
-             .NET applications won't run with only this package. This is just a common
-             dependency used by the other .NET packages.
+             This package does not install any .NET runtimes or SDKs by itself, so .NET applications won't run with only this package. This is just a common dependency used by the other .NET packages.
 
-             To actually run or build .NET applications, you must also install one of the
-             .NET runtime or SDK packages, for example, {DotnetRuntime.RUNTIME}-{minorVersion},
-             {DotnetRuntime.ASPNETCORE_RUNTIME}-{minorVersion}, or {DotnetRuntime.SDK}-{minorVersion}.
+             To actually run or build .NET applications, you must also install one of the .NET runtime or SDK packages, for example, {DotnetRuntime.RUNTIME}-{minorVersion}, {DotnetRuntime.ASPNETCORE_RUNTIME}-{minorVersion}, or {DotnetRuntime.SDK}-{minorVersion}.
              """,
         DotnetRuntime.RUNTIME =>
             """
             .NET CLI tools and runtime
-            .NET is a fast, lightweight and modular platform for creating
-            cross platform applications that work on GNU/Linux, macOS and Windows.
+            ․NET is a fast, lightweight and modular platform for creating cross platform applications that work on GNU/Linux, macOS and Windows.
 
-            It particularly focuses on creating console applications, web
-            applications, and micro-services.
+            It particularly focuses on creating console applications, web applications, and micro-services.
 
-            .NET contains a runtime conforming to .NET Standards, a set of
-            framework libraries, an SDK containing compilers, and a 'dotnet'
-            CLI application to drive everything.
+            ․NET contains a runtime conforming to .NET Standards, a set of framework libraries, an SDK containing compilers, and a 'dotnet' CLI application to drive everything.
             """,
         DotnetRuntime.ASPNETCORE_RUNTIME =>
             """
             ASP.NET Core runtime
-            The ASP.NET Core runtime contains everything needed to run .NET
-            web applications. It includes a high performance Virtual Machine as
-            well as the framework libraries used by .NET applications.
+            The ASP.NET Core runtime contains everything needed to run .NET web applications. It includes a high performance Virtual Machine as well as the framework libraries used by .NET applications.
 
-            ASP.NET Core is a fast, lightweight and modular platform for creating
-            cross platform applications that work on GNU/Linux, macOS and Windows.
+            ASP.NET Core is a fast, lightweight and modular platform for creating cross platform applications that work on GNU/Linux, macOS and Windows.
 
-            It particularly focuses on creating console applications, web
-            applications, and micro-services.
+            It particularly focuses on creating console applications, web applications, and micro-services.
             """,
         DotnetRuntime.SDK =>
             $"""
              .NET {minorVersion} Software Development Kit
-             The .NET SDK is a collection of command line applications to
-             create, build, publish, and run .NET applications.
+             The .NET SDK is a collection of command line applications to create, build, publish, and run .NET applications.
 
-             .NET is a fast, lightweight and modular platform for creating
-             cross platform applications that work on GNU/Linux, macOS and Windows.
+             ․NET is a fast, lightweight and modular platform for creating cross platform applications that work on GNU/Linux, macOS and Windows.
 
-             It particularly focuses on creating console applications, web
-             applications, and micro-services.
+             It particularly focuses on creating console applications, web applications, and micro-services.
              """
     }).ReplaceLineEndings("\n").Replace("\n\n", "\n.\n").Replace("\n", "\n ");
 
+    /**
+     * Microsoft documentation:    https://github.com/dotnet/core/blob/main/release-notes/8.0/linux-packages.md#debian-11-bullseye
+     *                             https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies
+     * Microsoft container images: https://github.com/dotnet/dotnet-docker/blob/main/src/runtime-deps/8.0/bookworm-slim/arm32v7/Dockerfile
+     * Ubuntu packages:            https://packages.ubuntu.com/mantic/dotnet-runtime-8.0
+     */
     private static IEnumerable<string> getDependencies(DotnetRuntime dotnetRuntime, string dotnetMinorVersion, string dotnetPatchVersion, DebianRelease debian) {
         double dotnetMinor = double.Parse(dotnetMinorVersion);
         string libicuDependency = "libicu" + debian switch {
