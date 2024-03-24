@@ -34,11 +34,13 @@ internal static class Program {
     private const CompressionLevel                                   GZ_COMPRESSION_LEVEL     = CompressionLevel.Optimal;
     private const SharpCompress.Compressors.Deflate.CompressionLevel TAR_GZ_COMPRESSION_LEVEL = SharpCompress.Compressors.Deflate.CompressionLevel.Default;
 
-    private static readonly Encoding UTF8                 = new UTF8Encoding(false, true);
-    private static readonly string   TEMPDIR              = Path.Combine(REPOSITORY_BASEDIR, @"..\temp");
-    private static readonly string   PACKAGEDIR           = Path.Combine(REPOSITORY_BASEDIR, "packages");
-    private static readonly string   BADGEDIR             = Path.Combine(REPOSITORY_BASEDIR, "badges");
-    private static readonly Uri      DOTNET_RELEASE_INDEX = new("https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json");
+    private static readonly Encoding UTF8       = new UTF8Encoding(false, true);
+    private static readonly string   TEMPDIR    = Path.Combine(REPOSITORY_BASEDIR, @"..\temp");
+    private static readonly string   PACKAGEDIR = Path.Combine(REPOSITORY_BASEDIR, "packages");
+    private static readonly string   BADGEDIR   = Path.Combine(REPOSITORY_BASEDIR, "badges");
+
+    // Found on https://github.com/dotnet/core#release-information
+    private static readonly Uri DOTNET_RELEASE_INDEX = new("https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json");
 
     private static readonly HttpClient HTTP_CLIENT = new(new SocketsHttpHandler { MaxConnectionsPerServer = Environment.ProcessorCount, AllowAutoRedirect = true })
         { Timeout = TimeSpan.FromSeconds(30) };
@@ -259,7 +261,7 @@ internal static class Program {
         await using (FileStream sdkArchiveStream = File.OpenRead(packageToGenerate.sdkArchivePath))
         using (IReader downloadReader = ReaderFactory.Open(sdkArchiveStream))
         await using (SharpCompress.Compressors.Deflate.GZipStream dataGzipStream = new(NonDisposingStream.Create(dataArchiveStream), CompressionMode.Compress, TAR_GZ_COMPRESSION_LEVEL))
-        using (UnfuckedTarWriter dataArchiveWriter = new(dataGzipStream, new TarWriterOptions(CompressionType.GZip, true))) {
+        using (UnfuckedTarWriter dataArchiveWriter = new(dataGzipStream, new TarWriterOptions(CompressionType.None, true))) {
             while (downloadReader.MoveToNextEntry()) {
                 IEntry entry = downloadReader.Entry;
                 if (entry.IsDirectory) continue;
@@ -333,8 +335,9 @@ internal static class Program {
 
         IList<string> dependencies = getDependencies(packageToGenerate.runtime, packageToGenerate.dotnetRelease.minorVersion, packageToGenerate.dotnetRelease.patchVersion, packageToGenerate.debian)
             .ToList();
-        string depends    = dependencies.Any() ? $"Depends: {string.Join(", ", dependencies)}" : string.Empty;
-        string recommends = isCliPackage ? $"Recommends: {DotnetRuntime.RUNTIME.getPackageName()}-{packageToGenerate.dotnetRelease.minorVersion}" : string.Empty;
+        string depends = dependencies.Any() ? $"Depends: {string.Join(", ", dependencies)}" : string.Empty;
+        // TODO try suggesting a virtual package fulfilled by any runtime (like dotnet-runtime-8.0-or-greater) once they exist, so apt stops telling you that dotnet-runtime-8.0 is suggested when installing dotnet-runtime-6.0
+        string suggests = isCliPackage ? $"Suggests: {DotnetRuntime.RUNTIME.getPackageName()}-{packageToGenerate.dotnetRelease.minorVersion}" : string.Empty;
         IList<string> providing = new[] {
             !isCliPackage && packageToGenerate.dotnetRelease.isLatestMinorVersion ? $"{packageName} (= {packageToGenerate.dotnetRelease.minorVersion})" : null,
             !isCliPackage && packageToGenerate.dotnetRelease.isLatestOfSupportTerm
@@ -351,7 +354,7 @@ internal static class Program {
                            Maintainer: Ben Hutchison <ben@aldaviva.com>
                            Installed-Size: {Math.Round(installedSize.ConvertToUnit(Unit.Kilobyte).Quantity):F0}
                            {depends}
-                           {recommends}
+                           {suggests}
                            {provides}
                            Section: devel
                            Priority: optional
@@ -408,7 +411,7 @@ internal static class Program {
 
              This package does not install any .NET runtimes or SDKs by itself, so .NET applications won't run with only this package. This is just a common dependency used by the other .NET packages.
 
-             To actually run or build .NET applications, you must also install one of the .NET runtime or SDK packages, for example, {DotnetRuntime.RUNTIME}-{minorVersion}, {DotnetRuntime.ASPNETCORE_RUNTIME}-{minorVersion}, or {DotnetRuntime.SDK}-{minorVersion}.
+             To actually run or build .NET applications, you must also install one of the .NET runtime or SDK packages, for example, {DotnetRuntime.RUNTIME.getPackageName()}-{minorVersion}, {DotnetRuntime.ASPNETCORE_RUNTIME.getPackageName()}-{minorVersion}, or {DotnetRuntime.SDK.getPackageName()}-{minorVersion}.
              """,
         DotnetRuntime.RUNTIME =>
             """
