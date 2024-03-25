@@ -6,4 +6,6 @@ public record DotnetRelease(string minorVersion, string patchVersion, bool isSup
     public bool isLatestMinorVersion { get; set; } = false;
     public bool isLatestOfSupportTerm { get; set; } = false;
 
+    public float minorVersionNumeric => float.Parse(minorVersion);
+
 }
