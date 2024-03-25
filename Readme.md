@@ -7,14 +7,14 @@ Public repository of ARM32 (armhf) and ARM64 .deb packages for [.NET](https://do
 
 Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Fedora](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Ubuntu](https://packages.ubuntu.com/source/mantic/dotnet8) provide official DEB packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script), which does not install system-wide by default, does not update or clean up automatically, and does not handle the concept of installing whatever the latest minor version currently is (you must always choose a release channel like LTS or STS, but there's no simple way for the script to tell which one is newer).
 
-This repository is made up of unofficial packages that each contain **official .NET Linux ARM builds by Microsoft**, created from the same exact binaries you get when you install .NET from their installation script or click one of the Linux Arm32 or Arm64 Binaries links on a [.NET download page](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
+This repository comprises unofficial packages that each contain **official .NET Linux ARM builds by Microsoft**, created from the same exact binaries you get when you install .NET from their installation script or click one of the Linux Arm32 or Arm64 Binaries links on a [.NET download page](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
 
 <!-- MarkdownTOC autolink="true" bracket="round" autoanchor="false" levels="1,2,3" bullets="-,1." -->
 
 - [Installation](#installation)
     1. [Add repository](#add-repository)
     1. [Install packages](#install-packages)
-- [Supported versions](#supported-versions)
+- [Compatible versions](#compatible-versions)
 - [List installed versions](#list-installed-versions)
 
 <!-- /MarkdownTOC -->
@@ -59,8 +59,9 @@ This package automatially installs the .NET Runtime and ASP.NET Core Runtime as 
 sudo apt install dotnet-sdk-8.0
 ```
 
-## Supported versions
+## Compatible versions
 
+#### Operating systems
 |Raspberry Pi OS|.NET 6|.NET 7|.NET 8|
 |-:|:-:|:-:|:-:|
 |Buster (10)|✅|✅|✅|
@@ -68,8 +69,16 @@ sudo apt install dotnet-sdk-8.0
 |Bookworm (12)|✅|✅|✅|
 
 #### CPU architectures
-- ARM32 (armhf/aarch32, 32-bit)
-- ARM64 (aarch64, 64-bit)
+- ✅ ARM32 (armhf/AArch32/ARMv7, 32-bit)
+- ✅ ARM64 (AArch64/ARMv8, 64-bit)
+
+#### Raspberry Pis
+- ✅ Raspberry Pi 2
+- ✅ Raspberry Pi 3
+- ✅ Raspberry Pi 4
+- ✅ Raspberry Pi 5 or greater
+- ✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as Compute Module 3 and 4, Pi Zero 2 W, and Pi 400
+- ⛔ Raspberry Pi 1, Pi Pico, Compute Module 1, and Pi Zero are [not supported by .NET](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
 
 ## List installed versions
 
