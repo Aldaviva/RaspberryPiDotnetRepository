@@ -1,11 +1,12 @@
 ﻿namespace RaspberryPiDotnetRepository.Data;
 
+// These must be sorted in ascending order to make version comparisons work, like BOOKWORM > BULLSEYE
 public enum DebianRelease {
 
     /// <summary>
     /// Debian 10
     /// </summary>
-    BUSTER,
+    BUSTER = 10,
 
     /// <summary>
     /// Debian 11
@@ -21,11 +22,7 @@ public enum DebianRelease {
 
 public static class DebianVersionsMethods {
 
-    public static int getMajorVersion(this DebianRelease release) => release switch {
-        DebianRelease.BUSTER   => 10,
-        DebianRelease.BULLSEYE => 11,
-        DebianRelease.BOOKWORM => 12
-    };
+    public static int getMajorVersion(this DebianRelease release) => (int) release;
 
     public static string getCodename(this DebianRelease release) => Enum.GetName(release)!.ToLowerInvariant();
 

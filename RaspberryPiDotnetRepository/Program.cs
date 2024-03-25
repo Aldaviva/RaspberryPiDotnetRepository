@@ -520,10 +520,11 @@ internal static class Program {
      */
     private static IEnumerable<string> getDependencies(DotnetRuntime dotnetRuntime, DotnetRelease dotnetRelease, DebianRelease debian) {
         string libicuDependency = "libicu" + debian switch {
-            DebianRelease.BUSTER => "63",
+            DebianRelease.BUSTER   => "63",
             DebianRelease.BULLSEYE => "67",
             DebianRelease.BOOKWORM => "72",
-            _ => throw new ArgumentOutOfRangeException(nameof(debian), debian, $"Please specify which version of libicu is used by this version of Debian in {nameof(getDependencies)}")
+            _ => throw new ArgumentOutOfRangeException(nameof(debian), debian,
+                $"Please specify which version of libicu is used by this version of Debian in {nameof(Program)}.{nameof(getDependencies)}")
         };
 
         return dotnetRuntime switch {

@@ -1,24 +1,24 @@
 Raspberry Pi OS .NET APT Package Repository
 ===
 
-![.NET latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fdotnet.json&query=%24.latestVersion&logo=dotnet&label=latest%20version&color=success) ![Raspberry Pi OS latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fraspbian.json&query=%24.latestVersion&logo=raspberrypi&label=latest%20version&color=success)
+![.NET latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fdotnet.json&query=%24.latestVersion&logo=dotnet&label=latest%20version&color=success) ![Raspberry Pi OS latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fraspbian.json&query=%24.latestVersion&logo=raspberrypi&label=latest%20version&color=success) [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/Aldaviva/RaspberryPiDotnetRepository/dotnet.yml?branch=master&logo=github)](https://github.com/Aldaviva/RaspberryPiDotnetRepository/actions/workflows/dotnet.yml)
 
 Public repository of armhf and arm64 APT packages for [.NET](https://dotnet.microsoft.com/) runtimes and SDKs to install on [Raspberry Pis](https://www.raspberrypi.com) running [Raspberry Pi OS (Raspbian)](https://www.raspberrypi.com/software/operating-systems/).
 
-Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Fedora](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Ubuntu](https://packages.ubuntu.com/source/mantic/dotnet8) provide official DEB packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script), which does not install system-wide by default, does not update or clean up automatically, and does not handle the concept of installing whatever the latest minor version currently is (you must always choose a release channel like LTS or STS, but there's no simple way for the script to tell which one is newer).
+Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Fedora](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Ubuntu](https://packages.ubuntu.com/source/mantic/dotnet8) provide official DEB packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which neither installs system-wide without extra manual steps, nor automatically updates or cleans up previous versions, nor lets you install the latest minor version without you manually looking whether STS or LTS is currently newer.
 
-This repository comprises unofficial packages that each contain **official .NET Linux ARM builds by Microsoft**, created from the same exact binaries you get when you install .NET from their installation script or click one of the Linux Arm32 or Arm64 Binaries links on a [.NET download page](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
+This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the same exact archives that the [official .NET download page](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) links to, under Linux Arm32 and Arm64 Binaries. These are also the same archives installed by the [.NET release notes](https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.3/8.0.3.md#downloads) and [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install).
 
 <!-- MarkdownTOC autolink="true" bracket="round" autoanchor="false" levels="1,2,3,4" bullets="-,1.,-" -->
 
 - [Installation](#installation)
-    1. [Add repository](#add-repository)
-    1. [Install packages](#install-packages)
+    1. [Add APT repository](#add-apt-repository)
+    1. [Install package](#install-package)
         - [Latest version](#latest-version)
         - [Latest LTS version](#latest-lts-version)
         - [Specific minor version](#specific-minor-version)
 - [Compatible versions](#compatible-versions)
-    1. [Operating systems](#operating-systems)
+    1. [Operating systems and .NET releases](#operating-systems-and-net-releases)
     1. [CPU architectures](#cpu-architectures)
     1. [Raspberry Pis](#raspberry-pis)
 - [List installed versions](#list-installed-versions)
@@ -28,7 +28,7 @@ This repository comprises unofficial packages that each contain **official .NET 
 
 ## Installation
 
-### Add repository
+### Add APT repository
 
 You only have to do this step once per Raspberry Pi.
 ```sh
@@ -37,7 +37,9 @@ echo "deb https://west.aldaviva.com/raspbian/ $(lsb_release -cs) main" | sudo te
 sudo apt update
 ```
 
-### Install packages
+The OpenPGP key fingerprint is `B3BF 3504 BBD0 A81D D82A  8DFB 45D6 6F05 4AB9 A66A`.
+
+### Install package
 
 There are three main package name prefixes to choose from:
 - `dotnet-runtime-*` for running command-line applications
@@ -94,7 +96,7 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 
 ## Compatible versions
 
-### Operating systems
+### Operating systems and .NET releases
 |Raspberry Pi OS|.NET 6|.NET 7|.NET 8|
 |-:|:-:|:-:|:-:|
 |Buster (10)|✅|✅|✅|

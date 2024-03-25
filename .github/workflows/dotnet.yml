@@ -1,0 +1,34 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    env:
+      ProjectName: RaspberryPiDotnetRepository
+      TargetPlatform: win-x64
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Clone
+      uses: actions/checkout@v4
+        
+    - name: Restore
+      run: dotnet restore ${{ env.ProjectName }} --locked-mode --verbosity normal
+
+    - name: Build
+      run: dotnet build ${{ env.ProjectName }} --no-restore --runtime ${{ env.TargetPlatform }} --configuration Release --no-self-contained --verbosity normal
+
+    - name: Publish
+      run: dotnet publish ${{ env.ProjectName }} --no-build --configuration Release -p:PublishSingleFile=true --runtime ${{ env.TargetPlatform }} --self-contained false
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ProjectName }}.exe
+        path: ${{ env.ProjectName }}/bin/Release/net8.0/${{ env.TargetPlatform }}/publish/*.exe
+        if-no-files-found: error

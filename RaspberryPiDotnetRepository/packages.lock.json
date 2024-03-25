@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "Bom.Squad": {
+        "type": "Direct",
+        "requested": "[0.2.1, )",
+        "resolved": "0.2.1",
+        "contentHash": "ImW3bGOADpx+rMMgsW1+TS3+QyGwJRZUKTNpkSJKfdOCUjfF6R50BHlusu8MvuWl2ME4P49CgV7cCs86n6JooQ=="
+      },
+      "DataSizeUnits": {
+        "type": "Direct",
+        "requested": "[2.1.0, )",
+        "resolved": "2.1.0",
+        "contentHash": "iya3uX4KkUOUiJYgE1mRsSWc1srwf2VUrrs9vYaqGvax+JdWhRtthi7yBP3mKf0mHuumn/OE/RDaxESZL+2s3Q=="
+      },
+      "LibObjectFile": {
+        "type": "Direct",
+        "requested": "[0.6.0, )",
+        "resolved": "0.6.0",
+        "contentHash": "XtFLHwx9gBILOWD+YnZNQhbIit2oMNlLJgiEXA8Sh9Ciz/SggGIFpXXKb9GqL+yQhUyr3cUJbZOG1ouH4vOqow=="
+      },
+      "PgpCore": {
+        "type": "Direct",
+        "requested": "[6.3.1, )",
+        "resolved": "6.3.1",
+        "contentHash": "j6FvE8XyCuXWDCEUSSUEEIEM7yB3Q3sXC4KO2V3wjNyR4/5ZI0ugSFhZHlMdAktHpXw1NfsUdZ3vZCI9U6XFnw==",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.1.1"
+        }
+      },
+      "SharpCompress": {
+        "type": "Direct",
+        "requested": "[0.36.0, )",
+        "resolved": "0.36.0",
+        "contentHash": "48am//T6Ou+GmyPmBaxaFN1ym0VNidRcBeANr9+OYTzpKRz8QMGzAkHVkCV30lFQ/gnWqGr50AuebahpG1C6xA==",
+        "dependencies": {
+          "ZstdSharp.Port": "0.7.4"
+        }
+      },
+      "BouncyCastle.Cryptography": {
+        "type": "Transitive",
+        "resolved": "2.1.1",
+        "contentHash": "NNQaa4eyf5YjSdLKUWGPzq5HXZQc3yGybfIOkR6UY1C/rRFWdo0UhSzBqqnxwGnq3ie4vkN0JlzhhANjfTIJIQ=="
+      },
+      "ZstdSharp.Port": {
+        "type": "Transitive",
+        "resolved": "0.7.4",
+        "contentHash": "ziptnotpUJr51afwXJQ5Wc03dvDiZAdmxS08s1g7SHn/VzbyZUXdH6yORk/zaNjzUOEE6pVZ0Nqztab0rYROgQ=="
+      }
+    }
+  }
+}
