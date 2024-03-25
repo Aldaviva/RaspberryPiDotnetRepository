@@ -41,20 +41,26 @@ The OpenPGP key fingerprint is `B3BF 3504 BBD0 A81D D82A  8DFB 45D6 6F05 4AB9 A6
 
 ### Install package
 
-There are three main package name prefixes to choose from:
-- `dotnet-runtime-*` for running command-line applications
-- `aspnetcore-runtime-*` for running web applications
-- `dotnet-sdk-*` for building applications
+To intall a package, first choose the package name you want. The name is the concatenation of a name prefix and a versioning suffix. For example, if you want the latest version of the .NET Runtime, regardless of whether it's LTS or STS, the package name would be `dotnet-runtime-latest`. See the following sections for explanations all the package name possibilities.
 
-There are also three upgrade strategies to choose from, to control which versions the package is allowed to upgrade to.
-- [Latest](#latest) (either LTS or STS [Standard Term Support, odd-numbered .NET releases that have 1.5 years of support])
-- [Latest LTS](#latest-lts) (Long Term Support, even-numbered .NET releases that have 3 years of support)
-- [Specific minor version](#specific-minor-version) (like 8.0 only)
+Then, once you know which package you want, you can install it with `apt install <packagename>`, for example, `sudo apt install dotnet-runtime-latest`.
+
+There are three package name prefixes to choose from:
+- `dotnet-runtime-` for running command-line applications
+- `aspnetcore-runtime-` for running web applications
+- `dotnet-sdk-` for building applications
+
+There are also three version upgrade strategy suffixes to choose from, to control which versions the package should install and also allow upgrades to.
+- [`latest`](#latest-version) (installs whichever LTS or STS release version is currently greater)
+- [`latest-lts`](#latest-lts-version) (installs the LTS release with the greatest version number)
+- [Specific minor version](#specific-minor-version) (will install and stick with one release permanently, like `8.0`)
+
+[*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) releases like 8.0 arrive every other November with even major version numbers, and come with 3 years of support. *Standard Term Support (STS)* releases like 7.0 arrive every other November on alternating years from LTS releases, and have odd version numbers and 1.5 years of support.
 
 #### Latest version
 This will install the latest .NET version, regardless of whether it is an LTS or STS release. It can upgrade to greater major and minor versions, including new STS major versions. It will not install previews or release candidates.
 
-For example, if you install `dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8.0. Later, if you run `apt upgrade` in December 2024, .NET 9.0 will have been released, so it will install .NET Runtime 9.0.
+For example, if you `apt install dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8.0. Later, if you run `apt upgrade` in December 2024, .NET 9.0 will have been released, so it will install .NET Runtime 9.0.
 
 |Installation|Package name|Purpose|Includes|
 |-|-|-|-|
@@ -68,7 +74,7 @@ For example, if you install `dotnet-runtime-latest` in March 2024, it will insta
 #### Latest LTS version
 This will install the latest LTS .NET version. It can upgrade to greater major and minor LTS versions. It will never install an STS release, preview, or release candidate.
 
-For example, if you install `dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8.0. Later, if you run `apt upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but not install the newly released .NET 9, because 9 is an STS release. It will stay on .NET 8 until November 2025, when .NET 10 is released, which is an LTS version like 8.
+For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8.0. Later, if you run `apt upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but not install the newly released .NET 9, because 9 is an STS release. It will stay on .NET 8 until November 2025, when .NET 10 is released, which is an LTS version like 8.
 
 |Installation|Package name|Purpose|Includes|
 |-|-|-|-|
@@ -80,16 +86,16 @@ For example, if you install `dotnet-runtime-latest-lts` in March 2024, it will i
 > If you find that a .NET application does not run after a major version upgrade, you can choose a different [Roll Forward](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#major-version-runtime-roll-forward) behavior. For example, you can set the `DOTNET_ROLL_FORWARD` environment variable to `LatestMajor`.
 
 #### Specific minor version
-If you want to stay on a specific minor version of .NET, such as 8.0, then you can install one of the numbered packages, like `dotnet-runtime-8.0`. This will install .NET Runtime 8.0 and only ever upgrade it to newer patch versions, like 8.0.3, but never to newer major or minor versions like 9.0.0 or 10.0.0. It will not install previews or release candidates.
+If you want to stay on a specific minor version of .NET, such as 8.0, then you can `apt install dotnet-runtime-8.0` or one of the other numbered packages. This example will install .NET Runtime 8.0 and only ever upgrade it to newer patch versions, like 8.0.3, but never to newer major or minor versions like 9.0.0 or 10.0.0. It will not install previews or release candidates.
 
-|Installation|Package name|Purpose|Includes|
+|Installation|Package name example|Purpose|Includes|
 |-|-|-|-|
 |.NET Runtime|`dotnet-runtime-8.0`|Run .NET CLI apps||
 |ASP.NET Core Runtime|`aspnetcore-runtime-8.0`|Run .NET web apps|.NET Runtime|
 |.NET SDK|`dotnet-sdk-8.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
 
 > [!NOTE]
-> The preceding examples use .NET 8.0. If you want to install a different version instead, then you can replace `8.0` in these examples with another [supported version number](#supported-versions), such as `6.0` or `7.0`.
+> The preceding examples use .NET 8.0. If you want to install a different .NET version instead, then you can replace `8.0` in these examples with another [supported .NET version number](#supported-versions), such as `6.0` or `7.0`.
 
 > [!NOTE]
 > The SDK package versions are numbered like the runtime versions they are released in lockstep with, not with the \*.\*.100-based SDK numbering. For example, as of 2024-03-25, the latest .NET 8 SDK package is versioned `8.0.3-0`, not the 8.0.203 version number reported by the SDK once installed.
@@ -102,6 +108,10 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 |Buster (10)|✅|✅|✅|
 |Bullseye (11)|✅|✅|✅|
 |Bookworm (12)|✅|✅|✅|
+
+[Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/)<br>
+[Debian releases](https://www.debian.org/releases/)<br>
+[.NET releases](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#lifecycle)
 
 ### CPU architectures
 - ✅ ARM32 (armhf/AArch32/ARMv7, 32-bit)
