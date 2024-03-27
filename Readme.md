@@ -7,7 +7,7 @@ Public repository of armhf and arm64 APT packages for [.NET](https://dotnet.micr
 
 Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Fedora](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Ubuntu](https://packages.ubuntu.com/source/mantic/dotnet8) provide official DEB packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which neither installs system-wide without extra manual steps, nor automatically updates or cleans up previous versions, nor lets you install the latest minor version without you manually looking whether STS or LTS is currently newer.
 
-This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the same exact archives that the [official .NET download page](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) links to, under Linux Arm32 and Arm64 Binaries. These are also the same archives installed by the [.NET release notes](https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.3/8.0.3.md#downloads) and [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install).
+This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the exact same Linux ARM binary archives that are linked to by the [official .NET download pages](https://dotnet.microsoft.com/en-us/download/dotnet/8.0), [release notes](https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.3/8.0.3.md#downloads), and [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install).
 
 <!-- MarkdownTOC autolink="true" bracket="round" autoanchor="false" levels="1,2,3,4" bullets="-,1.,-" -->
 
@@ -41,26 +41,59 @@ The OpenPGP key fingerprint is `B3BF 3504 BBD0 A81D D82A  8DFB 45D6 6F05 4AB9 A6
 
 ### Install package
 
-To intall a package, first choose the package name you want. The name is the concatenation of a name prefix and a versioning suffix. For example, if you want the latest version of the .NET Runtime, regardless of whether it's LTS or STS, the package name would be `dotnet-runtime-latest`. See the following sections for explanations all the package name possibilities.
+First, to install a package, choose the package name you want. The name is the concatenation of a name prefix and a versioning suffix. For example, if you want the latest version of the .NET Runtime, the package name would be `dotnet-runtime-latest`. See the following sections for explanations all the package name possibilities.
 
-Then, once you know which package you want, you can install it with `apt install <packagename>`, for example, `sudo apt install dotnet-runtime-latest`.
+<table>
+<thead>
+<th colspan="2">Package name format</th>
+<thead>
 
-There are three package name prefixes to choose from:
+<tbody>
+<tr>
+<td colspan="2" align="center"><code>dotnet-runtime-latest</code></td>
+</tr>
+
+<tr>
+<td align="center">↗️<br><strong>package type</strong></td>
+<td align="center">↖️<br><strong>version spec</strong></td>
+</tr>
+
+<tr>
+<td valign="top"><ul>
+<li><code>dotnet-runtime</code></li>
+<li><code>aspnetcore-runtime</code></li>
+<li><code>dotnet-sdk</code></li>
+</ul></td>
+<td valign="top"><ul>
+<li><code>latest</code></li>
+<li><code>latest-lts</code></li>
+<li><code>8.0</code></li>
+<li><code>7.0</code></li>
+<li><code>6.0</code></li>
+</ul></td>
+</tr>
+</tbody>
+</table>
+
+There are three package type prefixes to choose from:
 - `dotnet-runtime-` for running command-line applications
 - `aspnetcore-runtime-` for running web applications
 - `dotnet-sdk-` for building applications
 
-There are also three version upgrade strategy suffixes to choose from, to control which versions the package should install and also allow upgrades to.
-- [`latest`](#latest-version) (installs whichever LTS or STS release version is currently greater)
-- [`latest-lts`](#latest-lts-version) (installs the LTS release with the greatest version number)
-- [Specific minor version](#specific-minor-version) (will install and stick with one release permanently, like `8.0`)
+There are also three version specification suffixes to choose from, to control which versions the package should install and allow upgrades to.
+- [`latest`](#latest-version) installs the LTS or STS release with the greatest version number
+- [`latest-lts`](#latest-lts-version) installs the LTS release with the greatest version number
+- [Specific minor versions](#specific-minor-version) install and stick with one release permanently, like `8.0`
 
-[*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) releases like 8.0 arrive every other November with even major version numbers, and come with 3 years of support. *Standard Term Support (STS)* releases like 7.0 arrive every other November on alternating years from LTS releases, and have odd version numbers and 1.5 years of support.
+> [!NOTE]
+> [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released every other November with even major version numbers, and come with 3 years of support. *Standard Term Support (STS)* versions like 7.0 are released in the alternate Novembers with odd version numbers and 1.5 years of support.
+
+Then, once you know which package you want, you can install it with `apt install <packagename>`, for example, `sudo apt install dotnet-runtime-latest`.
 
 #### Latest version
-This will install the latest .NET version, regardless of whether it is an LTS or STS release. It can upgrade to greater major and minor versions, including new STS major versions. It will not install previews or release candidates.
+This will install the latest .NET version, regardless of whether it is an LTS or STS release. It will upgrade to greater major and minor versions, including new STS versions. It will never install previews or release candidates.
 
-For example, if you `apt install dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8.0. Later, if you run `apt upgrade` in December 2024, .NET 9.0 will have been released, so it will install .NET Runtime 9.0.
+For example, if you `apt install dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8. Later, if you run `apt upgrade` in December 2024, .NET 9 will have been released, so it will install .NET Runtime 9.
 
 |Installation|Package name|Purpose|Includes|
 |-|-|-|-|
@@ -72,9 +105,9 @@ For example, if you `apt install dotnet-runtime-latest` in March 2024, it will i
 > If you find that a .NET application does not run after a major version upgrade, you can choose a different [Roll Forward](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#major-version-runtime-roll-forward) behavior. For example, you can set the `DOTNET_ROLL_FORWARD` environment variable to `LatestMajor`.
 
 #### Latest LTS version
-This will install the latest LTS .NET version. It can upgrade to greater major and minor LTS versions. It will never install an STS release, preview, or release candidate.
+This will install the latest Long Term Support .NET version. It can upgrade to greater major and minor LTS versions. It will never install an STS, release candidate, or preview release.
 
-For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8.0. Later, if you run `apt upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but not install the newly released .NET 9, because 9 is an STS release. It will stay on .NET 8 until November 2025, when .NET 10 is released, which is an LTS version like 8.
+For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8. Later, if you run `apt upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but will not install the newly released .NET 9, because 9 is an STS release. It will stay on .NET 8 until November 2025, when .NET 10 is released, which is an LTS version like 8.
 
 |Installation|Package name|Purpose|Includes|
 |-|-|-|-|
@@ -86,16 +119,13 @@ For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it wi
 > If you find that a .NET application does not run after a major version upgrade, you can choose a different [Roll Forward](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#major-version-runtime-roll-forward) behavior. For example, you can set the `DOTNET_ROLL_FORWARD` environment variable to `LatestMajor`.
 
 #### Specific minor version
-If you want to stay on a specific minor version of .NET, such as 8.0, then you can `apt install dotnet-runtime-8.0` or one of the other numbered packages. This example will install .NET Runtime 8.0 and only ever upgrade it to newer patch versions, like 8.0.3, but never to newer major or minor versions like 9.0.0 or 10.0.0. It will not install previews or release candidates.
+If you want to stay on a specific minor version of .NET, such as 8.0, then you can `apt install dotnet-runtime-8.0` or one of the other numbered packages. This example will install .NET Runtime 8.0 and only ever upgrade it to newer patch versions, like 8.0.3, but never to newer major or minor versions like 9.0 or 10.0. It will not install previews or release candidates either.
 
-|Installation|Package name example|Purpose|Includes|
+|Installation|Package names|Purpose|Includes|
 |-|-|-|-|
-|.NET Runtime|`dotnet-runtime-8.0`|Run .NET CLI apps||
-|ASP.NET Core Runtime|`aspnetcore-runtime-8.0`|Run .NET web apps|.NET Runtime|
-|.NET SDK|`dotnet-sdk-8.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
-
-> [!NOTE]
-> The preceding examples use .NET 8.0. If you want to install a different .NET version instead, then you can replace `8.0` in these examples with another [supported .NET version number](#supported-versions), such as `6.0` or `7.0`.
+|.NET Runtime|`dotnet-runtime-8.0`<br>`dotnet-runtime-7.0`<br>`dotnet-runtime-6.0`|Run .NET CLI apps||
+|ASP.NET Core Runtime|`aspnetcore-runtime-8.0`<br>`aspnetcore-runtime-7.0`<br>`aspnetcore-runtime-6.0`|Run .NET web apps|.NET Runtime|
+|.NET SDK|`dotnet-sdk-8.0`<br>`dotnet-sdk-7.0`<br>`dotnet-sdk-6.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
 
 > [!NOTE]
 > The SDK package versions are numbered like the runtime versions they are released in lockstep with, not with the \*.\*.100-based SDK numbering. For example, as of 2024-03-25, the latest .NET 8 SDK package is versioned `8.0.3-0`, not the 8.0.203 version number reported by the SDK once installed.
@@ -103,25 +133,25 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 ## Compatible versions
 
 ### Operating systems and .NET releases
-|Raspberry Pi OS|.NET 6|.NET 7|.NET 8|
+|Raspberry Pi OS|.NET 8|.NET 7|.NET 6|
 |-:|:-:|:-:|:-:|
-|Buster (10)|✅|✅|✅|
-|Bullseye (11)|✅|✅|✅|
 |Bookworm (12)|✅|✅|✅|
+|Bullseye (11)|✅|✅|✅|
+|Buster (10)|✅|✅|✅|
 
 [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/)<br>
 [Debian releases](https://www.debian.org/releases/)<br>
 [.NET releases](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#lifecycle)
 
 ### CPU architectures
-- ✅ ARM32 (armhf/AArch32/ARMv7, 32-bit)
 - ✅ ARM64 (AArch64/ARMv8, 64-bit)
+- ✅ ARM32 (armhf/AArch32/ARMv7, 32-bit)
 
 ### Raspberry Pis
-- ✅ Raspberry Pi 2
-- ✅ Raspberry Pi 3
-- ✅ Raspberry Pi 4
 - ✅ Raspberry Pi 5 or greater
+- ✅ Raspberry Pi 4
+- ✅ Raspberry Pi 3
+- ✅ Raspberry Pi 2
 - ✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as Compute Module 3 and 4, Pi Zero 2 W, and Pi 400
 - ⛔ Raspberry Pi 1, Pi Pico, Compute Module 1, and Pi Zero are [not supported by .NET](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
 
