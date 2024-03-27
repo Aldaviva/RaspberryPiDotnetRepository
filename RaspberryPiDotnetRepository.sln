@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorldRuntime", "HelloW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorldAspNetCore", "HelloWorldAspNetCore\HelloWorldAspNetCore.csproj", "{D6B3D5B6-AE5D-4473-8FB7-391714CB3A57}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{12A8DD6B-D11E-4E0B-B232-0512F29AEE8E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{D6B3D5B6-AE5D-4473-8FB7-391714CB3A57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6B3D5B6-AE5D-4473-8FB7-391714CB3A57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6B3D5B6-AE5D-4473-8FB7-391714CB3A57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12A8DD6B-D11E-4E0B-B232-0512F29AEE8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12A8DD6B-D11E-4E0B-B232-0512F29AEE8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12A8DD6B-D11E-4E0B-B232-0512F29AEE8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12A8DD6B-D11E-4E0B-B232-0512F29AEE8E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
