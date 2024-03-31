@@ -1,4 +1,4 @@
-Raspberry Pi OS .NET APT Package Repository
+<img src=".github/images/rpi-dotnet.svg" height="25" alt="logo" /> Raspberry Pi OS .NET APT Package Repository
 ===
 
 ![.NET latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fdotnet.json&query=%24.latestVersion&logo=dotnet&label=latest%20version&color=success) ![Raspberry Pi OS latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwest.aldaviva.com%2Fraspbian%2Fbadges%2Fraspbian.json&query=%24.latestVersion&logo=raspberrypi&label=latest%20version&color=success) [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/Aldaviva/RaspberryPiDotnetRepository/dotnet.yml?branch=master&logo=github)](https://github.com/Aldaviva/RaspberryPiDotnetRepository/actions/workflows/dotnet.yml)
@@ -142,6 +142,8 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/)<br>
 [Debian releases](https://www.debian.org/releases/)<br>
 [.NET releases](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#lifecycle)
+
+In addition to Raspberry Pi OS, you should also be able to install these DEB packages on ARM builds of Debian and other Debian-based distributions like Ubuntu and Mobian, because these packages are not specific to Raspberry Pi OS and only [depend on packages in the standard Debian repository](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies).
 
 ### CPU architectures
 - ✅ ARM64 (AArch64/ARMv8, 64-bit)

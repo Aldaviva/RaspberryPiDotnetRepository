@@ -19,7 +19,7 @@ public static class RuntimeTypeMethods {
     };
 
     public static string getFriendlyName(this DotnetPackageType packageType) => packageType switch {
-        DotnetPackageType.CLI                => "/usr/bin/dotnet",
+        DotnetPackageType.CLI                => ".NET CLI",
         DotnetPackageType.RUNTIME            => ".NET Runtime",
         DotnetPackageType.ASPNETCORE_RUNTIME => "ASP.NET Core Runtime",
         DotnetPackageType.SDK                => ".NET SDK"

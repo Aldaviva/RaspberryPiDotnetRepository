@@ -34,4 +34,13 @@ public static class Extensions {
         }
     }
 
+    public static TValue getOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue newValue) {
+        if (dictionary.TryGetValue(key, out TValue? oldValue)) {
+            return oldValue;
+        } else {
+            dictionary.Add(key, newValue);
+            return newValue;
+        }
+    }
+
 }

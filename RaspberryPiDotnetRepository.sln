@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorldRuntime", "HelloW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorldAspNetCore", "HelloWorldAspNetCore\HelloWorldAspNetCore.csproj", "{D6B3D5B6-AE5D-4473-8FB7-391714CB3A57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{12A8DD6B-D11E-4E0B-B232-0512F29AEE8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{12A8DD6B-D11E-4E0B-B232-0512F29AEE8E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

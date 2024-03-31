@@ -6,6 +6,7 @@ using PgpCore;
 using RaspberryPiDotnetRepository.Data;
 using RaspberryPiDotnetRepository.Unfucked.PGPCore;
 using RaspberryPiDotnetRepository.Unfucked.SharpCompress.Writers.Tar;
+using RaspberryPiDotnetRepository.Unfucked.System.IO;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using System.Collections.Immutable;
@@ -17,20 +18,17 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using static RaspberryPiDotnetRepository.DebPackageBuilder;
-using FileInfo = System.IO.FileInfo;
 using PGP = RaspberryPiDotnetRepository.Unfucked.PGPCore.PGP;
 
 namespace RaspberryPiDotnetRepository;
 
 internal class Program {
 
-    private const string           DEBIAN_PACKAGE_VERSION_SUFFIX     = "-0";
-    private const float            LEAST_PROVIDED_HISTORICAL_RELEASE = 6.0f;
-    private const CompressionLevel GZ_COMPRESSION_LEVEL              = CompressionLevel.Optimal;
+    private const string DEBIAN_PACKAGE_VERSION_SUFFIX = "-0";
+    private const float  OLDEST_PACKAGED_RELEASE       = 6.0f;
 
-    private const SharpCompress.Compressors.Deflate.CompressionLevel TAR_GZ_COMPRESSION_LEVEL = SharpCompress.Compressors.Deflate.CompressionLevel.Default;
-
-    private static readonly Encoding UTF8 = new UTF8Encoding(false, true);
+    private const CompressionLevel                                   PACKAGE_INDEX_COMPRESSION = CompressionLevel.Optimal;
+    private const SharpCompress.Compressors.Deflate.CompressionLevel DEB_TGZ_COMPRESSION       = SharpCompress.Compressors.Deflate.CompressionLevel.Default;
 
     // Found on https://github.com/dotnet/core#release-information
     private static readonly Uri DOTNET_RELEASE_INDEX = new("https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json");
@@ -44,6 +42,8 @@ internal class Program {
 
     [Option("--repo-dir <PATH>", "Absolute path of 'raspbian' directory", CommandOptionType.SingleValue)]
     public string repositoryBaseDir { get; } = @".\raspbian\";
+
+    private string stagingDir { get; set; } = null!;
 
     [Option("--temp-dir <PATH>", "Absolute path in which to temporarily download .NET SDK archives", CommandOptionType.SingleValue)]
     public string tempDir { get; } = @".\temp\";
@@ -62,8 +62,8 @@ internal class Program {
 
     private IPGP pgp = null!;
 
-    private string packageDir => Path.Combine(repositoryBaseDir, "packages");
-    private string badgeDir => Path.Combine(repositoryBaseDir, "badges");
+    private string packageDir => Path.Combine(stagingDir, "packages");
+    private string badgeDir => Path.Combine(stagingDir, "badges");
 
     public static async Task Main(string[] args) => await CommandLineApplication.ExecuteAsync<Program>(args);
 
@@ -72,7 +72,9 @@ internal class Program {
         Stopwatch overallTimer = Stopwatch.StartNew();
         BomSquad.DefuseUtf8Bom();
 
-        pgp = new PGP(new EncryptionKeys(await File.ReadAllTextAsync(gpgPrivateKeyPath, UTF8), string.Empty)) { HashAlgorithmTag = HashAlgorithmTag.Sha256 };
+        pgp = new PGP(new EncryptionKeys(await File.ReadAllTextAsync(gpgPrivateKeyPath, Encoding.UTF8), string.Empty)) { HashAlgorithmTag = HashAlgorithmTag.Sha256 };
+
+        stagingDir = Path2.getTempDirectory(Path.GetDirectoryName(repositoryBaseDir));
 
         foreach (string directory in new[] { tempDir, packageDir, badgeDir }) {
             Directory.CreateDirectory(directory);
@@ -85,45 +87,46 @@ internal class Program {
         JsonNode dotnetMinorVersionsManifest = (await HTTP_CLIENT.GetFromJsonAsync<JsonNode>(DOTNET_RELEASE_INDEX))!;
 
         JsonArray releasesIndex = dotnetMinorVersionsManifest["releases-index"]!.AsArray();
-        knownReleaseMinorVersions = releasesIndex.Where(release => release!["support-phase"]!.GetValue<string>() is "active" or "maintenance" or "eol")
-            .Select(release => float.Parse(release!["channel-version"]!.GetValue<string>()))
-            .Where(minorVersion => minorVersion >= LEAST_PROVIDED_HISTORICAL_RELEASE)
-            .ToList().AsReadOnly();
 
-        IList<JsonNode> supportedStableReleases = releasesIndex.Where(release => release!["support-phase"]!.GetValue<string>() is "active" or "maintenance").Compact().ToList();
+        IList<(JsonNode release, float minorVersion)> releasesToPackage = releasesIndex.Compact()
+            .Select(release => (release, minorVersion: float.Parse(release["channel-version"]!.GetValue<string>())))
+            .Where(rel => rel.release["support-phase"]!.GetValue<string>() is "active" or "maintenance" or "eol" && rel.minorVersion >= OLDEST_PACKAGED_RELEASE).ToList();
+
+        knownReleaseMinorVersions = releasesToPackage.Select(rel => rel.minorVersion).ToList();
 
         Stream repoVersionStream;
         string repoVersionFilename = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "version.json");
-        VersionKey upstreamVersionKey = new(supportedStableReleases.Select(release => release["latest-release"]!.GetValue<string>()).ToImmutableSortedSet(),
+        VersionKey upstreamVersionKey = new(releasesToPackage.Select(rel => rel.release["latest-release"]!.GetValue<string>()).ToImmutableSortedSet(),
             Enum.GetValuesAsUnderlyingType<DebianRelease>().Cast<int>().ToImmutableSortedSet());
         if (!forceRegenerate) {
             try {
-                Console.WriteLine($"Comparing current repo version with latest upstream version to determine if the repository needs to be regenerated now ({repoVersionFilename})");
+                // Console.WriteLine($"Comparing current repo version with latest upstream version to determine if the repository needs to be regenerated now ({repoVersionFilename})");
                 await using (repoVersionStream = File.OpenRead(repoVersionFilename)) {
                     VersionKey? repoVersionKey = JsonSerializer.Deserialize<VersionKey>(repoVersionStream);
                     if (upstreamVersionKey.Equals(repoVersionKey)) {
-                        Console.WriteLine("No .NET or Raspbian updates since last repository regeneration, exiting leaving repository unchanged.");
+                        Console.WriteLine("No .NET or Raspbian updates since last repository regeneration, exiting leaving repository unchanged (pass --force to regenerate anyway).");
                         return;
                     }
                 }
             } catch (FileNotFoundException) {
-                // if file does not exist, continue generating repo
+                // if version.json file does not exist, continue generating repo
             }
         }
 
-        File.Copy(gpgPublicKeyPath, Path.Combine(repositoryBaseDir, "aldaviva.gpg.key"), true);
+        await File.WriteAllTextAsync(Path.Combine(stagingDir, "readme"), "https://github.com/Aldaviva/RaspberryPiDotnetRepository", Encoding.UTF8);
+        File.Copy(gpgPublicKeyPath, Path.Combine(stagingDir, "aldaviva.gpg.key"), true);
 
-        IList<DotnetRelease> dotnetReleases = (await Task.WhenAll(supportedStableReleases
-            .Select(async minorVersion => {
-                string         minorVersionNumber  = minorVersion["channel-version"]!.GetValue<string>();
-                Uri            patchVersionUrl     = new(minorVersion["releases.json"]!.GetValue<string>());
-                bool           isSupportedLongTerm = minorVersion["release-type"]!.GetValue<string>() == "lts";
+        IList<DotnetRelease> dotnetReleases = (await Task.WhenAll(releasesToPackage
+            .Select(async rel => {
+                string         minorVersion        = rel.release["channel-version"]!.GetValue<string>();
+                Uri            patchVersionUrl     = new(rel.release["releases.json"]!.GetValue<string>());
+                bool           isSupportedLongTerm = rel.release["release-type"]!.GetValue<string>() == "lts";
                 JsonNode       patchVersions       = (await HTTP_CLIENT.GetFromJsonAsync<JsonNode>(patchVersionUrl))!;
                 DotnetRelease? dotnetRelease       = null;
 
                 if (patchVersions["releases"]!.AsArray().FirstOrDefault(isStableVersion) is { } latestPatchVersion1) {
                     string patchVersionNumber = latestPatchVersion1["release-version"]!.GetValue<string>();
-                    dotnetRelease = new DotnetRelease(minorVersionNumber, patchVersionNumber, isSupportedLongTerm);
+                    dotnetRelease = new DotnetRelease(minorVersion, patchVersionNumber, isSupportedLongTerm);
 
                     await Task.WhenAll(cpuArchitectures.Select(async cpuArchitecture => {
                         string   rid                   = "linux-" + cpuArchitecture.toRuntimeIdentifierSuffix();
@@ -137,7 +140,7 @@ internal class Program {
                         await using FileStream fileDownloadStream = File.Open(downloadedSdkFilename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
 
                         if (fileDownloadStream.Length == 0) {
-                            Console.WriteLine($"Downloading .NET SDK {patchVersionNumber} for {cpuArchitecture}...");
+                            Console.WriteLine($"Downloading .NET SDK {patchVersionNumber} {cpuArchitecture.toRuntimeIdentifierSuffix()}...");
                             downloadTimer.Start();
                             await using Stream downloadStream = await HTTP_CLIENT.GetStreamAsync(sdkDownloadUrl);
                             await downloadStream.CopyToAsync(fileDownloadStream);
@@ -146,17 +149,17 @@ internal class Program {
 
                             DataSize fileSizeOnDisk         = new(fileDownloadStream.Length);
                             DataSize downloadSpeedPerSecond = fileSizeOnDisk / downloadTimer.Elapsed.TotalSeconds;
-                            Console.WriteLine($@"Downloaded .NET SDK {patchVersionNumber} for {cpuArchitecture} in {downloadTimer.Elapsed:m\m\ ss\s}"
+                            Console.WriteLine($@"Downloaded .NET SDK {patchVersionNumber} {cpuArchitecture.toRuntimeIdentifierSuffix()} in {downloadTimer.Elapsed:m\m\ ss\s}"
                                 + $" ({fileSizeOnDisk.ToString(1, true)} at {downloadSpeedPerSecond.ToString(1, true)}/s)");
                         }
 
                         fileDownloadStream.Position = 0;
-                        Console.WriteLine($"Verifying .NET SDK {patchVersionNumber} for {cpuArchitecture} file hash...");
+                        // Console.WriteLine($"Verifying .NET SDK {patchVersionNumber} for {cpuArchitecture} file hash...");
                         byte[] actualSdkSha512Hash = await SHA512.HashDataAsync(fileDownloadStream);
                         if (actualSdkSha512Hash.SequenceEqual(expectedSdkSha512Hash)) {
-                            Console.WriteLine($"Successfully verified .NET SDK {patchVersionNumber} for {cpuArchitecture} file hash.");
+                            Console.WriteLine($"Successfully verified .NET SDK {patchVersionNumber} {cpuArchitecture.toRuntimeIdentifierSuffix()} file hash.");
                         } else {
-                            Console.WriteLine($"Failed to verify .NET SDK {patchVersionNumber} for {cpuArchitecture}!");
+                            Console.WriteLine($"Failed to verify .NET SDK {patchVersionNumber} {cpuArchitecture.toRuntimeIdentifierSuffix()}!");
                             Console.WriteLine($"Expected SHA-512 hash of {sdkDownloadUrl}: {Convert.ToHexString(expectedSdkSha512Hash)}");
                             Console.WriteLine($"Actual SHA-512 hash of {downloadedSdkFilename}: {Convert.ToHexString(actualSdkSha512Hash)}");
                             throw new ApplicationException($"Verification failed after downloading {sdkDownloadUrl}");
@@ -196,11 +199,11 @@ internal class Program {
             }
         }
 
-        Console.WriteLine("Generating packages");
+        // Console.WriteLine("Generating packages");
         DebianPackage[] generatedPackages = await Task.WhenAll(packageRequests.AsParallel().Select(generateDebPackage));
         Console.WriteLine("Generated packages");
 
-        Console.WriteLine("Generating package index files");
+        // Console.WriteLine("Generating package index files");
         IEnumerable<IGrouping<DebianRelease, string>> packageIndexFiles = (await Task.WhenAll(groupPackagesIntoIndices(generatedPackages)
                 .Select(async suitePackages =>
                     (suitePackages.Key.debianVersion, packageIndexFiles: await generatePackageIndexFiles(suitePackages.Key.debianVersion, suitePackages.Key.architecture, suitePackages.Value)))))
@@ -209,7 +212,7 @@ internal class Program {
 
         Console.WriteLine("Generated package index files");
 
-        Console.WriteLine("Generating release index files");
+        // Console.WriteLine("Generating release index files");
         await Task.WhenAll(packageIndexFiles.Select(releaseFiles => generateReleaseIndexFiles(releaseFiles.Key, releaseFiles)));
         Console.WriteLine("Generated release index files");
 
@@ -219,6 +222,23 @@ internal class Program {
             await JsonSerializer.SerializeAsync(repoVersionStream, upstreamVersionKey);
             Console.WriteLine("Generated version key file");
         }
+
+        string oldRepoToDelete = Path2.trimSlashes(Path.GetFullPath(repositoryBaseDir)) + "-old";
+        Directory2.deleteQuietly(oldRepoToDelete, true);
+
+        bool lowLatencyMode = GC.TryStartNoGCRegion(new DataSize(16, Unit.Megabyte));
+        try {
+            Directory.Move(repositoryBaseDir, oldRepoToDelete);
+        } catch (DirectoryNotFoundException) { }
+
+        Directory.Move(stagingDir, repositoryBaseDir);
+        if (lowLatencyMode) {
+            GC.EndNoGCRegion();
+        }
+
+        Console.WriteLine("Activated new repository");
+
+        Directory2.deleteQuietly(oldRepoToDelete, true);
 
         if (!keepTempDownloads) {
             foreach (DotnetRelease release in dotnetReleases) {
@@ -230,25 +250,26 @@ internal class Program {
         }
 
         overallTimer.Stop();
-        Console.WriteLine($"Finished in {overallTimer.Elapsed.TotalSeconds:N0} seconds at Default/Optimal compression.");
-        return;
 
-        static IDictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groupPackagesIntoIndices(IEnumerable<DebianPackage> packages) {
-            Dictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groups = [];
-            foreach (DebianPackage package in packages) {
-                CpuArchitecture[] indexArchitectures = package.architecture.HasValue ? [package.architecture.Value] : Enum.GetValues<CpuArchitecture>();
-                foreach (CpuArchitecture indexArchitecture in indexArchitectures) {
-                    if (!groups.TryGetValue((package.debianVersion, indexArchitecture), out IList<DebianPackage>? packagesInIndex)) {
-                        packagesInIndex = [];
-                        groups.Add((package.debianVersion, indexArchitecture), packagesInIndex);
-                    }
+        (int fileCount, DataSize fileSize) = Directory.EnumerateFiles(repositoryBaseDir, "*", SearchOption.AllDirectories)
+            .Aggregate((fileCount: 0, fileSize: new DataSize(0, Unit.Byte)), (oldStats, filePath) =>
+                (fileCount: oldStats.fileCount + 1, fileSize: oldStats.fileSize + new DataSize(new FileInfo(filePath).Length)));
 
-                    packagesInIndex.Add(package);
-                }
+        double elapsedSeconds = overallTimer.Elapsed.TotalSeconds;
+        Console.WriteLine($"Wrote {fileSize.ToString(1, true)} to {fileCount:N0} files in {elapsedSeconds:N3} seconds at {DEB_TGZ_COMPRESSION}/{PACKAGE_INDEX_COMPRESSION} compression.");
+        Console.WriteLine($"Average speed: {(fileSize / elapsedSeconds).ToString(1, true)}/s, {fileCount / elapsedSeconds:N1} files/s");
+    }
+
+    private static IDictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groupPackagesIntoIndices(IEnumerable<DebianPackage> packages) {
+        Dictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groups = [];
+        foreach (DebianPackage package in packages) {
+            CpuArchitecture[] indexArchitectures = package.architecture.HasValue ? [package.architecture.Value] : Enum.GetValues<CpuArchitecture>();
+            foreach (CpuArchitecture indexArchitecture in indexArchitectures) {
+                groups.getOrAdd((package.debianVersion, indexArchitecture), []).Add(package);
             }
-
-            return groups;
         }
+
+        return groups;
     }
 
     private async Task generateBadges(DotnetRelease latestMinorRelease, IEnumerable<DebianRelease> debianReleases) {
@@ -265,15 +286,15 @@ internal class Program {
     }
 
     private async Task generateReleaseIndexFiles(DebianRelease debianRelease, IEnumerable<string> packageIndexFilesRelativeToSuite) {
-        Console.WriteLine($"Generating Release index file for Debian {debianRelease}");
-        string suiteDirectory = Path.Combine(repositoryBaseDir, "dists", debianRelease.getCodename());
+        // Console.WriteLine($"Generating Release index file for Debian {debianRelease.getCodename()}");
+        string suiteDirectory = Path.Combine(stagingDir, "dists", debianRelease.getCodename());
 
         string indexSha256Hashes = string.Join('\n', await Task.WhenAll(packageIndexFilesRelativeToSuite.Select(async filePath => {
             await using FileStream fileStream = File.OpenRead(Path.Combine(suiteDirectory, filePath));
 
             string sha256Hash = Convert.ToHexString(await SHA256.HashDataAsync(fileStream)).ToLowerInvariant();
             long   fileSize   = fileStream.Length;
-            return $" {sha256Hash} {fileSize:D} {dos2UnixPathSeparators(filePath)}";
+            return $" {sha256Hash} {fileSize:D} {Path2.dos2UnixSlashes(filePath)}";
         })));
 
         string releaseFileCleartext =
@@ -289,22 +310,22 @@ internal class Program {
                  {indexSha256Hashes}
                  """.ReplaceLineEndings("\n");
 
-        await File.WriteAllTextAsync(Path.Combine(suiteDirectory, "Release"), releaseFileCleartext, UTF8);
-        Console.WriteLine($"Wrote unsigned Release meta-index of package indices for Raspbian {debianRelease.getCodename()}");
+        await File.WriteAllTextAsync(Path.Combine(suiteDirectory, "Release"), releaseFileCleartext, Encoding.UTF8);
+        Console.WriteLine($"Wrote unsigned Release meta-index of package indices for Debian {debianRelease.getCodename()}");
 
         // gpg --sign --detach-sign --armor
-        await File.WriteAllTextAsync(Path.Combine(suiteDirectory, "Release.gpg"), await pgp.DetachedSignAsync(releaseFileCleartext), UTF8);
-        Console.WriteLine($"Wrote Release.gpg signature of Release meta-index of package indices for Raspbian {debianRelease.getCodename()}");
+        await File.WriteAllTextAsync(Path.Combine(suiteDirectory, "Release.gpg"), await pgp.DetachedSignAsync(releaseFileCleartext), Encoding.UTF8);
+        Console.WriteLine($"Wrote Release.gpg signature of Release meta-index of package indices for Debian {debianRelease.getCodename()}");
 
         // gpg --sign --clearsign --armor
-        await File.WriteAllTextAsync(Path.Combine(suiteDirectory, "InRelease"), await pgp.ClearSignAsync(releaseFileCleartext), UTF8);
-        Console.WriteLine($"Wrote signed InRelease meta-index of package indices for Raspbian {debianRelease.getCodename()}");
+        await File.WriteAllTextAsync(Path.Combine(suiteDirectory, "InRelease"), await pgp.ClearSignAsync(releaseFileCleartext), Encoding.UTF8);
+        Console.WriteLine($"Wrote signed InRelease meta-index of package indices for Debian {debianRelease.getCodename()}");
 
-        Console.WriteLine($"Generated Release index file for Debian {debianRelease}");
+        Console.WriteLine($"Generated Release index file for Debian {debianRelease.getCodename()}");
     }
 
     private async Task<IEnumerable<string>> generatePackageIndexFiles(DebianRelease debianRelease, CpuArchitecture cpuArchitecture, IEnumerable<DebianPackage> debPackages) {
-        Console.WriteLine($"Generating Packages index file for Debian {debianRelease} {cpuArchitecture}");
+        // Console.WriteLine($"Generating Packages index file for Debian {debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
         string packageFileContents = string.Join("\n\n", await Task.WhenAll(debPackages.Select(async package => {
             await using FileStream debPackageStream = File.OpenRead(package.absoluteFilename);
 
@@ -318,22 +339,22 @@ internal class Program {
         })));
 
         string packageFileRelativeToSuite = Path.Combine("main", $"binary-{cpuArchitecture.toDebian()}", "Packages");
-        string packageFileAbsolutePath    = Path.Combine(repositoryBaseDir, "dists", debianRelease.getCodename(), packageFileRelativeToSuite);
+        string packageFileAbsolutePath    = Path.Combine(stagingDir, "dists", debianRelease.getCodename(), packageFileRelativeToSuite);
         Directory.CreateDirectory(Path.GetDirectoryName(packageFileAbsolutePath)!);
-        await using StreamWriter packageIndexStreamWriter = new(packageFileAbsolutePath, false, UTF8);
+        await using StreamWriter packageIndexStreamWriter = new(packageFileAbsolutePath, false, Encoding.UTF8);
         await packageIndexStreamWriter.WriteAsync(packageFileContents);
-        Console.WriteLine($"Wrote uncompressed Packages index for Raspbian {debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
+        Console.WriteLine($"Wrote uncompressed Packages index for Debian {debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
 
         string compressedPackageFileRelativeToSuite = Path.ChangeExtension(packageFileRelativeToSuite, "gz");
         string compressedPackageFileAbsolutePath    = Path.ChangeExtension(packageFileAbsolutePath, "gz");
 
         await using FileStream   compressedPackageIndexFileStream   = File.Create(compressedPackageFileAbsolutePath);
-        await using GZipStream   gzipStream                         = new(compressedPackageIndexFileStream, GZ_COMPRESSION_LEVEL);
-        await using StreamWriter compressedPackageIndexStreamWriter = new(gzipStream, UTF8);
+        await using GZipStream   gzipStream                         = new(compressedPackageIndexFileStream, PACKAGE_INDEX_COMPRESSION);
+        await using StreamWriter compressedPackageIndexStreamWriter = new(gzipStream, Encoding.UTF8);
         await compressedPackageIndexStreamWriter.WriteAsync(packageFileContents);
-        Console.WriteLine($"Wrote compressed Packages.gz index for Raspbian {debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
+        Console.WriteLine($"Wrote compressed Packages.gz index for Debian {debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
 
-        Console.WriteLine($"Generated Packages index file for Debian {debianRelease} {cpuArchitecture}");
+        Console.WriteLine($"Generated Packages index file for Debian {debianRelease.getCodename()} {cpuArchitecture.toDebian()}");
         return [packageFileRelativeToSuite, compressedPackageFileRelativeToSuite];
     }
 
@@ -344,7 +365,8 @@ internal class Program {
     };
 
     private async Task<DebianPackage> generateDebPackage(DotnetPackageRequest packageToGenerate) {
-        Console.WriteLine($"Generating package for Debian {packageToGenerate.debian} {packageToGenerate.architecture} {packageToGenerate.packageType} {packageToGenerate.dotnetRelease.minorVersion}");
+        // Console.WriteLine(
+        // $"Generating package for Debian {packageToGenerate.debian.getCodename()} {packageToGenerate.architecture.toDebian()} {packageToGenerate.packageType} {packageToGenerate.dotnetRelease.minorVersion}");
         string   packageName                 = packageToGenerate.packageType.getPackageName();
         bool     isCliPackage                = packageToGenerate.packageType == DotnetPackageType.CLI;
         string   packageNameWithMinorVersion = isCliPackage ? packageName : $"{packageName}-{packageToGenerate.dotnetRelease.minorVersion}";
@@ -354,7 +376,7 @@ internal class Program {
             "./usr/bin"
         };
 
-        await using DebPackageBuilder debPackageBuilder = new() { gzipCompressionLevel = TAR_GZ_COMPRESSION_LEVEL };
+        await using DebPackageBuilder debPackageBuilder = new() { gzipCompressionLevel = DEB_TGZ_COMPRESSION };
 
         await using (FileStream sdkArchiveStream = File.OpenRead(packageToGenerate.sdkArchivePath))
         using (IReader downloadReader = ReaderFactory.Open(sdkArchiveStream))
@@ -401,9 +423,9 @@ internal class Program {
 
                 if (fileMode != null) {
                     IList<string> directoriesToAdd = [];
-                    for (string destinationDirectory = dos2UnixPathSeparators(Path.GetDirectoryName(destinationPath)!);
+                    for (string destinationDirectory = Path2.dos2UnixSlashes(Path.GetDirectoryName(destinationPath)!);
                          existingDirectories.Add(destinationDirectory);
-                         destinationDirectory = dos2UnixPathSeparators(Path.GetDirectoryName(destinationDirectory)!)) {
+                         destinationDirectory = Path2.dos2UnixSlashes(Path.GetDirectoryName(destinationDirectory)!)) {
 
                         directoriesToAdd.Add(destinationDirectory);
                     }
@@ -418,7 +440,7 @@ internal class Program {
                     dataArchiveWriter.WriteFile(destinationPath, downloadedInnerFileStream, lastModified, entry.Size, fileMode);
                     installedSize += entry.Size;
 
-                    if (destinationPath == "./usr/share/dotnet/dotnet") {
+                    if (sourcePath == "dotnet") {
                         // can't figure out how to make absolute symlinks in deb packages, so making it relative
                         dataArchiveWriter.WriteSymLink("./usr/bin/dotnet", "../share/dotnet/dotnet", lastModified);
                         installedSize += 1024;
@@ -458,8 +480,8 @@ internal class Program {
             await debPackageBuilder.build(debStream);
         }
 
-        Console.WriteLine($"Wrote package {debFileAbsolutePath}");
-        Console.WriteLine($"Generated package for Debian {packageToGenerate.debian} {packageToGenerate.architecture} {packageToGenerate.packageType} {packageToGenerate.dotnetRelease.minorVersion}");
+        Console.WriteLine(
+            $"Generated package for Debian {packageToGenerate.debian.getCodename()} {packageToGenerate.architecture.toDebian()} {packageToGenerate.packageType.getFriendlyName()} {packageToGenerate.dotnetRelease.minorVersion} ({debFileAbsolutePath})");
         return new DebianPackage(packageNameWithMinorVersion, packageToGenerate.dotnetRelease.patchVersion, packageToGenerate.debian, packageToGenerate.architecture, packageToGenerate.packageType,
             debPackageBuilder.control, debFileAbsolutePath);
     }
@@ -484,15 +506,15 @@ internal class Program {
              Description: {getPackageDescription(packageToGenerate.packageType, packageToGenerate.concreteMinorVersion, true, packageToGenerate.mustBeSupportedLongTerm)}
              """;
 
-        string debFileAbsolutePath = Path.Combine(packageDir, packageToGenerate.debian.getCodename(),
-            $"{packageName}-{packageVersion}.deb");
+        string debFileAbsolutePath = Path.Combine(packageDir, packageToGenerate.debian.getCodename(), $"{packageName}-{packageVersion}.deb");
         Directory.CreateDirectory(Path.GetDirectoryName(debFileAbsolutePath)!);
         await using (Stream debStream = File.Create(debFileAbsolutePath)) {
             await debPackageBuilder.build(debStream);
         }
 
-        Console.WriteLine($"Wrote package {debFileAbsolutePath}");
-        Console.WriteLine($"Generated package for Debian {packageToGenerate.debian} all {packageToGenerate.packageType} {packageToGenerate.concreteMinorVersion}");
+        // Console.WriteLine($"Wrote package {debFileAbsolutePath}");
+        Console.WriteLine(
+            $"Generated package for Debian {packageToGenerate.debian.getCodename()} all {packageToGenerate.packageType.getFriendlyName()} {packageToGenerate.concreteMinorVersion} ({debFileAbsolutePath})");
         return new DebianPackage(packageName, packageVersion, packageToGenerate.debian, null, packageToGenerate.packageType, debPackageBuilder.control, debFileAbsolutePath);
     }
 
@@ -569,8 +591,8 @@ internal class Program {
     }).Trim().ReplaceLineEndings("\n").Replace("\n\n", "\n.\n").Replace("\n", "\n ");
 
     /**
-     * Microsoft documentation:    https://github.com/dotnet/core/blob/main/release-notes/8.0/linux-packages.md#debian-11-bullseye
-     *                             https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies
+     * Microsoft documentation:    https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies
+     *                             https://github.com/dotnet/core/blob/main/release-notes/8.0/linux-packages.md#debian-11-bullseye
      * Microsoft container images: https://github.com/dotnet/dotnet-docker/blob/main/src/runtime-deps/8.0/bookworm-slim/arm32v7/Dockerfile
      * Ubuntu packages:            https://packages.ubuntu.com/mantic/dotnet-runtime-8.0
      */
@@ -590,8 +612,6 @@ internal class Program {
         DotnetPackageType.ASPNETCORE_RUNTIME => [$"{DotnetPackageType.RUNTIME.getPackageName()}-{dotnetRelease.minorVersion} (= {dotnetRelease.patchVersion}{DEBIAN_PACKAGE_VERSION_SUFFIX})"],
         DotnetPackageType.SDK => [$"{DotnetPackageType.ASPNETCORE_RUNTIME.getPackageName()}-{dotnetRelease.minorVersion} (= {dotnetRelease.patchVersion}{DEBIAN_PACKAGE_VERSION_SUFFIX})"]
     };
-
-    private static string dos2UnixPathSeparators(string dosPath) => dosPath.Replace('\\', '/');
 
     private static bool isStableVersion(JsonNode? release) {
         string patchVersionNumber = release!["release-version"]!.GetValue<string>();

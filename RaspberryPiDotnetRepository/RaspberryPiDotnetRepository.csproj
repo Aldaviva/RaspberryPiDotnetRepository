@@ -15,7 +15,12 @@
         <LangVersion>latest</LangVersion>
         <RollForward>major</RollForward>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <ApplicationIcon>rpi-dotnet.ico</ApplicationIcon>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="rpi-dotnet.ico" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Bom.Squad" Version="0.2.1" />
