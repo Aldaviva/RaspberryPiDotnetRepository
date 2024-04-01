@@ -32,8 +32,8 @@ This repository comprises unofficial packages that install **official .NET Linux
 
 You only have to do this step once per Raspberry Pi.
 ```sh
-sudo wget -q https://west.aldaviva.com/raspbian/aldaviva.gpg.key -O /etc/apt/trusted.gpg.d/aldaviva.gpg
-echo "deb https://west.aldaviva.com/raspbian/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
+sudo wget -q https://raspbian.aldaviva.com/aldaviva.gpg.key -O /etc/apt/trusted.gpg.d/aldaviva.gpg
+echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
 sudo apt update
 ```
 
