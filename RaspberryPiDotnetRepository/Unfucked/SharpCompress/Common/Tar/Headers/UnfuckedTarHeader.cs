@@ -11,14 +11,11 @@ namespace RaspberryPiDotnetRepository.Unfucked.SharpCompress.Common.Tar.Headers;
 #nullable disable
 
 /// <summary>
-/// Like <see cref="SharpCompress.Common.Tar.Headers.TarHeader"/> except you're not prevented from setting the file mode, owner, and group.
-/// For changes from upstream file, see TODO comments
+/// Like <c>SharpCompress.Common.Tar.Headers.TarHeader</c> except you're not prevented from setting the file mode, owner, and group.
 /// </summary>
-public class UnfuckedTarHeader {
+public class UnfuckedTarHeader(ArchiveEncoding archiveEncoding) {
 
     internal static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-    public UnfuckedTarHeader(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
 
     internal string Name { get; set; }
     internal string LinkName { get; set; }
@@ -30,16 +27,16 @@ public class UnfuckedTarHeader {
     internal DateTime LastModifiedTime { get; set; }
     public EntryType EntryType { get; set; }
     internal Stream PackedStream { get; set; }
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal ArchiveEncoding ArchiveEncoding { get; } = archiveEncoding;
 
     internal const int BLOCK_SIZE = 512;
 
-    internal void Write(Stream output) {
+    protected internal virtual void Write(Stream output) {
         byte[] buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(Mode != -1 ? Mode : 511, buffer, 100, 8); // file mode TODO fixed by Ben: not hardcoded to 0o777
-        WriteOctalBytes(UserId, buffer, 108, 8);                  // owner ID TODO fixed by Ben: not hardcoded to 0
-        WriteOctalBytes(GroupId, buffer, 116, 8);                 // group ID TODO fixed by Ben: not hardcoded to 0
+        WriteOctalBytes(Mode != -1 ? Mode : 511, buffer, 100, 8); // file mode fixed by Ben: not hardcoded to 0o777
+        WriteOctalBytes(UserId, buffer, 108, 8);                  // owner ID fixed by Ben: not hardcoded to 0
+        WriteOctalBytes(GroupId, buffer, 116, 8);                 // group ID fixed by Ben: not hardcoded to 0
 
         int nameByteCount = ArchiveEncoding.GetEncoding().GetByteCount(Name);
         if (nameByteCount > 100) {
@@ -61,7 +58,7 @@ public class UnfuckedTarHeader {
                 bytes12.CopyTo(buffer.AsSpan(124));
             }
 
-            // TODO added by Ben: serialize symlinks
+            // added by Ben: serialize symlinks
             if (EntryType == EntryType.SymLink) {
                 WriteStringBytes(ArchiveEncoding.Encode(LinkName), buffer.AsSpan(157, 100), 100);
             }
@@ -109,7 +106,7 @@ public class UnfuckedTarHeader {
             return false;
         }
 
-        // for symlinks, additionally read the linkname
+        // for symlinks, additionally read the link name
         if (ReadEntryType(buffer) == EntryType.SymLink) {
             LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
         }
@@ -167,7 +164,7 @@ public class UnfuckedTarHeader {
 
     private static EntryType ReadEntryType(byte[] buffer) => (EntryType) buffer[156];
 
-    private long ReadSize(byte[] buffer) {
+    private static long ReadSize(byte[] buffer) {
         if ((buffer[124] & 0x80) == 0x80) // if size in binary
         {
             return BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(0x80));

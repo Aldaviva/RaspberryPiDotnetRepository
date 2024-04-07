@@ -12,7 +12,7 @@ namespace RaspberryPiDotnetRepository.Unfucked.SharpCompress.Writers.Tar;
 // ReSharper disable InconsistentNaming - extension methods
 public class UnfuckedTarWriter(Stream destination, TarWriterOptions options): TarWriter(destination, options) {
 
-    public void WriteFile(string filename, Stream source, DateTime? modificationTime, long? size, int? fileMode, int ownerId = 0, int groupId = 0) {
+    public virtual void WriteFile(string filename, Stream source, DateTime? modificationTime, long? size, int? fileMode, int ownerId = 0, int groupId = 0) {
         if (!source.CanSeek && size is null) {
             throw new ArgumentException("Seekable stream is required if no size is given.");
         }
@@ -23,11 +23,11 @@ public class UnfuckedTarWriter(Stream destination, TarWriterOptions options): Ta
             LastModifiedTime = modificationTime ?? UnfuckedTarHeader.EPOCH,
             Name             = NormalizeFilename(filename),
             Size             = realSize,
-            UserId           = ownerId, //TODO added by Ben: set newly-public properties
-            GroupId          = groupId  //TODO added by Ben: set newly-public properties
+            UserId           = ownerId, //added by Ben: set newly-public properties
+            GroupId          = groupId  //added by Ben: set newly-public properties
         };
         if (fileMode.HasValue) {
-            //TODO added by Ben: set newly-public properties
+            //added by Ben: set newly-public properties
             header.Mode = fileMode.Value;
         }
 
@@ -37,7 +37,7 @@ public class UnfuckedTarWriter(Stream destination, TarWriterOptions options): Ta
         PadTo512(size.Value);
     }
 
-    public void WriteDirectory(string directoryName, DateTime? modificationTime, int? fileMode, int ownerId = 0, int groupId = 0) {
+    public virtual void WriteDirectory(string directoryName, DateTime? modificationTime, int? fileMode, int ownerId = 0, int groupId = 0) {
         UnfuckedTarHeader header = new(WriterOptions.ArchiveEncoding) {
             LastModifiedTime = modificationTime ?? UnfuckedTarHeader.EPOCH,
             Name             = NormalizeFilename(directoryName),
@@ -52,7 +52,7 @@ public class UnfuckedTarWriter(Stream destination, TarWriterOptions options): Ta
         header.Write(OutputStream);
     }
 
-    public void WriteSymLink(string source, string destination, DateTime? modificationTime, int ownerId = 0, int groupId = 0) {
+    public virtual void WriteSymLink(string source, string destination, DateTime? modificationTime, int ownerId = 0, int groupId = 0) {
         UnfuckedTarHeader header = new(WriterOptions.ArchiveEncoding) {
             LastModifiedTime = modificationTime ?? UnfuckedTarHeader.EPOCH,
             Name             = NormalizeFilename(source),
@@ -72,7 +72,7 @@ public class UnfuckedTarWriter(Stream destination, TarWriterOptions options): Ta
         OutputStream.Write(stackalloc byte[zeros]);
     }
 
-    protected string NormalizeFilename(string filename) {
+    protected static string NormalizeFilename(string filename) {
         filename = filename.Replace('\\', '/');
 
         int pos = filename.IndexOf(':');

@@ -13,6 +13,8 @@ namespace RaspberryPiDotnetRepository;
 
 public class DebPackageBuilder: IAsyncDisposable, IDisposable {
 
+    public const string CONTROL_ARCHIVE_FILENAME = "control.tar.gz";
+
     public CompressionLevel gzipCompressionLevel { get; set; } = CompressionLevel.Default;
     public UnfuckedTarWriter data { get; }
 
@@ -44,13 +46,13 @@ public class DebPackageBuilder: IAsyncDisposable, IDisposable {
 
         controlArchiveStream.Position = 0;
 
-        ArArchiveFile debArchive = new();
+        ArArchiveFile debArchive = new() { Kind = ArArchiveKind.Common };
         debArchive.AddFile(new ArBinaryFile {
             Name   = "debian-binary",
             Stream = "2.0\n".ToStream()
         });
         debArchive.AddFile(new ArBinaryFile {
-            Name   = "control.tar.gz",
+            Name   = CONTROL_ARCHIVE_FILENAME,
             Stream = controlArchiveStream
         });
         debArchive.AddFile(new ArBinaryFile {

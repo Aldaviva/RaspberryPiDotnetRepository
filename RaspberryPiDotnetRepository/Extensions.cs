@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Azure;
+using System.Text;
 
 // ReSharper disable InconsistentNaming - extension methods
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
@@ -34,13 +35,23 @@ public static class Extensions {
         }
     }
 
-    public static TValue getOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue newValue) {
+    public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue newValue) {
         if (dictionary.TryGetValue(key, out TValue? oldValue)) {
             return oldValue;
         } else {
             dictionary.Add(key, newValue);
             return newValue;
         }
+    }
+
+    public static T? AsNullable<T>(this NullableResponse<T> response) where T: class {
+        return response.HasValue ? response.Value : null;
+    }
+
+    public static ISet<T> Minus<T>(this IEnumerable<T> a, IEnumerable<T> b) {
+        var difference = new HashSet<T>(a);
+        difference.ExceptWith(b);
+        return difference;
     }
 
 }
