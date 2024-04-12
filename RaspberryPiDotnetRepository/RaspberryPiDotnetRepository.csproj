@@ -8,7 +8,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <NoWarn>8524</NoWarn>
-        <Version>0.1.0</Version>
+        <Version>0.1.1</Version>
         <Authors>Ben Hutchison</Authors>
         <Copyright>© 2024 $(Authors)</Copyright>
         <Company>$(Authors)</Company>
@@ -23,12 +23,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" Version="1.10.4" />
+        <PackageReference Include="Azure.Identity" Version="1.11.0" />
         <PackageReference Include="Azure.ResourceManager.Cdn" Version="1.2.0" />
         <PackageReference Include="Bom.Squad" Version="0.2.1" />
         <PackageReference Include="DataSizeUnits" Version="2.1.0" />
         <PackageReference Include="LibObjectFile" Version="0.6.0" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.1" />
+        <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="8.0.4" ExcludeAssets="all" PrivateAssets="all" />
         <PackageReference Include="PgpCore" Version="6.3.1" />
         <PackageReference Include="SharpCompress" Version="0.36.0" />
     </ItemGroup>
