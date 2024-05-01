@@ -72,11 +72,11 @@
       },
       "SharpCompress": {
         "type": "Direct",
-        "requested": "[0.36.0, )",
-        "resolved": "0.36.0",
-        "contentHash": "48am//T6Ou+GmyPmBaxaFN1ym0VNidRcBeANr9+OYTzpKRz8QMGzAkHVkCV30lFQ/gnWqGr50AuebahpG1C6xA==",
+        "requested": "[0.37.2, )",
+        "resolved": "0.37.2",
+        "contentHash": "cFBpTct57aubLQXkdqMmgP8GGTFRh7fnRWP53lgE/EYUpDZJ27SSvTkdjB4OYQRZ20SJFpzczUquKLbt/9xkhw==",
         "dependencies": {
-          "ZstdSharp.Port": "0.7.4"
+          "ZstdSharp.Port": "0.8.0"
         }
       },
       "Azure.Core": {
@@ -204,8 +204,8 @@
       },
       "ZstdSharp.Port": {
         "type": "Transitive",
-        "resolved": "0.7.4",
-        "contentHash": "ziptnotpUJr51afwXJQ5Wc03dvDiZAdmxS08s1g7SHn/VzbyZUXdH6yORk/zaNjzUOEE6pVZ0Nqztab0rYROgQ=="
+        "resolved": "0.8.0",
+        "contentHash": "Z62eNBIu8E8YtbqlMy57tK3dV1+m2b9NhPeaYovB5exmLKvrGCqOhJTzrEUH5VyUWU6vwX3c1XHJGhW5HVs8dA=="
       }
     },
     "net8.0/win-x64": {

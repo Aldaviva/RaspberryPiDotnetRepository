@@ -17,6 +17,10 @@ This repository comprises unofficial packages that install **official .NET Linux
         - [Latest version](#latest-version)
         - [Latest LTS version](#latest-lts-version)
         - [Specific minor version](#specific-minor-version)
+    1. [Update installed packages](#update-installed-packages)
+        - [Patch versions](#patch-versions)
+        - [Major and minor versions](#major-and-minor-versions)
+        - [Automatic updates](#automatic-updates)
 - [Compatible versions](#compatible-versions)
     1. [Operating systems and .NET releases](#operating-systems-and-net-releases)
     1. [CPU architectures](#cpu-architectures)
@@ -60,9 +64,9 @@ First, to install a package, choose the package name you want. The name is the c
 
 <tr>
 <td valign="top"><ul>
-<li><code>dotnet-runtime</code></li>
-<li><code>aspnetcore-runtime</code></li>
-<li><code>dotnet-sdk</code></li>
+<li><code>dotnet-runtime-</code></li>
+<li><code>aspnetcore-runtime-</code></li>
+<li><code>dotnet-sdk-</code></li>
 </ul></td>
 <td valign="top"><ul>
 <li><code>latest</code></li>
@@ -83,12 +87,15 @@ There are three package type prefixes to choose from:
 There are also three version specification suffixes to choose from, to control which versions the package should install and allow upgrades to.
 - [`latest`](#latest-version) installs the LTS or STS release with the greatest version number
 - [`latest-lts`](#latest-lts-version) installs the LTS release with the greatest version number
-- [Specific minor versions](#specific-minor-version) install and stick with one release permanently, like `8.0`
+- [Specific minor versions](#specific-minor-version) install and stick with one release permanently, like 8.0.*, only installing patch updates
 
 > [!NOTE]
 > [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released every other November with even major version numbers, and come with 3 years of support. *Standard Term Support (STS)* versions like 7.0 are released in the alternate Novembers with odd version numbers and 1.5 years of support.
 
 Then, once you know which package you want, you can install it with `apt install <packagename>`, for example, `sudo apt install dotnet-runtime-latest`.
+
+> [!TIP]
+> Multiple .NET packages can be safely installed at the same time, even from different versions. For example, you can have both .NET 6 Runtime and .NET 8 Runtime installed side-by-side without causing a conflict. At run time, the .NET host framework resolver will choose the correct .NET runtime with which to launch each app based on Roll Forward settings and the app's target framework.
 
 #### Latest version
 This will install the latest .NET version, regardless of whether it is an LTS or STS release. It will upgrade to greater major and minor versions, including new STS versions. It will never install previews or release candidates.
@@ -129,6 +136,27 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 
 > [!NOTE]
 > The SDK package versions are numbered like the runtime versions they are released in lockstep with, not with the \*.\*.100-based SDK numbering. For example, as of 2024-03-25, the latest .NET 8 SDK package is versioned `8.0.3-0`, not the 8.0.203 version number reported by the SDK once installed.
+
+### Update installed packages
+
+#### Patch versions
+
+When a new .NET patch version is released, you can update the installed packages to the new version.
+
+```sh
+sudo apt update
+sudo apt upgrade
+```
+
+#### Major and minor versions
+
+If you want to update to a new major or minor version, you will need to have installed one of the [`latest`](#latest-version) packages, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt update`.
+
+Alternatively, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`.
+
+#### Automatic updates
+
+To automatically install package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages).
 
 ## Compatible versions
 

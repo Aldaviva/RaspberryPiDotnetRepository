@@ -442,7 +442,7 @@ internal class Program {
         using (UnfuckedTarWriter dataArchiveWriter = debPackageBuilder.data) {
             while (downloadReader.MoveToNextEntry()) {
                 IEntry entry = downloadReader.Entry;
-                if (entry.IsDirectory) continue;
+                if (entry.IsDirectory || entry.Key == null) continue;
 
                 string   sourcePath      = entry.Key[2..]; // remove leading "./"
                 string   destinationPath = $"./usr/share/dotnet/{sourcePath}";
