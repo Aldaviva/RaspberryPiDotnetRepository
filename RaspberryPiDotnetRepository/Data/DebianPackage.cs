@@ -41,7 +41,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// Like <c>packages/dotnet-runtime-8.0.5-0-armhf.deb</c> or <c>packages/aspnetcore-runtime-8.0-0-latest-lts.deb</c>
     /// </summary>
     public string filePathRelativeToRepo => Paths.Dos2UnixSlashes(Path.Combine("packages",
-        string.Join(null, runtime.getPackageName(), "-", isMetaPackage ? minorVersion : patchVersion, versionSuffix, architecture == null ? "" : $"-{architecture.Value.toDebian()}",
+        string.Join(null, runtime.getPackageName(), "-", version.ToString(isMetaPackage ? 2 : 3), versionSuffix, architecture == null ? "" : $"-{architecture.Value.toDebian()}",
             isMetaPackage ? "-latest" : "", isMetaPackageSupportedLongTerm ? "-lts" : "", ".deb")));
 
     /// <summary>
@@ -62,12 +62,12 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// <summary>
     /// <c>true</c> if this is a <c>-latest</c> or <c>-latest-lts</c> meta-dependency package, or <c>false</c> if it's a concrete CLI, runtime, or SDK implementation
     /// </summary>
-    public bool isMetaPackage { get; set; }
+    public bool isMetaPackage { get; init; }
 
     /// <summary>
     /// <c>true</c> if this is a <c>-latest-lts</c> meta-dependency package, or <c>false</c> if it's a <c>-latest</c> meta-dependency package or a concrete CLI, runtime, or SDK implementation
     /// </summary>
-    public bool isMetaPackageSupportedLongTerm { get; set; }
+    public bool isMetaPackageSupportedLongTerm { get; init; }
 
     /// <summary>
     /// The version of this package, from upstream. SDK packages will use a patch version greater than or equal to 100.
@@ -106,6 +106,11 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
 
     /// <summary>
     /// <para>Packages that this package depends on. They are mandatory to install when this package is installed, and package managers like apt will install them automatically.</para>
+    /// <para> </para>
+    /// <para>Microsoft documentation:    https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies</para>
+    /// <para>Microsoft container images: https://github.com/dotnet/dotnet-docker/blob/main/src/runtime-deps/8.0/bookworm-slim/arm32v7/Dockerfile</para>
+    /// <para>Ubuntu packages:            https://packages.ubuntu.com/mantic/dotnet-runtime-8.0</para>
+    /// <para> </para>
     /// <para>This uses an nice undocumented behavior of dpkg or apt where unknown package dependencies are ignored, so a list of alternatives can contain names that apply to other major Debian versions, like all the renamed libicu packages.</para>
     /// <para>This allows us to create a package that is agnostic to the Debian major version, which ends up saving about 2GB in this repository.</para>
     /// <para>If this weren't the case, we would need to make duplicate packages for each major Debian version with slightly different libicu dependencies to keep dpkg from failing on unknown dependencies. Luckily, this is not the case with dpkg 1.22.6 or apt 2.6.1.</para>
@@ -120,7 +125,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
             new DependencyAlternatives(new DependencyPackage("libgcc-s1"), new DependencyPackage("libgcc1")),
             new DependencyPackage("libgssapi-krb5-2"),
             new DependencyAlternatives(Enum.GetValues<DebianRelease>().OrderDescending().Select(release => new DependencyPackage(release.getLibIcuDependencyName()))),
-            new DependencyAlternatives(new DependencyPackage("libssl3"), new DependencyPackage("libssl1.1")),
+            new DependencyAlternatives(new DependencyPackage("libssl3"), new DependencyPackage("libssl1.1")), // Trixie and Noble Numbat use libssl3t64
             new DependencyPackage("libstdc++6"),
             new DependencyPackage("tzdata"),
             new DependencyPackage("zlib1g")
@@ -233,7 +238,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
 
     public Control getControl(UpstreamReleasesSecondaryInfo upstreamInfo) => new(
         name: nameWithMinorVersion,
-        version: $"{patchVersion}{versionSuffix}",
+        version: $"{version.ToString(isMetaPackage ? 2 : 3)}{versionSuffix}",
         maintainer: maintainer,
         installedSize: installationSize,
         descriptionSummary: descriptionSummary,

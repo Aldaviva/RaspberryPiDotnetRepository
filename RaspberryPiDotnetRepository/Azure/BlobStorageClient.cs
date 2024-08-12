@@ -3,8 +3,6 @@ using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
-using System.Globalization;
-using ThrottleDebounce;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 
 namespace RaspberryPiDotnetRepository.Azure;
@@ -22,15 +20,14 @@ public interface BlobStorageClient {
 
 }
 
-public class BlobStorageClientImpl(BlobContainerClient container, IOptions<Options> options, ILogger<BlobStorageClientImpl> logger): BlobStorageClient, IDisposable {
+public class BlobStorageClientImpl(BlobContainerClient container, IOptions<Options> options, ILogger<BlobStorageClientImpl> logger, ILogger<UploadProgressHandler> uploadProgressLogger)
+    : BlobStorageClient, IDisposable {
 
     private static readonly TimeSpan CACHE_DURATION = TimeSpan.FromDays(90);
 
     private readonly SemaphoreSlim uploadSemaphore = new(1);
 
-    private BlobClient openFile(string blobFilePath) {
-        return container.GetBlobClient(blobFilePath);
-    }
+    private BlobClient openFile(string blobFilePath) => container.GetBlobClient(blobFilePath);
 
     public async Task<BlobDownloadResult?> readFile(string blobFilePath, CancellationToken ct = default) {
         logger.LogDebug("Downloading {file}", blobFilePath);
@@ -55,7 +52,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, IOptions<Optio
         await uploadSemaphore.WaitAsync(ct);
         try {
             logger.LogInformation("Uploading to {dest}", destinationBlobFilePath);
-            using UploadProgressHandler uploadProgressHandler = new(destinationBlobFilePath, source.Length, logger);
+            using UploadProgressHandler uploadProgressHandler = new(destinationBlobFilePath, source.Length, uploadProgressLogger);
             return (await openFile(destinationBlobFilePath).UploadAsync(source, new BlobHttpHeaders {
                     ContentType  = contentType,
                     CacheControl = $"public, max-age={CACHE_DURATION.TotalSeconds:F0}"
@@ -84,43 +81,6 @@ public class BlobStorageClientImpl(BlobContainerClient container, IOptions<Optio
     public void Dispose() {
         uploadSemaphore.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private class UploadProgressHandler: IProgress<long>, IDisposable {
-
-        private static readonly string ZERO_PERCENT        = 0.0.ToString("P0", CultureInfo.CurrentCulture);
-        private static readonly string ONE_HUNDRED_PERCENT = 1.0.ToString("P0", CultureInfo.CurrentCulture);
-
-        private readonly string                         destinationPath;
-        private readonly long                           totalSize;
-        private readonly ILogger<BlobStorageClientImpl> logger;
-        private readonly RateLimitedAction<string>      logProgressThrottled;
-
-        private string? previousPercentage;
-
-        public UploadProgressHandler(string destinationPath, long totalSize, ILogger<BlobStorageClientImpl> logger) {
-            this.destinationPath = destinationPath;
-            this.totalSize       = totalSize;
-            this.logger          = logger;
-            logProgressThrottled = Throttler.Throttle((string percentage) => logProgress(percentage), TimeSpan.FromSeconds(3));
-        }
-
-        public void Report(long uploadedBytes) {
-            string percentage = ((double) uploadedBytes / totalSize).ToString("P0", CultureInfo.CurrentCulture);
-            if (percentage != ZERO_PERCENT && percentage != ONE_HUNDRED_PERCENT && percentage != previousPercentage) {
-                logProgressThrottled.Invoke(percentage);
-            }
-            previousPercentage = percentage;
-        }
-
-        private void logProgress(string percentage) {
-            logger.LogDebug("Uploading to {dest}: {percentage,3}", destinationPath, percentage);
-        }
-
-        public void Dispose() {
-            logProgressThrottled.Dispose();
-        }
-
     }
 
 }

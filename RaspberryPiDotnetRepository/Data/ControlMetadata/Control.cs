@@ -49,6 +49,12 @@ public record Control(
         StringBuilder output = new();
         foreach ((string key, string value) in metadata.Compact().Where(pair => !string.IsNullOrWhiteSpace(pair.Value))) {
             output.Append(key).Append(':').Append(' ');
+            // Subsequent lines in each of these strings will be prefixed with a leading space in the package control file because that indentation is how multi-line descriptions work.
+            //
+            // Except for the summary first line of every description string, each line that starts with "." will be replaced to start with U+2024 ONE DOT LEADER ("․") instead of U+002E FULL STOP (".", a normal period).
+            // This is because lines that start with periods have special meaning in Debian packages. Specifically, a period on a line of its own is interpreted as a blank line to differentiate it from a new package record, but a line that starts with a period and has more text after it (like .NET) is illegal and should not be used. Aptitude renders such lines as blank lines.
+            //
+            // https://www.debian.org/doc/debian-policy/ch-controlfields.html#description
             output.Append(value.Trim().ReplaceLineEndings("\n").Replace("\n.", "\n\u2024").Replace("\n\n", "\n.\n").Replace("\n", "\n "));
             output.Append('\n');
         }

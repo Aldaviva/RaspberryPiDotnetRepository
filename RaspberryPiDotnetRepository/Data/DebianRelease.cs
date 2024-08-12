@@ -47,6 +47,7 @@ public static class DebianVersionsMethods {
         DebianRelease.BULLSEYE => "67",
         DebianRelease.BOOKWORM => "72"
         // Debian 13 Trixie seems to use libicu72 as of 2024-06-01: https://packages.debian.org/search?suite=trixie&searchon=names&keywords=libicu
+        // Ubuntu 24.04 Noble Numbat uses libicu74
     };
 
 }

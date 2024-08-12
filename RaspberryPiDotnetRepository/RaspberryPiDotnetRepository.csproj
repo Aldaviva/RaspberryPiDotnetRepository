@@ -47,16 +47,16 @@
             <HintPath>..\..\DataSizeUnits\DataSizeUnits\bin\Debug\net5.0\DataSizeUnits.dll</HintPath>
         </Reference>
         <Reference Include="Unfucked">
-          <HintPath>..\..\Unfucked\Unfucked\bin\Debug\net8.0\Unfucked.dll</HintPath>
+            <HintPath>..\..\Unfucked\Unfucked\bin\Debug\net8.0\Unfucked.dll</HintPath>
         </Reference>
         <Reference Include="Unfucked.Compression">
-          <HintPath>..\..\Unfucked\Unfucked.Compression\bin\Debug\netstandard2.0\Unfucked.Compression.dll</HintPath>
+            <HintPath>..\..\Unfucked\Unfucked.Compression\bin\Debug\netstandard2.0\Unfucked.Compression.dll</HintPath>
         </Reference>
         <Reference Include="Unfucked.DependencyInjection">
-          <HintPath>..\..\Unfucked\Unfucked.DependencyInjection\bin\Debug\net6.0\Unfucked.DependencyInjection.dll</HintPath>
+            <HintPath>..\..\Unfucked\Unfucked.DependencyInjection\bin\Debug\net6.0\Unfucked.DependencyInjection.dll</HintPath>
         </Reference>
         <Reference Include="Unfucked.PGP">
-          <HintPath>..\..\Unfucked\Unfucked.PGP\bin\Debug\netstandard2.0\Unfucked.PGP.dll</HintPath>
+            <HintPath>..\..\Unfucked\Unfucked.PGP\bin\Debug\netstandard2.0\Unfucked.PGP.dll</HintPath>
         </Reference>
     </ItemGroup>
 

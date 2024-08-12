@@ -1,4 +1,5 @@
-﻿using Azure.Identity;
+﻿using Azure.Core;
+using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Cdn;
 using Azure.Storage.Blobs;
@@ -44,7 +45,8 @@ appConfig.Services
     .AddSingleton(new HttpClient(new SocketsHttpHandler { MaxConnectionsPerServer = 16 }) { Timeout = TimeSpan.FromSeconds(30) })
 
     // Azure Blob Storage
-    .AddSingleton(provider => new BlobServiceClient(provider.options().storageConnection, new BlobClientOptions { Retry = { MaxRetries = 0, NetworkTimeout = TimeSpan.FromMinutes(30) } }))
+    .AddSingleton(provider => new BlobServiceClient(provider.options().storageConnection,
+        new BlobClientOptions { Retry = { MaxRetries = 2, Delay = TimeSpan.FromSeconds(2), Mode = RetryMode.Fixed, NetworkTimeout = TimeSpan.FromMinutes(30) } }))
     .AddSingleton(provider => provider.GetRequiredService<BlobServiceClient>().GetBlobContainerClient(provider.options().storageContainerName))
     .AddSingleton<BlobStorageClient, BlobStorageClientImpl>()
 
