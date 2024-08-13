@@ -20,12 +20,12 @@ public interface BlobStorageClient {
 
 }
 
-public class BlobStorageClientImpl(BlobContainerClient container, IOptions<Options> options, ILogger<BlobStorageClientImpl> logger, ILogger<UploadProgressHandler> uploadProgressLogger)
+public class BlobStorageClientImpl(BlobContainerClient container, UploadProgressFactory uploadProgress, IOptions<Options> options, ILogger<BlobStorageClientImpl> logger)
     : BlobStorageClient, IDisposable {
 
     private static readonly TimeSpan CACHE_DURATION = TimeSpan.FromDays(90);
 
-    private readonly SemaphoreSlim uploadSemaphore = new(1);
+    private readonly SemaphoreSlim uploadSemaphore = new(options.Value.storageParallelUploads);
 
     private BlobClient openFile(string blobFilePath) => container.GetBlobClient(blobFilePath);
 
@@ -52,13 +52,13 @@ public class BlobStorageClientImpl(BlobContainerClient container, IOptions<Optio
         await uploadSemaphore.WaitAsync(ct);
         try {
             logger.LogInformation("Uploading to {dest}", destinationBlobFilePath);
-            using UploadProgressHandler uploadProgressHandler = new(destinationBlobFilePath, source.Length, uploadProgressLogger);
+            using DisposableProgress<long> progressHandler = uploadProgress.registerFile(destinationBlobFilePath, source.Length);
             return (await openFile(destinationBlobFilePath).UploadAsync(source, new BlobHttpHeaders {
                     ContentType  = contentType,
                     CacheControl = $"public, max-age={CACHE_DURATION.TotalSeconds:F0}"
                 },
-                progressHandler: uploadProgressHandler,
-                transferOptions: new StorageTransferOptions { MaximumConcurrency = (int) Math.Max(1, options.Value.storageParallelUploads) },
+                progressHandler: progressHandler,
+                transferOptions: new StorageTransferOptions { MaximumConcurrency = options.Value.storageParallelUploads },
                 cancellationToken: ct)).AsNullable();
         } catch (Exception e) when (e is not OutOfMemoryException) {
             logger.LogError(e, "Failed to upload to {dest}", destinationBlobFilePath);

@@ -5,41 +5,45 @@
 /// </summary>
 public record Options {
 
-    public string repositoryBaseDir { get; set; } = @".\raspbian\";
+    public string repositoryBaseDir { get; init; } = @".\raspbian\";
 
-    public string tempDir { get; set; } = @".\temp\";
+    public string tempDir { get; init; } = @".\temp\";
 
-    public string gpgPublicKeyPath { get; set; } = @".\dotnet-raspbian.gpg.pub.asc";
+    public string gpgPublicKeyPath { get; init; } = @".\dotnet-raspbian.gpg.pub.asc";
 
-    public string gpgPrivateKeyPath { get; set; } = @".\dotnet-raspbian.gpg.priv";
+    public string gpgPrivateKeyPath { get; init; } = @".\dotnet-raspbian.gpg.priv";
 
-    public bool keepTempDownloads { get; set; }
+    public bool keepTempDownloads { get; init; }
 
-    public bool forceRegenerate { get; set; }
+    public bool forceRegenerate { get; init; }
 
-    public string? cdnTenantId { get; set; }
+    public string? cdnTenantId { get; init; }
 
-    public string? cdnClientId { get; set; }
+    public string? cdnClientId { get; init; }
 
-    public string? cdnCertFilePath { get; set; }
+    public string? cdnCertFilePath { get; init; }
 
-    public string cdnCertPassword { get; set; } = string.Empty;
+    public string cdnCertPassword { get; init; } = string.Empty;
 
-    public string? cdnSubscriptionId { get; set; }
+    public string? cdnSubscriptionId { get; init; }
 
-    public string? cdnResourceGroup { get; set; }
+    public string? cdnResourceGroup { get; init; }
 
-    public string? cdnProfile { get; set; }
+    public string? cdnProfile { get; init; }
 
-    public string? cdnEndpointName { get; set; }
+    public string? cdnEndpointName { get; init; }
 
     /// <summary>
     /// From Azure Portal > Storage accounts > account > Access keys > Connection string
     /// </summary>
-    public required string storageConnection { get; set; }
+    public required string storageConnection { get; init; }
 
-    public required string storageContainerName { get; set; }
+    public required string storageContainerName { get; init; }
 
-    public uint storageParallelUploads { get; set; } = 1;
+    public int storageParallelUploads { get; set; } = 1;
+
+    internal void sanitize() {
+        storageParallelUploads = Math.Max(1, storageParallelUploads);
+    }
 
 }

@@ -29,6 +29,7 @@ appConfig.Logging.AddUnfuckedConsole(options => options.IncludeNamespaces = fals
 
 appConfig.Services
     .Configure<Options>(appConfig.Configuration)
+    .PostConfigure<Options>(options => options.sanitize())
 
     // Business logic
     .AddSingleton<SdkDownloader, SdkDownloaderImpl>()
@@ -39,6 +40,7 @@ appConfig.Services
     .AddSingleton<Indexer, IndexerImpl>()
     .AddSingleton<ExtraFileGenerator, ExtraFileGeneratorImpl>()
     .AddSingleton<ManifestManager, ManifestManagerImpl>()
+    .AddSingleton<UploadProgressFactory, MultiUploadProgress>()
     .AddHostedService<Orchestrator>()
 
     // HTTP client

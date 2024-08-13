@@ -3,7 +3,7 @@ using ThrottleDebounce;
 
 namespace RaspberryPiDotnetRepository.Azure;
 
-public class UploadProgressHandler: IProgress<long>, IDisposable {
+public class UploadProgress: IProgress<long>, IDisposable {
 
     private const string PERCENTAGE_FORMAT = "P0";
 
@@ -11,14 +11,14 @@ public class UploadProgressHandler: IProgress<long>, IDisposable {
     private static readonly string      ZERO_PERCENT        = 0.0.ToString(PERCENTAGE_FORMAT, CULTURE);
     private static readonly string      ONE_HUNDRED_PERCENT = 1.0.ToString(PERCENTAGE_FORMAT, CULTURE);
 
-    private readonly string                         destinationPath;
-    private readonly long                           totalSize;
-    private readonly ILogger<UploadProgressHandler> logger;
-    private readonly RateLimitedAction<string>      logProgressThrottled;
+    private readonly string                    destinationPath;
+    private readonly long                      totalSize;
+    private readonly ILogger<UploadProgress>   logger;
+    private readonly RateLimitedAction<string> logProgressThrottled;
 
     private string? previousPercentage;
 
-    public UploadProgressHandler(string destinationPath, long totalSize, ILogger<UploadProgressHandler> logger) {
+    public UploadProgress(string destinationPath, long totalSize, ILogger<UploadProgress> logger) {
         this.destinationPath = destinationPath;
         this.totalSize       = totalSize;
         this.logger          = logger;
