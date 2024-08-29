@@ -98,9 +98,7 @@ public class Orchestrator(
         }
 
         TimeSpan elapsed = statistics.stopTimer();
-        logger.LogInformation(@"Finished in {elapsed:m\m\ ss\s}", elapsed);
-        logger.LogDebug("Wrote {size} to {files:N0} files at {dataSpeed}/s ({fileSpeed:N1} files/s)", statistics.dataWritten.ToString(1, true), statistics.filesWritten,
-            (statistics.dataWritten / elapsed.TotalSeconds).ToString(1, true), statistics.filesWritten / elapsed.TotalSeconds);
+        logger.LogInformation(@"Finished in {elapsed:m\m\ ss\s}. Wrote {size} to {files:N0} files.", elapsed, statistics.dataWritten.ToString(1, true), statistics.filesWritten);
 
         appLifetime.StopApplication();
     }

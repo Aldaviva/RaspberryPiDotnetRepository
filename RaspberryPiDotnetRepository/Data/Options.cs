@@ -15,7 +15,7 @@ public record Options {
 
     public bool keepTempDownloads { get; init; }
 
-    public bool forceRegenerate { get; init; }
+    // public bool forceRegenerate { get; init; }
 
     public string? cdnTenantId { get; init; }
 

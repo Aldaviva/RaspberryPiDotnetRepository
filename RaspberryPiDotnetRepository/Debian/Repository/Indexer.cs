@@ -6,7 +6,6 @@ using RaspberryPiDotnetRepository.DotnetUpstream;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
-using Unfucked.PGP;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 
 namespace RaspberryPiDotnetRepository.Debian.Repository;

@@ -13,9 +13,8 @@ using RaspberryPiDotnetRepository.Debian.Repository;
 using RaspberryPiDotnetRepository.DotnetUpstream;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using Unfucked.PGP;
 using Options = RaspberryPiDotnetRepository.Data.Options;
-using PGP = Unfucked.PGP.PGP;
+using PGP = Unfucked.PGP;
 
 #pragma warning disable CS8634 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'class' constraint. - You can safely try to register a singleton with a null value, it just won't register. Just make sure you inject it as nullable.
 
@@ -48,7 +47,7 @@ appConfig.Services
 
     // Azure Blob Storage
     .AddSingleton(provider => new BlobServiceClient(provider.options().storageConnection,
-        new BlobClientOptions { Retry = { MaxRetries = 2, Delay = TimeSpan.FromSeconds(2), Mode = RetryMode.Fixed, NetworkTimeout = TimeSpan.FromMinutes(30) } }))
+        new BlobClientOptions { Retry = { MaxRetries = 3, Delay = TimeSpan.FromSeconds(2), Mode = RetryMode.Fixed, NetworkTimeout = TimeSpan.FromMinutes(30) } }))
     .AddSingleton(provider => provider.GetRequiredService<BlobServiceClient>().GetBlobContainerClient(provider.options().storageContainerName))
     .AddSingleton<BlobStorageClient, BlobStorageClientImpl>()
 

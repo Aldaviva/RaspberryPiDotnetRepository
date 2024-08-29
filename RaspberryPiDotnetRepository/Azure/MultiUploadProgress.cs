@@ -44,7 +44,7 @@ public class MultiUploadProgress: UploadProgressFactory {
         lock (activeUploadsLock) {
             activeUploads.Add(filename, fileUploadProgress);
         }
-        return new Handler(fileUploadProgress);
+        return new ProgressHandler(fileUploadProgress);
     }
 
     private void onUploadProgress(object? sender, PropertyChangedEventArgs e) {
@@ -78,16 +78,16 @@ public class MultiUploadProgress: UploadProgressFactory {
         snapshots.Return(snapshot);
 
         if (message?.Length > 0 && message != mostRecentMessage) {
-            logger.LogDebug("{progress}", mostRecentMessage);
+            logger.LogDebug("{progress}", message);
             mostRecentMessage = message;
         }
     }
 
-    private class Handler: DisposableProgress<long> {
+    private class ProgressHandler: DisposableProgress<long> {
 
         private readonly FileUploadProgress file;
 
-        internal Handler(FileUploadProgress file) => this.file = file;
+        internal ProgressHandler(FileUploadProgress file) => this.file = file;
 
         public void Report(long value) => file.uploadedBytes = value;
 

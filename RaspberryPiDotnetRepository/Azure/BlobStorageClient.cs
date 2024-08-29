@@ -13,7 +13,6 @@ public interface BlobStorageClient {
 
     Task<BlobDownloadResult?> readFile(string blobFilePath, CancellationToken ct = default);
 
-    Task<BlobContentInfo?> uploadFile(Stream source,   string destinationBlobFilePath, string? contentType = default, CancellationToken ct = default);
     Task<BlobContentInfo?> uploadFile(string filename, string destinationBlobFilePath, string? contentType = default, CancellationToken ct = default);
 
     Task deleteFile(string blobFilePath, CancellationToken ct = default);
@@ -47,7 +46,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
         return await enumerator.ToList();
     }
 
-    public async Task<BlobContentInfo?> uploadFile(Stream source, string destinationBlobFilePath, string? contentType = default, CancellationToken ct = default) {
+    protected async Task<BlobContentInfo?> uploadFile(Stream source, string destinationBlobFilePath, string? contentType = default, CancellationToken ct = default) {
         destinationBlobFilePath = Paths.Dos2UnixSlashes(destinationBlobFilePath);
         await uploadSemaphore.WaitAsync(ct);
         try {
