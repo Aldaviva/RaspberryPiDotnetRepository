@@ -2,22 +2,31 @@
 
 public interface PackageRequest {
 
-    public DotnetPackageType packageType { get; }
-    public DebianRelease debian { get; }
+    public RuntimeType packageType { get; }
 
 }
 
 public record DotnetPackageRequest(
-    DotnetRelease     dotnetRelease,
-    DotnetPackageType packageType,
-    CpuArchitecture   architecture,
-    DebianRelease     debian,
-    string            sdkArchivePath
-): PackageRequest;
+    DotnetRelease   dotnetRelease,
+    RuntimeType     packageType,
+    CpuArchitecture architecture,
+    string          sdkArchivePath
+): PackageRequest {
+
+    public override string ToString() {
+        return $"{packageType.getFriendlyName()} {dotnetRelease.runtimeVersion} {architecture}";
+    }
+
+}
 
 public record MetaPackageRequest(
-    DotnetPackageType packageType,
-    DebianRelease     debian,
-    bool              mustBeSupportedLongTerm,
-    string            concreteMinorVersion
-): PackageRequest;
+    RuntimeType packageType,
+    bool        mustBeSupportedLongTerm,
+    Version     concreteMinorVersion
+): PackageRequest {
+
+    public override string ToString() {
+        return $"{packageType.getFriendlyName()} {concreteMinorVersion} latest {(mustBeSupportedLongTerm ? "LTS" : "")}";
+    }
+
+}
