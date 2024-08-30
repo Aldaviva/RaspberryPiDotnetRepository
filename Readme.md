@@ -3,7 +3,7 @@
 
 ![.NET latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraspbian.aldaviva.com%2Fbadges%2Fdotnet.json&query=%24.latestVersion&logo=dotnet&label=latest%20version&color=success) ![Raspberry Pi OS latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraspbian.aldaviva.com%2Fbadges%2Fraspbian.json&query=%24.latestVersion&logo=raspberrypi&label=latest%20version&color=success) [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/Aldaviva/RaspberryPiDotnetRepository/dotnet.yml?branch=master&logo=github)](https://github.com/Aldaviva/RaspberryPiDotnetRepository/actions/workflows/dotnet.yml)
 
-This public APT repository supplies armhf and arm64 .deb packages of [.NET](https://dotnet.microsoft.com/) runtimes and SDKs to install on [Raspberry Pis](https://www.raspberrypi.com/products/) running [Raspberry Pi OS/Raspbian](https://www.raspberrypi.com/software/operating-systems/).
+This public [APT repository](https://github.com/Aldaviva/RaspberryPiDotnetRepository/wiki/Debian-APT-package-repository-format) supplies armhf and arm64 .deb packages of [.NET](https://dotnet.microsoft.com/) runtimes and SDKs to install on [Raspberry Pis](https://www.raspberrypi.com/products/) running [Raspberry Pi OS/Raspbian](https://www.raspberrypi.com/software/operating-systems/).
 
 Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Red Hat](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Ubuntu](https://packages.ubuntu.com/source/mantic/dotnet8) provide official .deb packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which neither installs system-wide without extra manual steps, nor automatically updates or cleans up previous versions, nor lets you install the latest minor version without you manually looking up whether STS or LTS is currently newer.
 
@@ -21,12 +21,14 @@ This repository comprises unofficial packages that install **official .NET Linux
         - [Patch versions](#patch-versions)
         - [Major and minor versions](#major-and-minor-versions)
         - [Automatic updates](#automatic-updates)
+    1. [List installed versions](#list-installed-versions)
 - [Compatible versions](#compatible-versions)
     1. [Operating systems and .NET releases](#operating-systems-and-net-releases)
     1. [CPU architectures](#cpu-architectures)
     1. [Raspberry Pis](#raspberry-pis)
-- [List installed versions](#list-installed-versions)
-- [Application package dependencies](#application-package-dependencies)
+- [Developer information](#developer-information)
+    1. [Application package dependencies](#application-package-dependencies)
+    1. [DEB package and APT repository formats](#deb-package-and-apt-repository-formats)
 
 <!-- /MarkdownTOC -->
 
@@ -45,10 +47,10 @@ The OpenPGP key fingerprint is [`B3BF 3504 BBD0 A81D D82A 8DFB 45D6 6F05 4AB9 A6
 
 ### Install package
 
-First, to install a package, choose the package name you want. The name is the concatenation of a name prefix and a versioning suffix. For example, if you want the latest version of the ASP.NET Core Runtime, the package name would be `aspnetcore-runtime-latest`, which you could install by running
+First, to install a package, choose the package name you want. The name is the concatenation of a name prefix and a versioning suffix. For example, if you want the latest version of the .NET Runtime, the package name would be `dotnet-runtime-latest`, which you could install by running
 
 ```sh
-sudo apt install aspnetcore-runtime-latest
+sudo apt install dotnet-runtime-latest
 ```
 
 See the following sections for explanations all the package name possibilities.
@@ -60,7 +62,7 @@ See the following sections for explanations all the package name possibilities.
 
 <tbody>
 <tr>
-<td colspan="2" align="center"><em>example:</em> <code>dotnet-runtime-latest</code></td>
+<td colspan="2" align="center"><code>dotnet-runtime-latest</code></td>
 </tr>
 
 <tr>
@@ -166,6 +168,15 @@ Alternatively, you can manually choose a new minor version to install using a co
 
 To automatically install package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages).
 
+### List installed versions
+
+```bash
+dotnet --info
+```
+```bash
+apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
+```
+
 ## Compatible versions
 
 ### Operating systems and .NET releases
@@ -177,7 +188,7 @@ To automatically install package updates without any user interaction, see [Debi
 |Buster (10)|☑<sup>2</sup>|☑<sup>1</sup>|✅|
 
 ✅ = Functional and currently officially supported<br>
-☑ = Functional, but not currently officially supported<br>
+☑ = Functional but not currently officially supported<br>
 ❌ = Incompatible
 
 > [!NOTE]
@@ -204,13 +215,8 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 ✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/), [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/) and [4](https://www.raspberrypi.com/products/compute-module-4/), [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/), and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/)<br>
 ⛔ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
 
-## List installed versions
-
-```bash
-dotnet --info
-```
-
-## Application package dependencies
+## Developer information
+### Application package dependencies
 If you are a developer who maintains an APT package for a .NET application, you can declare a dependency on one of the packages in this repository to automatically install the correct .NET runtime when a user installs your package.
 
 It is recommended to declare a dependency on a virtual package with a metapackage alternative. This way, it allows users to use newer .NET versions if they already have one installed. If your application targets a minimum version of .NET Runtime 6, for example, you can add this to your package's `control` file.
@@ -238,3 +244,6 @@ To allow your application to run with newer major runtime versions, be sure to a
     }
 }
 ```
+
+### DEB package and APT repository formats
+To learn how to create your own DEB packages and serve them in an APT repository, you can refer to [Debian APT package repository format](https://github.com/Aldaviva/RaspberryPiDotnetRepository/wiki/Debian-APT-package-repository-format). The formats are confusing, misguided, and poorly designed, while their documentation is scattered and complex. This wiki page is an effort to accurately distill the steps to create simple repositories into the relevant information that covers normal cases while still being precise and avoiding common problems.
