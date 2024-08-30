@@ -43,7 +43,10 @@ echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /et
 sudo apt update
 ```
 
-The OpenPGP key fingerprint is [`B3BF 3504 BBD0 A81D D82A 8DFB 45D6 6F05 4AB9 A66A`](https://keys.openpgp.org/search?q=B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A).
+The OpenPGP key fingerprint is [`B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A`](https://keys.openpgp.org/search?q=B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A). You can verify this with 
+```sh
+gpg --show-keys /etc/apt/trusted.gpg.d/aldaviva.gpg
+```
 
 ### Install package
 
