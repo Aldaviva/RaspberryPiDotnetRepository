@@ -73,7 +73,8 @@ public class Orchestrator(
             // Upload InRelease index files to Azure Blob Storage
             Task<BlobContentInfo?[]> releaseIndexUploads = Task.WhenAll(releaseIndexFiles.Where(file => !file.isUpToDateInBlobStorage).SelectMany(file =>
                 new[] { file.inreleaseFilePathRelativeToRepo, file.releaseFilePathRelativeToRepo, file.releaseGpgFilePathRelativeToRepo }.Select(relativeFilePath =>
-                    blobStorage.uploadFile(Path.Combine(repoBaseDir, relativeFilePath), relativeFilePath, "text/plain", ct))));
+                    blobStorage.uploadFile(Path.Combine(repoBaseDir, relativeFilePath), relativeFilePath, Path.GetExtension(relativeFilePath) == ".gpg" ? "application/pgp-signature" : "text/plain",
+                        ct))));
 
             await packageIndexUploads;
             await releaseIndexUploads;
@@ -82,10 +83,10 @@ public class Orchestrator(
             await Task.WhenAll(badgeFiles.Where(file => !file.isUpToDateInBlobStorage)
                 .Select(file => blobStorage.uploadFile(Path.Combine(repoBaseDir, file.filePathRelativeToRepo), file.filePathRelativeToRepo, "application/json", ct)));
             await blobStorage.uploadFile(Path.Combine(repoBaseDir, readmeFilename), readmeFilename, "text/plain", ct);
-            await blobStorage.uploadFile(Path.Combine(repoBaseDir, gpgPublicKeyFile), gpgPublicKeyFile, "application/octet-stream", ct);
+            await blobStorage.uploadFile(Path.Combine(repoBaseDir, gpgPublicKeyFile), gpgPublicKeyFile, "application/pgp-keys", ct);
 
             // Clear CDN cache
-            await cdnClient.purge();
+            await cdnClient.purge(["/dists/*", "/badges/*", "/manifest.json"]);
 
             // Upload manifest.json file to Azure Blob Storage
             await blobStorage.uploadFile(manifestManager.manifestFilePath, manifestManager.manifestFilename, "application/json", ct);

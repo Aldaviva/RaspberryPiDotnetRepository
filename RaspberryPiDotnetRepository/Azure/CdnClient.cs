@@ -19,15 +19,15 @@ namespace RaspberryPiDotnetRepository.Azure;
  */
 public interface CdnClient {
 
-    Task purge();
+    Task purge(IEnumerable<string> paths);
 
 }
 
 public class CdnClientImpl(CdnEndpointResource? cdnEndpoint, ILogger<CdnClientImpl> logger): CdnClient {
 
-    public async Task purge() {
+    public async Task purge(IEnumerable<string> paths) {
         if (cdnEndpoint != null) {
-            await cdnEndpoint.PurgeContentAsync(WaitUntil.Started, new PurgeContent(["/dists/*", "/badges/*"]));
+            await cdnEndpoint.PurgeContentAsync(WaitUntil.Started, new PurgeContent(paths));
             logger.LogInformation("Starting CDN purge, will finish asynchronously later");
         } else {
             logger.LogInformation("No CDN configured, not purging");

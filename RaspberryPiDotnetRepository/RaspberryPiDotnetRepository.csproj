@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <NoWarn>8524</NoWarn>
-        <Version>1.0.0</Version>
+        <Version>1.0.1</Version>
         <Authors>Ben Hutchison</Authors>
         <Copyright>© 2024 $(Authors)</Copyright>
         <Company>$(Authors)</Company>
@@ -24,13 +24,19 @@
     <ItemGroup>
         <PackageReference Include="Azure.Identity" Version="1.12.0" />
         <PackageReference Include="Azure.ResourceManager.Cdn" Version="1.3.0" />
-        <PackageReference Include="Azure.Storage.Blobs" Version="12.21.2" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.22.0" />
         <PackageReference Include="Bom.Squad" Version="0.3.0" />
+        <PackageReference Include="DataSizeUnits" Version="3.0.0-beta1" />
         <PackageReference Include="LibObjectFile" Version="0.6.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="PgpCore" Version="6.5.0" />
-        <PackageReference Include="SharpCompress" Version="0.37.2" />
+        <PackageReference Include="PgpCore" Version="6.5.1" />
+        <PackageReference Include="SharpCompress" Version="0.38.0" />
+        <PackageReference Include="System.Text.Json" Version="8.0.4" /> <!-- pinned to non-vulnerable version -->
         <PackageReference Include="ThrottleDebounce" Version="2.0.0" />
+        <PackageReference Include="Unfucked" Version="0.0.0-beta3" />
+        <PackageReference Include="Unfucked.Compression" Version="0.0.0-beta2" />
+        <PackageReference Include="Unfucked.DI" Version="0.0.0-beta2" />
+        <PackageReference Include="Unfucked.PGP" Version="0.0.0-beta2" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,24 +46,6 @@
         <None Update="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="DataSizeUnits">
-            <HintPath>..\..\DataSizeUnits\DataSizeUnits\bin\Debug\net5.0\DataSizeUnits.dll</HintPath>
-        </Reference>
-        <Reference Include="Unfucked">
-            <HintPath>..\..\Unfucked\Unfucked\bin\Debug\net8.0\Unfucked.dll</HintPath>
-        </Reference>
-        <Reference Include="Unfucked.Compression">
-            <HintPath>..\..\Unfucked\Unfucked.Compression\bin\Debug\netstandard2.0\Unfucked.Compression.dll</HintPath>
-        </Reference>
-        <Reference Include="Unfucked.DependencyInjection">
-            <HintPath>..\..\Unfucked\Unfucked.DependencyInjection\bin\Debug\net6.0\Unfucked.DependencyInjection.dll</HintPath>
-        </Reference>
-        <Reference Include="Unfucked.PGP">
-            <HintPath>..\..\Unfucked\Unfucked.PGP\bin\Debug\netstandard2.0\Unfucked.PGP.dll</HintPath>
-        </Reference>
     </ItemGroup>
 
     <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' or '$(Configuration)' == 'Release'">

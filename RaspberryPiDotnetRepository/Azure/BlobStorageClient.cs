@@ -22,7 +22,7 @@ public interface BlobStorageClient {
 public class BlobStorageClientImpl(BlobContainerClient container, UploadProgressFactory uploadProgress, IOptions<Options> options, ILogger<BlobStorageClientImpl> logger)
     : BlobStorageClient, IDisposable {
 
-    private static readonly TimeSpan CACHE_DURATION = TimeSpan.FromDays(90);
+    private static readonly TimeSpan CACHE_DURATION = TimeSpan.FromDays(180); // the max Azure CDN cache duration is 366 days
 
     private readonly SemaphoreSlim uploadSemaphore = new(options.Value.storageParallelUploads);
 

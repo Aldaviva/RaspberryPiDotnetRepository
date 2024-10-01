@@ -11,17 +11,6 @@ using TarWriter = Unfucked.Compression.Writers.Tar.TarWriter;
 
 namespace RaspberryPiDotnetRepository.Debian.Package;
 
-//TODO update comments for new Control type
-/// <summary>
-/// Create a Debian package with given files to install and control metadata.
-///
-/// <list type="number">
-/// <item><description>Construct a new <see cref="PackageBuilderImpl"/> instance</description></item>
-/// <item><description>Set <see cref="control"/> to be the control metadata (see <see href="https://www.debian.org/doc/debian-policy/ch-controlfields.html"/>)</description></item>
-/// <item><description>Add files to install by getting <see cref="data"/> and calling <see cref="TarWriter.WriteFile"/>, <see cref="TarWriter.WriteDirectory"/>, or <see cref="TarWriter.WriteSymLink"/> as many times as you want on it</description></item>
-/// <item><description>Create a destination stream (like a <see cref="FileStream"/>) and call <see cref="build"/> to save the package to a .deb file</description></item>
-/// </list>
-/// </summary>
 public interface PackageBuilder: IAsyncDisposable, IDisposable {
 
     CompressionLevel gzipCompressionLevel { get; set; }
@@ -53,7 +42,7 @@ public class PackageBuilderImpl: PackageBuilder {
 
         await using Stream controlArchiveStream = new MemoryStream();
         using (IWriter controlArchiveWriter = WriterFactory.Open(controlArchiveStream, ArchiveType.Tar, new GZipWriterOptions { CompressionLevel = gzipCompressionLevel })) {
-            await using Stream controlFileBuffer = control.serialize().ToStream();
+            await using Stream controlFileBuffer = control.serialize().ToByteStream();
             controlArchiveWriter.Write("./control", controlFileBuffer);
         }
 
@@ -62,7 +51,7 @@ public class PackageBuilderImpl: PackageBuilder {
         ArArchiveFile debArchive = new() { Kind = ArArchiveKind.Common };
         debArchive.AddFile(new ArBinaryFile {
             Name   = "debian-binary",
-            Stream = "2.0\n".ToStream()
+            Stream = "2.0\n".ToByteStream()
         });
         debArchive.AddFile(new ArBinaryFile {
             Name   = CONTROL_ARCHIVE_FILENAME,

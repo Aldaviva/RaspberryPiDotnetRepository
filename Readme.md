@@ -1,4 +1,4 @@
-<img src=".github/images/rpi-dotnet.svg" height="25" alt="logo" /> Raspberry Pi OS .NET APT Package Repository
+﻿<img src=".github/images/rpi-dotnet.svg" height="25" alt="logo" /> Raspberry Pi OS .NET APT Package Repository
 ===
 
 ![.NET latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraspbian.aldaviva.com%2Fbadges%2Fdotnet.json&query=%24.latestVersion&logo=dotnet&label=latest%20version&color=success) ![Raspberry Pi OS latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraspbian.aldaviva.com%2Fbadges%2Fraspbian.json&query=%24.latestVersion&logo=raspberrypi&label=latest%20version&color=success) [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/Aldaviva/RaspberryPiDotnetRepository/dotnet.yml?branch=master&logo=github)](https://github.com/Aldaviva/RaspberryPiDotnetRepository/actions/workflows/dotnet.yml)

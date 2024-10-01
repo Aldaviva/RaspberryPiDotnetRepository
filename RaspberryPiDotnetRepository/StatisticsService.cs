@@ -1,7 +1,7 @@
 ﻿using DataSizeUnits;
 using System.Diagnostics;
 
-namespace RaspberryPiDotnetRepository.Debian.Package;
+namespace RaspberryPiDotnetRepository;
 
 public interface StatisticsService {
 
