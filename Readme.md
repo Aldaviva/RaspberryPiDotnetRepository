@@ -83,6 +83,7 @@ See the following sections for explanations all the package name possibilities.
 <li><code>latest</code></li>
 <li><code>latest-lts</code></li>
 <!-- Add new releases here -->
+<li><code>9.0</code></li>
 <li><code>8.0</code></li>
 <li><code>7.0</code></li>
 <li><code>6.0</code></li>
@@ -142,9 +143,9 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 
 |Installation|Package names|Purpose|Also auto-installs|
 |-|-|-|-|
-|.NET Runtime|`dotnet-runtime-8.0`<br>`dotnet-runtime-7.0`<br>`dotnet-runtime-6.0`|Run .NET CLI apps||
-|ASP.NET Core Runtime|`aspnetcore-runtime-8.0`<br>`aspnetcore-runtime-7.0`<br>`aspnetcore-runtime-6.0`|Run .NET web apps|.NET Runtime|
-|.NET SDK|`dotnet-sdk-8.0`<br>`dotnet-sdk-7.0`<br>`dotnet-sdk-6.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
+|.NET Runtime|`dotnet-runtime-9.0`<br>`dotnet-runtime-8.0`<br>`dotnet-runtime-7.0`<br>`dotnet-runtime-6.0`|Run .NET CLI apps||
+|ASP.NET Core Runtime|`aspnetcore-runtime-9.0`<br>`aspnetcore-runtime-8.0`<br>`aspnetcore-runtime-7.0`<br>`aspnetcore-runtime-6.0`|Run .NET web apps|.NET Runtime|
+|.NET SDK|`dotnet-sdk-9.0`<br>`dotnet-sdk-8.0`<br>`dotnet-sdk-7.0`<br>`dotnet-sdk-6.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
 <!-- Add new releases here -->
 
 ### Update installed packages
@@ -184,19 +185,19 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 
 ### Operating systems and .NET releases
 <!-- Add new releases here -->
-|Raspberry Pi OS|.NET 8|.NET 7|.NET 6|
-|-:|:-:|:-:|:-:|
-|Bookworm (12)|✅|☑<sup>1</sup>|✅|
-|Bullseye (11)|✅|☑<sup>1</sup>|✅|
-|Buster (10)|☑<sup>2</sup>|☑<sup>1</sup>|✅|
+|Raspberry Pi OS|.NET 9|.NET 8|.NET 7|.NET 6|
+|-:|:-|:-|:-|:-|
+|Bookworm (12)|✅|✅|☑<sup>2</sup>|☑<sup>2</sup>|
+|Bullseye (11)|☑<sup>1</sup>|✅|☑<sup>2</sup>|☑<sup>2</sup>|
+|Buster (10)|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>2</sup>|☑<sup>2</sup>|
 
 ✅ = Available, compatible, and currently officially supported<br>
 ☑ = Available and compatible, but not currently officially supported<br>
-❌ = Unavailable and incompatible
+❌ = Unavailable, incompatible, and unsupported
 
 > [!NOTE]
-> 1. [.NET 7 is no longer updated by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
-> 1. [.NET 8 on Debian 10 is not supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
+> 1. [This combination of .NET and Debian versions is not supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
+> 1. [Older versions of .NET are no longer updated by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
 
 ##### Release information
 - [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/)
@@ -207,8 +208,8 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 In addition to Raspberry Pi OS, you should also be able to install these .deb packages on ARM builds of [Debian](https://raspi.debian.net) and other Debian-based distributions like [Ubuntu](https://ubuntu.com/download/raspberry-pi) and [Mobian](https://wiki.debian.org/Mobian/), because these packages are not specific to Raspberry Pi OS and only [depend on packages in the standard Debian repository](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies).
 
 ### CPU architectures
-✅ 64-bit/ARM64/AArch64/ARMv8<br>
-✅ 32-bit/ARM32/AArch32/ARMv7/armhf
+✅ 64-bit ARM64/AArch64/ARMv8<br>
+✅ 32-bit ARM32/AArch32/ARMv7/armhf
 
 ### Raspberry Pis
 ✅ [Raspberry Pi 5](https://www.raspberrypi.com/products/raspberry-pi-5/)<br>
