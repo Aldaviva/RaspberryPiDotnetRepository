@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" Version="1.12.0" />
+        <PackageReference Include="Azure.Identity" Version="1.12.1" />
         <PackageReference Include="Azure.ResourceManager.Cdn" Version="1.3.0" />
         <PackageReference Include="Azure.Storage.Blobs" Version="12.22.0" />
         <PackageReference Include="Bom.Squad" Version="0.3.0" />
