@@ -53,9 +53,12 @@
       },
       "LibObjectFile": {
         "type": "Direct",
-        "requested": "[0.6.0, )",
-        "resolved": "0.6.0",
-        "contentHash": "XtFLHwx9gBILOWD+YnZNQhbIit2oMNlLJgiEXA8Sh9Ciz/SggGIFpXXKb9GqL+yQhUyr3cUJbZOG1ouH4vOqow=="
+        "requested": "[1.1.1, )",
+        "resolved": "1.1.1",
+        "contentHash": "7o5w4xfT+Q9F01ABSD2l3FmbOyvoHuQ4QPNzbyFh8Nv0UIz9yQpwHB9j6X9gLl3IhWnwL3a8jAeRFr/Wu4qQgA==",
+        "dependencies": {
+          "System.Text.Encoding.CodePages": "8.0.0"
+        }
       },
       "Microsoft.Extensions.Hosting": {
         "type": "Direct",
@@ -523,6 +526,11 @@
         "resolved": "4.7.0",
         "contentHash": "ehYW0m9ptxpGWvE4zgqongBVWpSDU/JCFD4K7krxkQwSz/sFQjEXCUqpvencjy6DYDbn7Ig09R8GFffu8TtneQ=="
       },
+      "System.Text.Encoding.CodePages": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "OZIsVplFGaVY90G2SbpgU7EnCoOO5pw1t4ic21dBF3/1omrJFpAGoNAVpPyMVOC90/hvgkGG3VFqR13YgZMQfg=="
+      },
       "System.Text.Encodings.Web": {
         "type": "Transitive",
         "resolved": "8.0.0",
@@ -549,6 +557,11 @@
         "type": "Transitive",
         "resolved": "4.7.0",
         "contentHash": "ehYW0m9ptxpGWvE4zgqongBVWpSDU/JCFD4K7krxkQwSz/sFQjEXCUqpvencjy6DYDbn7Ig09R8GFffu8TtneQ=="
+      },
+      "System.Text.Encoding.CodePages": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "OZIsVplFGaVY90G2SbpgU7EnCoOO5pw1t4ic21dBF3/1omrJFpAGoNAVpPyMVOC90/hvgkGG3VFqR13YgZMQfg=="
       },
       "System.Text.Encodings.Web": {
         "type": "Transitive",
