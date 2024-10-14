@@ -5,8 +5,7 @@
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <NoWarn>8524</NoWarn>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Authors>Ben Hutchison</Authors>
         <Copyright>© 2024 $(Authors)</Copyright>
         <Company>$(Authors)</Company>
@@ -22,30 +21,34 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" Version="1.12.0" />
+        <PackageReference Include="Azure.Identity" Version="1.12.1" />
         <PackageReference Include="Azure.ResourceManager.Cdn" Version="1.3.0" />
-        <PackageReference Include="Azure.Storage.Blobs" Version="12.22.0" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
         <PackageReference Include="Bom.Squad" Version="0.3.0" />
         <PackageReference Include="DataSizeUnits" Version="3.0.0-beta1" />
-        <PackageReference Include="LibObjectFile" Version="0.6.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+        <PackageReference Include="LibObjectFile" Version="1.1.1" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
         <PackageReference Include="PgpCore" Version="6.5.1" />
         <PackageReference Include="SharpCompress" Version="0.38.0" />
-        <PackageReference Include="System.Text.Json" Version="8.0.4" /> <!-- pinned to non-vulnerable version -->
+        <!-- 
+            Increase version of transitive dependency to make NuGet stop complaining about security vulnerabilities, even though this assembly comes from whatever version 
+            of the runtime is installed, not from this program, even when published as a single file.
+        -->
+        <PackageReference Include="System.Text.Json" Version="8.0.5" ExcludeAssets="all" /> 
         <PackageReference Include="ThrottleDebounce" Version="2.0.0" />
         <PackageReference Include="Unfucked" Version="0.0.0-beta3" />
         <PackageReference Include="Unfucked.Compression" Version="0.0.0-beta2" />
-        <PackageReference Include="Unfucked.DI" Version="0.0.0-beta2" />
+        <!-- <PackageReference Include="Unfucked.DI" Version="0.0.0-beta2" /> -->
         <PackageReference Include="Unfucked.PGP" Version="0.0.0-beta2" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="appsettings.Development.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="appsettings.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+        <Reference Include="Unfucked.DI" HintPath="..\..\Unfucked\DI\bin\Debug\net6.0\Unfucked.DI.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' or '$(Configuration)' == 'Release'">

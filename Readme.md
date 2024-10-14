@@ -190,9 +190,9 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 |Bullseye (11)|✅|☑<sup>1</sup>|✅|
 |Buster (10)|☑<sup>2</sup>|☑<sup>1</sup>|✅|
 
-✅ = Functional and currently officially supported<br>
-☑ = Functional but not currently officially supported<br>
-❌ = Incompatible
+✅ = Available, compatible, and currently officially supported<br>
+☑ = Available and compatible, but not currently officially supported<br>
+❌ = Unavailable and incompatible
 
 > [!NOTE]
 > 1. [.NET 7 is no longer updated by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.

@@ -119,7 +119,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     public IEnumerable<Dependency> dependencyPackages => runtime switch {
         _ when isMetaPackage => [new DependencyPackage($"{runtime.getPackageName()}-{minorVersion}")],
         RuntimeType.CLI      => [],
-        RuntimeType.RUNTIME => [
+        RuntimeType.RUNTIME => ((List<Dependency?>) [
             new DependencyPackage(RuntimeType.CLI.getPackageName(), Inequality.GREATER_THAN_OR_EQUAL_TO, $"{runtimeVersion.ToString(3)}{versionSuffix}"),
             new DependencyPackage("libc6"),
             new DependencyAlternatives(new DependencyPackage("libgcc-s1"), new DependencyPackage("libgcc1")),
@@ -128,8 +128,9 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
             new DependencyAlternatives(new DependencyPackage("libssl3"), new DependencyPackage("libssl1.1")), // Trixie and Noble Numbat use libssl3t64
             new DependencyPackage("libstdc++6"),
             new DependencyPackage("tzdata"),
-            new DependencyPackage("zlib1g")
-        ],
+            new DependencyPackage("ca-certificates"),
+            runtimeVersion < new Version(9, 0, 0) ? new DependencyPackage("zlib1g") : null
+        ]).Compact(),
         RuntimeType.ASPNETCORE_RUNTIME =>
             [new DependencyPackage($"{RuntimeType.RUNTIME.getPackageName()}-{runtimeVersion.ToString(2)}", Inequality.EQUAL, $"{runtimeVersion.ToString(3)}{versionSuffix}")],
         RuntimeType.SDK => [new DependencyPackage($"{RuntimeType.ASPNETCORE_RUNTIME.getPackageName()}-{runtimeVersion.ToString(2)}", Inequality.EQUAL, $"{runtimeVersion.ToString(3)}{versionSuffix}")],

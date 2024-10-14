@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
-using RaspberryPiDotnetRepository.Debian.Package;
 using System.Text;
 using System.Text.Json;
 using Options = RaspberryPiDotnetRepository.Data.Options;
@@ -21,7 +20,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
 
     public async Task<IEnumerable<UploadableFile>> generateReadmeBadges(DotnetRelease latestMinorRelease) {
         const string BADGE_DIR = "badges";
-        Directory.CreateDirectory(BADGE_DIR);
+        Directory.CreateDirectory(Path.Combine(options.Value.repositoryBaseDir, BADGE_DIR));
         IList<UploadableFile> files = new List<UploadableFile>(2);
 
         var dotnetBadge = new { latestVersion = latestMinorRelease.runtimeVersion.ToString(3) };

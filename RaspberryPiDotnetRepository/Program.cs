@@ -41,6 +41,7 @@ appConfig.Services
     .AddSingleton<ManifestManager, ManifestManagerImpl>()
     .AddSingleton<UploadProgressFactory, MultiUploadProgress>()
     .AddHostedService<Orchestrator>()
+    .SetExitCodeOnBackgroundServiceException()
 
     // HTTP client
     .AddSingleton(new HttpClient(new SocketsHttpHandler { MaxConnectionsPerServer = 16 }) { Timeout = TimeSpan.FromSeconds(30) })
