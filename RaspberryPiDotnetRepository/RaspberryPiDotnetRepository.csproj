@@ -31,7 +31,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="PgpCore" Version="6.5.1" />
         <PackageReference Include="SharpCompress" Version="0.38.0" />
-        <PackageReference Include="System.Text.Json" Version="8.0.4" /> <!-- pinned to non-vulnerable version -->
+        <PackageReference Include="System.Text.Json" Version="8.0.5" /> <!-- pinned to non-vulnerable version -->
         <PackageReference Include="ThrottleDebounce" Version="2.0.0" />
         <PackageReference Include="Unfucked" Version="0.0.0-beta3" />
         <PackageReference Include="Unfucked.Compression" Version="0.0.0-beta2" />
