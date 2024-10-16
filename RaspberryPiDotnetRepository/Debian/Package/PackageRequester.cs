@@ -15,29 +15,28 @@ public interface PackageRequester {
 
 public class PackageRequesterImpl: PackageRequester {
 
-    private readonly CpuArchitecture[] cpuArchitectures = Enum.GetValues<CpuArchitecture>();
+    private static readonly CpuArchitecture[] CPU_ARCHITECTURES = Enum.GetValues<CpuArchitecture>();
 
-    private readonly RuntimeType[] dotnetRuntimes = Enum.GetValues<RuntimeType>()
-        // .Where(type => type is not (RuntimeType.SDK or RuntimeType.ASPNETCORE_RUNTIME))
+    private static readonly RuntimeType[] DOTNET_RUNTIMES = Enum.GetValues<RuntimeType>()
+        .Where(type => type is not RuntimeType.SDK) //FIXME testing
         .ToArray();
 
     public IEnumerable<PackageRequest> listPackagesToRequest(IEnumerable<DotnetRelease> upstreamReleases) {
         upstreamReleases = upstreamReleases.ToList();
-        IList<PackageRequest> packageRequests    = [];
-        DotnetRelease         latestLongTerm     = upstreamReleases.First(release => release is { isSupportedLongTerm: true, isLatestOfSupportTerm: true });
-        DotnetRelease         latestMinorRelease = upstreamReleases.First(release => release.isLatestMinorVersion);
-
-        foreach (CpuArchitecture cpuArchitecture in cpuArchitectures) {
+        IList<PackageRequest> packageRequests = [];
+        foreach (CpuArchitecture cpuArchitecture in CPU_ARCHITECTURES) {
             foreach (DotnetRelease dotnetRelease in upstreamReleases) {
-                foreach (RuntimeType dotnetRuntime in dotnetRuntimes) {
+                foreach (RuntimeType dotnetRuntime in DOTNET_RUNTIMES) {
                     packageRequests.Add(new DotnetPackageRequest(dotnetRelease, dotnetRuntime, cpuArchitecture, dotnetRelease.downloadedSdkArchiveFilePaths[cpuArchitecture]));
+
+                    if (dotnetRuntime != RuntimeType.CLI) {
+                        if (dotnetRelease.isSupportedLongTerm) {
+                            packageRequests.Add(new MetaPackageRequest(dotnetRuntime, cpuArchitecture, true, dotnetRelease.sdkVersion.AsMinor()));
+                        }
+                        packageRequests.Add(new MetaPackageRequest(dotnetRuntime, cpuArchitecture, false, dotnetRelease.sdkVersion.AsMinor()));
+                    }
                 }
             }
-        }
-
-        foreach (RuntimeType dotnetRuntime in dotnetRuntimes.Except([RuntimeType.CLI])) {
-            packageRequests.Add(new MetaPackageRequest(dotnetRuntime, true, latestLongTerm.sdkVersion.AsMinor()));
-            packageRequests.Add(new MetaPackageRequest(dotnetRuntime, false, latestMinorRelease.sdkVersion.AsMinor()));
         }
 
         return packageRequests;

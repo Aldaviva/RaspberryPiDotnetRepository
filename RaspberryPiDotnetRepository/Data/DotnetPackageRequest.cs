@@ -7,10 +7,10 @@ public interface PackageRequest {
 }
 
 public record DotnetPackageRequest(
-    DotnetRelease   dotnetRelease,
-    RuntimeType     packageType,
+    DotnetRelease dotnetRelease,
+    RuntimeType packageType,
     CpuArchitecture architecture,
-    string          sdkArchivePath
+    string sdkArchivePath
 ): PackageRequest {
 
     public override string ToString() {
@@ -21,12 +21,13 @@ public record DotnetPackageRequest(
 
 public record MetaPackageRequest(
     RuntimeType packageType,
-    bool        mustBeSupportedLongTerm,
-    Version     concreteMinorVersion
+    CpuArchitecture architecture,
+    bool mustBeSupportedLongTerm,
+    Version concreteMinorVersion
 ): PackageRequest {
 
     public override string ToString() {
-        return $"{packageType.getFriendlyName()} {concreteMinorVersion} latest {(mustBeSupportedLongTerm ? "LTS" : "")}";
+        return $"{packageType.getFriendlyName()} {concreteMinorVersion} {architecture} latest {(mustBeSupportedLongTerm ? "LTS" : "")}";
     }
 
 }

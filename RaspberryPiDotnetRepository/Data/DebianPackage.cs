@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace RaspberryPiDotnetRepository.Data;
 
-public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version sdkVersion, CpuArchitecture? architecture): IEquatable<DebianPackage> {
+public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version sdkVersion, CpuArchitecture architecture): IEquatable<DebianPackage> {
 
     public const string VERSION_SUFFIX = "-0";
 
@@ -35,14 +35,22 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// <summary>
     /// Which CPU architecture this package is for, or <c>null</c> for a package that can run on any architecture CPU.
     /// </summary>
-    public CpuArchitecture? architecture { get; } = architecture;
+    public CpuArchitecture architecture { get; } = architecture;
 
     /// <summary>
-    /// Like <c>packages/dotnet-runtime-8.0.5-0-armhf.deb</c> or <c>packages/aspnetcore-runtime-8.0-0-latest-lts.deb</c>
+    /// <para>The oldest version of Debian that this package can run on, usually dictated by its libc6 version</para>
+    /// <para>See <see href="https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility"/></para>
+    /// <para>#28: .NET 9 and later don't run on ARM32 Debian 10 or 11</para>
+    /// </summary>
+    [JsonIgnore]
+    public DebianRelease minimumDebianRelease => architecture == CpuArchitecture.ARM32 && version >= new Version(9, 0, 0) ? DebianRelease.BOOKWORM : DebianRelease.BUSTER;
+
+    /// <summary>
+    /// Like <c>packages/dotnet-runtime-8.0.5-0-armhf.deb</c> or <c>packages/aspnetcore-runtime-8.0-0-arm64-latest-lts.deb</c>
     /// </summary>
     public string filePathRelativeToRepo => Paths.Dos2UnixSlashes(Path.Combine("packages",
-        string.Join(null, runtime.getPackageName(), "-", version.ToString(isMetaPackage ? 2 : 3), versionSuffix, architecture == null ? "" : $"-{architecture.Value.toDebian()}",
-            isMetaPackage ? "-latest" : "", isMetaPackageSupportedLongTerm ? "-lts" : "", ".deb")));
+        string.Join(null, runtime.getPackageName(), "-", version.ToString(isMetaPackage ? 2 : 3), versionSuffix, $"-{architecture.toDebian()}", isMetaPackage ? "-latest" : "",
+            isMetaPackageSupportedLongTerm ? "-lts" : "", ".deb")));
 
     /// <summary>
     /// Lowercase hexadecimal SHA-256 hash of the package file
@@ -129,7 +137,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
             new DependencyPackage("libstdc++6"),
             new DependencyPackage("tzdata"),
             new DependencyPackage("ca-certificates"),
-            runtimeVersion < new Version(9, 0, 0) ? new DependencyPackage("zlib1g") : null
+            runtimeVersion >= new Version(9, 0, 0) ? null : new DependencyPackage("zlib1g") // #26 .NET ≥ 9 has built-in zlib-ng
         ]).Compact(),
         RuntimeType.ASPNETCORE_RUNTIME =>
             [new DependencyPackage($"{RuntimeType.RUNTIME.getPackageName()}-{runtimeVersion.ToString(2)}", Inequality.EQUAL, $"{runtimeVersion.ToString(3)}{versionSuffix}")],
@@ -250,14 +258,14 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
         priority     = priority,
         homepage     = homepage,
         dependencies = dependencyPackages,
-        suggestions  = suggestedPackages(upstreamInfo.leastProvidedCurrentReleaseMinorVersion),
-        provided     = providedPackages(upstreamInfo.knownReleaseMinorRuntimeVersions)
+        suggestions  = suggestedPackages(upstreamInfo.leastProvidedCurrentReleaseMinorVersion), //TODO check .NET 9 compatibility
+        provided     = providedPackages(upstreamInfo.knownReleaseMinorRuntimeVersions)          //TODO check .NET 9 compatibility
     };
 
     [JsonIgnore]
     public bool isUpToDateInBlobStorage { get; set; } = false;
 
-    public override string ToString() => $"{runtime.getFriendlyName()} {patchVersion}{(architecture == null ? "" : $" {architecture.Value}")}";
+    public override string ToString() => $"{runtime.getFriendlyName()} {patchVersion}{architecture}";
 
     public bool Equals(DebianPackage? other) => other is not null &&
         runtime == other.runtime &&

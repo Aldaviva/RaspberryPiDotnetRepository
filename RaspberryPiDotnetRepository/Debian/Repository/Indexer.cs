@@ -1,7 +1,6 @@
 ﻿using DataSizeUnits;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
-using RaspberryPiDotnetRepository.Debian.Package;
 using RaspberryPiDotnetRepository.DotnetUpstream;
 using System.IO.Compression;
 using System.Security.Cryptography;
@@ -35,15 +34,13 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
     }
 
     private static IDictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groupPackagesIntoIndices(IEnumerable<DebianPackage> packages) {
-        CpuArchitecture[] allArchitectures  = Enum.GetValues<CpuArchitecture>();
-        DebianRelease[]   allDebianReleases = Enum.GetValues<DebianRelease>();
+        DebianRelease[] allDebianReleases = Enum.GetValues<DebianRelease>();
 
         Dictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groups = [];
         foreach (DebianPackage package in packages) {
-            CpuArchitecture[] indexArchitectures = package.architecture.HasValue ? [package.architecture.Value] : allArchitectures;
             foreach (DebianRelease debianRelease in allDebianReleases) {
-                foreach (CpuArchitecture indexArchitecture in indexArchitectures) {
-                    groups.GetOrAdd((debianRelease, indexArchitecture), [], out _).Add(package);
+                if (package.minimumDebianRelease <= debianRelease) {
+                    groups.GetOrAdd((debianRelease, package.architecture), [], out _).Add(package);
                 }
             }
         }
@@ -51,9 +48,8 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
         return groups;
     }
 
-    private async Task<IEnumerable<PackageIndexFile>>
-        generateIndexOfPackagesInDebianReleaseAndArchitecture(DebianRelease                 debianRelease, CpuArchitecture cpuArchitecture, IEnumerable<DebianPackage> debPackages,
-                                                              UpstreamReleasesSecondaryInfo upstreamInfo) {
+    private async Task<IEnumerable<PackageIndexFile>> generateIndexOfPackagesInDebianReleaseAndArchitecture(DebianRelease debianRelease, CpuArchitecture cpuArchitecture,
+                                                                                                            IEnumerable<DebianPackage> debPackages, UpstreamReleasesSecondaryInfo upstreamInfo) {
         bool areAllPackagesInIndexUpToDateInBlobStorage = true;
         string packageFileContents = string.Join("\n\n", debPackages.Select(package => {
             areAllPackagesInIndexUpToDateInBlobStorage &= package.isUpToDateInBlobStorage;

@@ -109,14 +109,14 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
             generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).Length;
         }
 
-        logger.LogInformation("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture?.toDebian() ?? "all", generatedPackage.runtime.getFriendlyName(),
+        logger.LogInformation("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture.toDebian() ?? "all", generatedPackage.runtime.getFriendlyName(),
             generatedPackage.minorVersion, debFileAbsolutePath);
         statistics.onFileWritten(debFileAbsolutePath);
         return generatedPackage;
     }
 
     private async Task<DebianPackage> generateDebPackage(MetaPackageRequest packageToGenerate, UpstreamReleasesSecondaryInfo secondaryInfo, RepositoryManifest? oldManifest) {
-        DebianPackage generatedPackage = new(packageToGenerate.packageType, packageToGenerate.concreteMinorVersion, packageToGenerate.concreteMinorVersion, null) {
+        DebianPackage generatedPackage = new(packageToGenerate.packageType, packageToGenerate.concreteMinorVersion, packageToGenerate.concreteMinorVersion, packageToGenerate.architecture) {
             isMetaPackage                  = true,
             isMetaPackageSupportedLongTerm = packageToGenerate.mustBeSupportedLongTerm,
         };
@@ -141,7 +141,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
             generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).Length;
         }
 
-        logger.LogInformation("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture?.toDebian() ?? "all", generatedPackage.runtime.getFriendlyName(),
+        logger.LogInformation("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture.toDebian() ?? "all", generatedPackage.runtime.getFriendlyName(),
             generatedPackage.minorVersion, debFileAbsolutePath);
         statistics.onFileWritten(debFileAbsolutePath);
         return generatedPackage;
@@ -154,6 +154,6 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
     }
 
     public static int o(string octal) => Convert.ToInt32(octal, 8);
-    public static int o(int    octal) => o(octal.ToString());
+    public static int o(int octal) => o(octal.ToString());
 
 }
