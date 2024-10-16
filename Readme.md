@@ -43,7 +43,7 @@ echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /et
 sudo apt update
 ```
 
-The OpenPGP key fingerprint is [`B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A`](https://keys.openpgp.org/search?q=B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A). You can verify this with 
+The OpenPGP key fingerprint is [`B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A`](https://keys.openpgp.org/search?q=B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A). You may verify this with 
 ```sh
 gpg --show-keys /etc/apt/trusted.gpg.d/aldaviva.gpg
 ```
@@ -183,19 +183,23 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 
 ### Operating systems and .NET releases
 <!-- Add new releases here -->
-|Raspberry Pi OS|.NET 9|.NET 8|.NET 7|.NET 6|
-|-:|:-|:-|:-|:-|
-|Bookworm (12)|✅|✅|☑<sup>2</sup>|☑<sup>2</sup>|
-|Bullseye (11)|☑<sup>1</sup>|✅|☑<sup>2</sup>|☑<sup>2</sup>|
-|Buster (10)|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>2</sup>|☑<sup>2</sup>|
+|Raspberry Pi OS|CPU architecture|.NET 9|.NET 8|.NET 7|.NET 6|
+|-:|-:|:-|:-|:-|:-|
+|Bookworm (12)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bookworm (12)|ARM32|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bullseye (11)|ARM64|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bullseye (11)|ARM32|❌<sup>3</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Buster (10)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Buster (10)|ARM32|❌<sup>3</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
 
 ✅ = Available, compatible, and currently officially supported<br>
 ☑ = Available and compatible, but not currently officially supported<br>
 ❌ = Unavailable, incompatible, and unsupported
 
 > [!NOTE]
-> 1. [This combination of .NET and Debian versions is not supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
 > 1. [Older versions of .NET are no longer updated by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although they still work.
+> 1. [This combination of .NET and Debian versions was never supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
+> 1. [.NET 9 on ARM32 Linux requires a newer version of glibc (`libc6` 2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility) than is provided by Debian 10 ([2.28](https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
 
 ##### Release information
 - [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/)
