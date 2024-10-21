@@ -26,7 +26,7 @@
         <PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
         <PackageReference Include="Bom.Squad" Version="0.3.0" />
         <PackageReference Include="DataSizeUnits" Version="3.0.0-beta1" />
-        <PackageReference Include="LibObjectFile" Version="1.1.1" />
+        <PackageReference Include="LibObjectFile" Version="2.0.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
         <PackageReference Include="PgpCore" Version="6.5.1" />
         <PackageReference Include="SharpCompress" Version="0.38.0" />

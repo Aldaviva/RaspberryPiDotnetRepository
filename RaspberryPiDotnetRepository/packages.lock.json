@@ -53,9 +53,9 @@
       },
       "LibObjectFile": {
         "type": "Direct",
-        "requested": "[1.1.1, )",
-        "resolved": "1.1.1",
-        "contentHash": "7o5w4xfT+Q9F01ABSD2l3FmbOyvoHuQ4QPNzbyFh8Nv0UIz9yQpwHB9j6X9gLl3IhWnwL3a8jAeRFr/Wu4qQgA==",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "8ZefdTGuQovqsFvoVOWP/mRfS9LiYXpkpV0K94X0apQzvPjGx8FiGFBGFTSTuK276RpWefx5LKeQd1SH4GexVg==",
         "dependencies": {
           "System.Text.Encoding.CodePages": "8.0.0"
         }
