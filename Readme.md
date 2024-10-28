@@ -38,6 +38,11 @@ This repository comprises unofficial packages that install **official .NET Linux
 
 You only have to do this step once per Raspberry Pi OS installation.
 ```sh
+wget -qO- https://raspbian.aldaviva.com/addrepo.sh | sh
+```
+
+Alternatively, you may do this step manually.
+```sh
 sudo wget -q https://raspbian.aldaviva.com/aldaviva.gpg.key -O /etc/apt/trusted.gpg.d/aldaviva.gpg
 echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
 sudo apt update
@@ -93,14 +98,14 @@ See the following sections for explanations all the package name possibilities.
 </table>
 
 There are three package type prefixes to choose from:
-- `dotnet-runtime-` for running command-line applications
-- `aspnetcore-runtime-` for running web applications
-- `dotnet-sdk-` for building applications
+- **`dotnet-runtime-`** for running command-line applications
+- **`aspnetcore-runtime-`** for running web applications
+- **`dotnet-sdk-`** for building applications
 
 There are also three types of version specification suffixes to choose from, which control the versions that the package should install and allow upgrades to.
-- [`latest`](#latest-version) installs the LTS or STS release with the greatest version number
-- [`latest-lts`](#latest-lts-version) installs the LTS release with the greatest version number
-- [Specific minor versions](#specific-minor-version) install and stick with one release permanently, like 8.0.*, only installing patch updates like 8.0.1
+- [**`latest`**](#latest-version) installs the LTS or STS release with the greatest version number
+- [**`latest-lts`**](#latest-lts-version) installs the LTS release with the greatest version number
+- [**Specific minor versions**](#specific-minor-version) install and stick with one release permanently, like 8.0.*, only installing patch updates like 8.0.1
 
 > [!NOTE]
 > [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released each November of odd-numbered years like 2023, have even major version numbers, and come with 3 years of support.<br>
@@ -197,7 +202,7 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 ❌ = Unavailable, incompatible, and unsupported
 
 > [!NOTE]
-> 1. [Older versions of .NET are no longer updated by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although they still work.
+> 1. [This older version of .NET is no longer updated by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
 > 1. [This combination of .NET and Debian versions was never supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
 > 1. [.NET 9 on ARM32 Linux requires a newer version of glibc (`libc6` 2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility) than is provided by Debian 10 ([2.28](https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
 
