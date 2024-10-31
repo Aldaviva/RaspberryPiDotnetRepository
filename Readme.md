@@ -202,12 +202,12 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 ❌ = Unavailable, incompatible, and unsupported
 
 > [!NOTE]
-> 1. [This older version of .NET is no longer updated by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
+> 1. [This older version of .NET is no longer updated or supported by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
 > 1. [This combination of .NET and Debian versions was never supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
-> 1. [.NET 9 on ARM32 Linux requires a newer version of glibc (`libc6` 2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility) than is provided by Debian 10 ([2.28](https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
+> 1. [.NET 9 on ARM32 Linux requires a newer version of glibc/libc6 (2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility) than is provided by Debian 10 ([2.28](https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
 
 ##### Release information
-- [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/)
+- [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/) and [hardware compatibility](https://en.wikipedia.org/wiki/Raspberry_Pi_OS#Releases)
 - [Debian releases](https://www.debian.org/releases/) and [details](https://wiki.debian.org/DebianReleases)
 - [.NET releases](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#lifecycle), [details](https://github.com/dotnet/core/blob/main/releases.md), [Release Policies](https://github.com/dotnet/core/blob/main/release-policies.md), and [Supported OS Policy](https://github.com/dotnet/core/blob/main/os-lifecycle-policy.md)
 
@@ -222,7 +222,7 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 ✅ [Raspberry Pi 5](https://www.raspberrypi.com/products/raspberry-pi-5/)<br>
 ✅ [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)<br>
 ✅ [Raspberry Pi 3](https://www.raspberrypi.com/products/raspberry-pi-3-model-b/)<br>
-✅ [Raspberry Pi 2](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/)<br>
+✅ [Raspberry Pi 2](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) (64-bit OS requires v1.2, not v1.1)<br>
 ✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/), [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/) and [4](https://www.raspberrypi.com/products/compute-module-4/), [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/), and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/)<br>
 ⛔ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
 

@@ -18,7 +18,7 @@ public class PackageRequesterImpl: PackageRequester {
     private static readonly CpuArchitecture[] CPU_ARCHITECTURES = Enum.GetValues<CpuArchitecture>();
 
     private static readonly RuntimeType[] DOTNET_RUNTIMES = Enum.GetValues<RuntimeType>()
-        .Where(type => type is not RuntimeType.SDK) //FIXME testing
+        // .Where(type => type is not RuntimeType.SDK)
         .ToArray();
 
     public IEnumerable<PackageRequest> listPackagesToRequest(IEnumerable<DotnetRelease> upstreamReleases) {

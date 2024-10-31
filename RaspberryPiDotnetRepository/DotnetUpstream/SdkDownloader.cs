@@ -97,7 +97,7 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
         return new UpstreamReleasesState(dotnetReleases, new UpstreamReleasesSecondaryInfo(
             knownReleaseMinorRuntimeVersions: dotnetReleases.Select(release => release.runtimeVersion.AsMinor()).ToList().AsReadOnly(),
             knownReleaseSdkVersions: dotnetReleases.Select(release => release.sdkVersion).ToList().AsReadOnly(),
-            leastProvidedCurrentReleaseMinorVersion: dotnetReleases.Last().sdkVersion.AsMinor()));
+            leastProvidedReleaseMinorVersion: dotnetReleases.Last().sdkVersion.AsMinor()));
     }
 
     private static bool isStableVersion(JsonNode? release) {

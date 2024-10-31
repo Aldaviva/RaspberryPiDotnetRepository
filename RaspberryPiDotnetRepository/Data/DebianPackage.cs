@@ -258,8 +258,8 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
         priority     = priority,
         homepage     = homepage,
         dependencies = dependencyPackages,
-        suggestions  = suggestedPackages(upstreamInfo.leastProvidedCurrentReleaseMinorVersion), //TODO check .NET 9 compatibility
-        provided     = providedPackages(upstreamInfo.knownReleaseMinorRuntimeVersions)          //TODO check .NET 9 compatibility
+        suggestions  = suggestedPackages(upstreamInfo.leastProvidedReleaseMinorVersion),
+        provided     = providedPackages(upstreamInfo.knownReleaseMinorRuntimeVersions)
     };
 
     [JsonIgnore]
