@@ -163,13 +163,13 @@ sudo apt upgrade
 ```
 
 > [!IMPORTANT]  
-> Be sure to restart any running .NET applications after installing a new version of the runtime they were using, or else they may mysteriously crash much later when a dynamically-loaded file cannot be found in an old, now-deleted directory.
+> Be sure to restart any running .NET applications after installing a new version of the runtime they were using, or else they may mysteriously crash much later when a dynamically-loaded file cannot be found in an old, now-deleted versioned directory.
 
 #### Major and minor versions
 
-If you want to update to a new major or minor version, you will need to have installed one of the [`latest`](#latest-version) packages, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt update`.
+**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt update && apt upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt upgrade --autoremove`.
 
-Alternatively, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`.
+**Specific minor version installed:** If you aren't using a `latest[-lts]` package, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`. Afterwards, you may clean up previous versions using a command like `sudo apt remove dotnet-runtime-7.0`.
 
 #### Automatic updates
 
@@ -188,7 +188,7 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 
 ### Operating systems and .NET releases
 <!-- Add new releases here -->
-|Raspberry Pi OS|CPU architecture|.NET 9|.NET 8|.NET 7|.NET 6|
+|Raspberry Pi OS|OS CPU architecture|.NET 9|.NET 8|.NET 7|.NET 6|
 |-:|-:|:-|:-|:-|:-|
 |Bookworm (12)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
 |Bookworm (12)|ARM32|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
