@@ -1,6 +1,8 @@
 ﻿using Azure;
 using Azure.ResourceManager.Cdn;
 using Azure.ResourceManager.Cdn.Models;
+using Microsoft.Extensions.Options;
+using Options = RaspberryPiDotnetRepository.Data.Options;
 
 namespace RaspberryPiDotnetRepository.Azure;
 
@@ -23,14 +25,16 @@ public interface CdnClient {
 
 }
 
-public class CdnClientImpl(CdnEndpointResource? cdnEndpoint, ILogger<CdnClientImpl> logger): CdnClient {
+public class CdnClientImpl(CdnEndpointResource? cdnEndpoint, ILogger<CdnClientImpl> logger, IOptions<Options> options): CdnClient {
 
     public async Task purge(IEnumerable<string> paths) {
-        if (cdnEndpoint != null) {
+        if (cdnEndpoint == null) {
+            logger.LogInformation("No CDN configured, not purging");
+        } else if (options.Value.dryRun) {
+            logger.LogInformation("Would have started CDN purge if not in dry run");
+        } else {
             await cdnEndpoint.PurgeContentAsync(WaitUntil.Started, new PurgeContent(paths));
             logger.LogInformation("Starting CDN purge, will finish asynchronously later");
-        } else {
-            logger.LogInformation("No CDN configured, not purging");
         }
     }
 

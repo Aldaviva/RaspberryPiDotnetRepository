@@ -50,15 +50,20 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
         destinationBlobFilePath = Paths.Dos2UnixSlashes(destinationBlobFilePath);
         await uploadSemaphore.WaitAsync(ct);
         try {
-            logger.LogInformation("Uploading to {dest}", destinationBlobFilePath);
-            using DisposableProgress<long> progressHandler = uploadProgress.registerFile(destinationBlobFilePath, source.Length);
-            return (await openFile(destinationBlobFilePath).UploadAsync(source, new BlobHttpHeaders {
-                    ContentType  = contentType,
-                    CacheControl = $"public, max-age={CACHE_DURATION.TotalSeconds:F0}"
-                },
-                progressHandler: progressHandler,
-                transferOptions: new StorageTransferOptions { MaximumConcurrency = options.Value.storageParallelUploads },
-                cancellationToken: ct)).AsNullable();
+            if (!options.Value.dryRun) {
+                logger.LogInformation("Uploading to {dest}", destinationBlobFilePath);
+                using DisposableProgress<long> progressHandler = uploadProgress.registerFile(destinationBlobFilePath, source.Length);
+                return (await openFile(destinationBlobFilePath).UploadAsync(source, new BlobHttpHeaders {
+                        ContentType  = contentType,
+                        CacheControl = $"public, max-age={CACHE_DURATION.TotalSeconds:F0}"
+                    },
+                    progressHandler: progressHandler,
+                    transferOptions: new StorageTransferOptions { MaximumConcurrency = options.Value.storageParallelUploads },
+                    cancellationToken: ct)).AsNullable();
+            } else {
+                logger.LogInformation("Would have uploaded to {dest} if not in dry run", destinationBlobFilePath);
+                return null;
+            }
         } catch (Exception e) when (e is not OutOfMemoryException) {
             logger.LogError(e, "Failed to upload to {dest}", destinationBlobFilePath);
             throw;
@@ -73,8 +78,12 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
     }
 
     public async Task deleteFile(string blobFilePath, CancellationToken ct = default) {
-        logger.LogDebug("Deleting {file}", blobFilePath);
-        await container.DeleteBlobIfExistsAsync(blobFilePath, DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: ct);
+        if (!options.Value.dryRun) {
+            logger.LogDebug("Deleting {file}", blobFilePath);
+            await container.DeleteBlobIfExistsAsync(blobFilePath, DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: ct);
+        } else {
+            logger.LogDebug("Would have deleted {file} if not in dry run", blobFilePath);
+        }
     }
 
     public void Dispose() {

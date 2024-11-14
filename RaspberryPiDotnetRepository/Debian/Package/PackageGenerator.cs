@@ -63,7 +63,6 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                     RuntimeType.CLI when sourcePath == "dotnet" => o(755),
                     RuntimeType.RUNTIME when sourcePath.StartsWith("shared/Microsoft.NETCore.App/") => Path.GetExtension(sourcePath) == ".so" || Path.GetFileName(sourcePath) == "createdump"
                         ? o(755) : o(644),
-                    RuntimeType.RUNTIME when sourcePath is "ThirdPartyNotices.txt" or "LICENSE.txt"               => o(644),
                     RuntimeType.RUNTIME when sourcePath.StartsWith("host/fxr")                                    => o(755),
                     RuntimeType.ASPNETCORE_RUNTIME when sourcePath.StartsWith("shared/Microsoft.AspNetCore.App/") => o(644),
                     RuntimeType.SDK when sourcePath.StartsWith("packs/") || sourcePath.StartsWith("sdk") || sourcePath.StartsWith("templates/") => Path.GetExtension(sourcePath) == ".so"
@@ -71,9 +70,15 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                     _ => null //exclude file
                 };
 
+                // #32: when attempting to install multiple Runtime packages, dpkg will fail because they all contain ThirdPartyNotices.txt with the same path, so rename them.
+                if (generatedPackage.runtime == RuntimeType.RUNTIME && sourcePath is "ThirdPartyNotices.txt" or "LICENSE.txt") {
+                    sourcePath = $"{Path.GetFileNameWithoutExtension(sourcePath)}-{generatedPackage.minorVersion}{Path.GetExtension(sourcePath)}";
+                    fileMode   = o(644);
+                }
+
                 if (fileMode != null) {
-                    IList<string> directoriesToAdd = [];
                     string        destinationPath  = $"./usr/share/dotnet/{sourcePath}";
+                    IList<string> directoriesToAdd = [];
                     for (string destinationDirectory = Paths.Dos2UnixSlashes(Path.GetDirectoryName(destinationPath)!);
                          existingDirectories.Add(destinationDirectory);
                          destinationDirectory = Paths.Dos2UnixSlashes(Path.GetDirectoryName(destinationDirectory)!)) {

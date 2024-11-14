@@ -13,11 +13,11 @@ public interface ManifestManager {
     string manifestFilePath { get; }
 
     Task<RepositoryManifest?> downloadManifest(CancellationToken ct = default);
-    string serializeManifest(RepositoryManifest                  manifest);
+    string serializeManifest(RepositoryManifest manifest);
 
 }
 
-public class ManifestManagerImpl(BlobStorageClient blobStorage, IOptions<Options> options): ManifestManager {
+public class ManifestManagerImpl(BlobStorageClient blobStorage, IOptions<Options> options, ILogger<ManifestManagerImpl> logger): ManifestManager {
 
     private static readonly JsonSerializerOptions JSON_OPTIONS = new() {
         Converters    = { new JsonStringEnumConverter() },
@@ -30,7 +30,14 @@ public class ManifestManagerImpl(BlobStorageClient blobStorage, IOptions<Options
     public async Task<RepositoryManifest?> downloadManifest(CancellationToken ct = default) {
         await using Stream? oldManifestStream = (await blobStorage.readFile(manifestFilename, ct))?.Content.ToStream();
         if (oldManifestStream != null) {
-            RepositoryManifest repositoryManifest = (await JsonSerializer.DeserializeAsync<RepositoryManifest>(oldManifestStream, JSON_OPTIONS, ct))!;
+            RepositoryManifest repositoryManifest;
+            try {
+                repositoryManifest = (await JsonSerializer.DeserializeAsync<RepositoryManifest>(oldManifestStream, JSON_OPTIONS, ct))!;
+            } catch (JsonException e) {
+                logger.LogWarning(e, "Package manifest JSON file {filename} was corrupted, ignoring it and regenerating all packages", manifestFilename);
+                return null;
+            }
+
             foreach (DebianPackage package in repositoryManifest.packages) {
                 package.isUpToDateInBlobStorage = true;
             }

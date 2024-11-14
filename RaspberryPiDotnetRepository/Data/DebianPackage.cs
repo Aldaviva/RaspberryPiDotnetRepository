@@ -7,7 +7,7 @@ namespace RaspberryPiDotnetRepository.Data;
 
 public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version sdkVersion, CpuArchitecture architecture): IEquatable<DebianPackage> {
 
-    public const string VERSION_SUFFIX = "-0";
+    public const string VERSION_SUFFIX = "-1";
 
     /// <summary>
     /// The name of the Debian package, such as <c>dotnet-runtime-8.0</c> or <c>aspnetcore-runtime-latest-lts</c>.
@@ -145,16 +145,11 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
         _               => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, "Unhandled runtime")
     };
 
-    // TODO this will get advertised by apt even if it's a transitive dependency, which is annoying because it yells at you even when you're doing the right thing. maybe suggesting dotnet-runtime should be removed entirely.
-    /// <summary>
-    /// These packages should also be installed along with this package. The .NET runtime should be installed when /usr/bin/dotnet is installed, because dotnet is worthless without it.
-    /// Not using Depends for CLI because that would create a circular dependency between CLI and runtime.
-    /// Not using Recommends for CLI because that might auto-install the wrong runtime version by default.
-    /// </summary>
-    /// <param name="leastProvidedRelease">this should be 6.0</param>
-    /// <returns></returns>
-    public IEnumerable<Dependency> suggestedPackages(Version leastProvidedRelease) => runtime == RuntimeType.CLI
-        ? [new DependencyPackage($"{RuntimeType.RUNTIME.getPackageName()}-{leastProvidedRelease.ToString(2)}-or-greater")] : [];
+	/*
+	 * Not declaring any suggested packages because
+	 * 1. Suggested packages are retained and not autoremoved, which makes it require explicit manual steps to clean up old versions after a minor version upgrade of a latest[-lts] package.
+	 * 2. APT will advertise suggested packages even when the suggester is transitively installed, which is annoying because it yells at you even when you're doing the right thing.
+	 */
 
     /// <summary>
     /// The runtime and SDK packages say they provide a virtual package with a version inequality.
@@ -163,7 +158,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// </summary>
     /// <param name="knownReleaseMinorVersions">a list of the latest minor versions of each .NET release in this repo >= 6.0, like [6.0, 7.0, 8.0]</param>
     /// <returns></returns>
-    public IEnumerable<Dependency> providedPackages(IEnumerable<Version> knownReleaseMinorVersions) => runtime != RuntimeType.CLI && !isMetaPackage
+    private IEnumerable<Dependency> providedPackages(IEnumerable<Version> knownReleaseMinorVersions) => runtime != RuntimeType.CLI && !isMetaPackage
         ? knownReleaseMinorVersions.Where(knownMinorVersion => knownMinorVersion <= version.AsMinor())
             .Select(knownMinorVersion => new DependencyPackage($"{runtime.getPackageName()}-{knownMinorVersion.ToString(2)}-or-greater")) : [];
 
@@ -258,7 +253,6 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
         priority     = priority,
         homepage     = homepage,
         dependencies = dependencyPackages,
-        suggestions  = suggestedPackages(upstreamInfo.leastProvidedReleaseMinorVersion),
         provided     = providedPackages(upstreamInfo.knownReleaseMinorRuntimeVersions)
     };
 
