@@ -1,4 +1,4 @@
-﻿using Azure;
+using Azure;
 using Azure.ResourceManager.Cdn;
 using Azure.ResourceManager.Cdn.Models;
 using Microsoft.Extensions.Options;

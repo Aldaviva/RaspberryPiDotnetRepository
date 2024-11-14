@@ -1,4 +1,4 @@
-﻿using DataSizeUnits;
+using DataSizeUnits;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
 using System.Diagnostics;

@@ -1,4 +1,4 @@
-﻿using DataSizeUnits;
+using DataSizeUnits;
 using RaspberryPiDotnetRepository.Data.ControlMetadata;
 using RaspberryPiDotnetRepository.DotnetUpstream;
 using System.Text.Json.Serialization;
@@ -145,11 +145,11 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
         _               => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, "Unhandled runtime")
     };
 
-	/*
-	 * Not declaring any suggested packages because
-	 * 1. Suggested packages are retained and not autoremoved, which makes it require explicit manual steps to clean up old versions after a minor version upgrade of a latest[-lts] package.
-	 * 2. APT will advertise suggested packages even when the suggester is transitively installed, which is annoying because it yells at you even when you're doing the right thing.
-	 */
+    /*
+     * Not declaring any suggested packages because
+     * 1. Suggested packages are retained and not autoremoved, which makes it require explicit manual steps to clean up old versions after a minor version upgrade of a latest[-lts] package.
+     * 2. APT will advertise suggested packages even when the suggester is transitively installed, which is annoying because it yells at you even when you're doing the right thing.
+     */
 
     /// <summary>
     /// The runtime and SDK packages say they provide a virtual package with a version inequality.

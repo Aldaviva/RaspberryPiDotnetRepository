@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data;
+namespace RaspberryPiDotnetRepository.Data;
 
 /// <summary>
 /// Inject this by depending upon the <c>IOptions&lt;Options&gt;</c> type.

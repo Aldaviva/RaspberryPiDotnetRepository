@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
 using System.Text;
 using System.Text.Json;

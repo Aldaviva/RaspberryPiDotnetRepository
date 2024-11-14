@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using System.Buffers;
 using System.ComponentModel;
 using System.Globalization;

@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data;
+namespace RaspberryPiDotnetRepository.Data;
 
 public record DotnetRelease(Version sdkVersion, Version runtimeVersion, bool isSupportedLongTerm) {
 

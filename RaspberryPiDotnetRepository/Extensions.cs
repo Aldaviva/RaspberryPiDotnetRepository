@@ -1,4 +1,4 @@
-﻿using Azure;
+using Azure;
 using RaspberryPiDotnetRepository.Data;
 
 // ReSharper disable InconsistentNaming - extension methods

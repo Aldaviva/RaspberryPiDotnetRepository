@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data;
+namespace RaspberryPiDotnetRepository.Data;
 
 /// <summary>
 /// This represents <c>Packages.gz</c> or <c>Packages</c> files in a Debian package repository

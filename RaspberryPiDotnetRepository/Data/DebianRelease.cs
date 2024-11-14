@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data;
+namespace RaspberryPiDotnetRepository.Data;
 
 /*
  * https://www.debian.org/releases/

@@ -1,4 +1,4 @@
-﻿using DataSizeUnits;
+using DataSizeUnits;
 using System.Diagnostics;
 
 namespace RaspberryPiDotnetRepository;

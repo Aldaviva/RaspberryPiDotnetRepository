@@ -1,4 +1,4 @@
-﻿using DataSizeUnits;
+using DataSizeUnits;
 using RaspberryPiDotnetRepository.Debian.Repository;
 using System.Text;
 

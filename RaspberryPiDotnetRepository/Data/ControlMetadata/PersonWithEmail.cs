@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data.ControlMetadata;
+namespace RaspberryPiDotnetRepository.Data.ControlMetadata;
 
 public record PersonWithEmail(string name, string emailAddress): DebianSerializable {
 

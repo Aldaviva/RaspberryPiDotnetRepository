@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data;
+namespace RaspberryPiDotnetRepository.Data;
 
 public record VersionKey(ISet<string> dotnetVersions, ISet<int> debianVersions) {
 

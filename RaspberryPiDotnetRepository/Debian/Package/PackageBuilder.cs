@@ -1,4 +1,4 @@
-﻿using LibObjectFile.Ar;
+using LibObjectFile.Ar;
 using RaspberryPiDotnetRepository.Data.ControlMetadata;
 using SharpCompress.Common;
 using SharpCompress.Compressors;

@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data;
+namespace RaspberryPiDotnetRepository.Data;
 
 /// <summary>
 /// This represents <c>InRelease</c>, <c>Release</c>, or <c>Release.gpg</c> files in a Debian package repository

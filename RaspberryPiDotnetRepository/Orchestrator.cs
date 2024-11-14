@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Azure;
 using RaspberryPiDotnetRepository.Data;

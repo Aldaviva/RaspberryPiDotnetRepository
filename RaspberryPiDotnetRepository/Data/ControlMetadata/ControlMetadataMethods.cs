@@ -1,4 +1,4 @@
-﻿namespace RaspberryPiDotnetRepository.Data.ControlMetadata;
+namespace RaspberryPiDotnetRepository.Data.ControlMetadata;
 
 public static class ControlMetadataMethods {
 

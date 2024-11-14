@@ -1,4 +1,4 @@
-﻿using RaspberryPiDotnetRepository.Data;
+using RaspberryPiDotnetRepository.Data;
 
 namespace RaspberryPiDotnetRepository.Debian.Package;
 

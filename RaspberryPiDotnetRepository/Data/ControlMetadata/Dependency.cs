@@ -1,3 +1,3 @@
-﻿namespace RaspberryPiDotnetRepository.Data.ControlMetadata;
+namespace RaspberryPiDotnetRepository.Data.ControlMetadata;
 
 public interface Dependency: DebianSerializable;
