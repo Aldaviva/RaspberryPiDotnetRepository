@@ -19,21 +19,21 @@ public record Options {
 
     // public bool forceRegenerate { get; init; }
 
-    public string? cdnTenantId { get; private set; }
+    public string? cdnTenantId { get; set; }
 
-    public string? cdnClientId { get; private set; }
+    public string? cdnClientId { get; set; }
 
-    public string? cdnCertFilePath { get; private set; }
+    public string? cdnCertFilePath { get; set; }
 
     public string cdnCertPassword { get; init; } = string.Empty;
 
-    public string? cdnSubscriptionId { get; private set; }
+    public string? cdnSubscriptionId { get; set; }
 
-    public string? cdnResourceGroup { get; private set; }
+    public string? cdnResourceGroup { get; set; }
 
-    public string? cdnProfile { get; private set; }
+    public string? cdnProfile { get; set; }
 
-    public string? cdnEndpointName { get; private set; }
+    public string? cdnEndpointName { get; set; }
 
     /// <summary>
     /// From Azure Portal > Storage accounts > account > Access keys > Connection string
