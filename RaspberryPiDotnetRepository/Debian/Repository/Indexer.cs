@@ -50,16 +50,13 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
 
     private async Task<IEnumerable<PackageIndexFile>> generateIndexOfPackagesInDebianReleaseAndArchitecture(DebianRelease debianRelease, CpuArchitecture cpuArchitecture,
                                                                                                             IEnumerable<DebianPackage> debPackages, UpstreamReleasesSecondaryInfo upstreamInfo) {
-        bool areAllPackagesInIndexUpToDateInBlobStorage = true;
-        string packageFileContents = string.Join("\n\n", debPackages.Select(package => {
-            areAllPackagesInIndexUpToDateInBlobStorage &= package.isUpToDateInBlobStorage;
-            return $"""
-                    {package.getControl(upstreamInfo).serialize().Trim()}
-                    Filename: {package.filePathRelativeToRepo}
-                    Size: {package.downloadSize.ConvertToUnit(Unit.Byte).Quantity:F0}
-                    SHA256: {package.fileHashSha256}
-                    """.ReplaceLineEndings("\n");
-        }));
+        string packageFileContents = string.Join("\n\n", debPackages.Select(package =>
+            $"""
+                 {package.getControl(upstreamInfo).serialize().Trim()}
+                 Filename: {package.filePathRelativeToRepo}
+                 Size: {package.downloadSize.ConvertToUnit(Unit.Byte).Quantity:F0}
+                 SHA256: {package.fileHashSha256}
+                 """.ReplaceLineEndings("\n")));
 
         string packageFileRelativeToSuite = Path.Combine("main", $"binary-{cpuArchitecture.toDebian()}", "Packages");
         string packageFileAbsolutePath    = Path.Combine(options.Value.repositoryBaseDir, "dists", debianRelease.getCodename(), packageFileRelativeToSuite);
@@ -79,22 +76,19 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
         logger.LogInformation("Generated Packages index files for Debian {debian} {arch}", debianRelease.getCodename(), cpuArchitecture.toDebian());
 
         return [
-            new PackageIndexFile(debianRelease, cpuArchitecture, true, areAllPackagesInIndexUpToDateInBlobStorage),
-            new PackageIndexFile(debianRelease, cpuArchitecture, false, areAllPackagesInIndexUpToDateInBlobStorage)
+            new PackageIndexFile(debianRelease, cpuArchitecture, true),
+            new PackageIndexFile(debianRelease, cpuArchitecture, false)
         ];
     }
 
     public async Task<ReleaseIndexFile> generateReleaseIndex(DebianRelease debianRelease, IEnumerable<PackageIndexFile> packageIndexFiles) {
-        string repositoryBaseDir                            = options.Value.repositoryBaseDir;
-        bool   areAllReleaseIndexFilesUpToDateInBlobStorage = true;
+        string repositoryBaseDir = options.Value.repositoryBaseDir;
 
         string indexSha256Hashes = string.Join('\n', await Task.WhenAll(packageIndexFiles.Select(async packageIndexFile => {
             await using FileStream fileStream = File.OpenRead(Path.Combine(repositoryBaseDir, packageIndexFile.filePathRelativeToRepo));
 
             string sha256Hash = Convert.ToHexString(await SHA256.HashDataAsync(fileStream)).ToLowerInvariant();
-            long   fileSize   = fileStream.Length;
-            areAllReleaseIndexFilesUpToDateInBlobStorage &= packageIndexFile.isUpToDateInBlobStorage;
-            return $" {sha256Hash} {fileSize:D} {Paths.Dos2UnixSlashes(packageIndexFile.filePathRelativeToSuite)}";
+            return $" {sha256Hash} {fileStream.Length:D} {Paths.Dos2UnixSlashes(packageIndexFile.filePathRelativeToSuite)}";
         })));
 
         string releaseFileCleartext =
@@ -111,7 +105,7 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
                  {indexSha256Hashes}
                  """.ReplaceLineEndings("\n");
 
-        ReleaseIndexFile releaseIndexFile = new(debianRelease, areAllReleaseIndexFilesUpToDateInBlobStorage);
+        ReleaseIndexFile releaseIndexFile = new(debianRelease);
 
         string filePath = Path.Combine(repositoryBaseDir, releaseIndexFile.releaseFilePathRelativeToRepo);
         await File.WriteAllTextAsync(filePath, releaseFileCleartext, Encoding.UTF8); // Bom.Squad has already defused this UTF-8 BOM, or else apt will get its limbs blown off

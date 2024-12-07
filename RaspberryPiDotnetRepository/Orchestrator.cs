@@ -11,18 +11,18 @@ using Options = RaspberryPiDotnetRepository.Data.Options;
 namespace RaspberryPiDotnetRepository;
 
 public class Orchestrator(
-    SdkDownloader            sdkDownloader,
-    PackageRequester         packageRequester,
-    PackageGenerator         packageGenerator,
-    Indexer                  indexer,
-    CdnClient                cdnClient,
-    ExtraFileGenerator       extraFileGenerator,
-    ManifestManager          manifestManager,
-    BlobStorageClient        blobStorage,
-    StatisticsService        statistics,
+    SdkDownloader sdkDownloader,
+    PackageRequester packageRequester,
+    PackageGenerator packageGenerator,
+    Indexer indexer,
+    CdnClient cdnClient,
+    ExtraFileGenerator extraFileGenerator,
+    ManifestManager manifestManager,
+    BlobStorageClient blobStorage,
+    StatisticsService statistics,
     IHostApplicationLifetime appLifetime,
-    IOptions<Options>        options,
-    ILogger<Orchestrator>    logger
+    IOptions<Options> options,
+    ILogger<Orchestrator> logger
 ): BackgroundService {
 
     private static readonly Version MIN_DOTNET_MINOR_VERSION = new(6, 0);
@@ -55,9 +55,10 @@ public class Orchestrator(
             ReleaseIndexFile[] releaseIndexFiles = await Task.WhenAll(packageIndicesByDebianRelease.Select(releaseFiles => indexer.generateReleaseIndex(releaseFiles.Key, releaseFiles)));
 
             // Write readme, badges, and GPG public key
-            string                      readmeFilename   = await extraFileGenerator.generateReadme();
-            IEnumerable<UploadableFile> badgeFiles       = await extraFileGenerator.generateReadmeBadges(upstreamReleases.First(release => release.isLatestMinorVersion));
-            string                      gpgPublicKeyFile = extraFileGenerator.copyGpgPublicKey();
+            string                      readmeFilename    = await extraFileGenerator.generateReadme();
+            IEnumerable<UploadableFile> badgeFiles        = await extraFileGenerator.generateReadmeBadges(upstreamReleases.First(release => release.isLatestMinorVersion));
+            string                      gpgPublicKeyFile  = extraFileGenerator.copyGpgPublicKey();
+            string                      addRepoScriptFile = await extraFileGenerator.generateAddRepoScript();
 
             // Upload .deb packages to Azure Blob Storage
             string repoBaseDir = options.Value.repositoryBaseDir;
@@ -65,31 +66,30 @@ public class Orchestrator(
                 blobStorage.uploadFile(Path.Combine(repoBaseDir, p.filePathRelativeToRepo), p.filePathRelativeToRepo, "application/vnd.debian.binary-package", ct)));
 
             // Upload Packages.gz indices to Azure Blob Storage
-            Task<BlobContentInfo?[]> packageIndexUploads = Task.WhenAll(packageIndicesByDebianRelease.SelectMany(debianRelease => debianRelease).Where(file => !file.isUpToDateInBlobStorage).Select(
-                packageIndexFile =>
-                    blobStorage.uploadFile(Path.Combine(repoBaseDir, packageIndexFile.filePathRelativeToRepo), packageIndexFile.filePathRelativeToRepo,
-                        packageIndexFile.isCompressed ? "application/gzip" : "text/plain", ct)));
+            Task<BlobContentInfo?[]> packageIndexUploads = Task.WhenAll(packageIndicesByDebianRelease.SelectMany(debianRelease => debianRelease).Select(packageIndexFile =>
+                blobStorage.uploadFile(Path.Combine(repoBaseDir, packageIndexFile.filePathRelativeToRepo), packageIndexFile.filePathRelativeToRepo,
+                    packageIndexFile.isCompressed ? "application/gzip" : "text/plain", ct)));
 
-            // Upload InRelease index files to Azure Blob Storage
-            Task<BlobContentInfo?[]> releaseIndexUploads = Task.WhenAll(releaseIndexFiles.Where(file => !file.isUpToDateInBlobStorage).SelectMany(file =>
+            // Upload InRelease indices to Azure Blob Storage
+            Task<BlobContentInfo?[]> releaseIndexUploads = Task.WhenAll(releaseIndexFiles.SelectMany(file =>
                 new[] { file.inreleaseFilePathRelativeToRepo, file.releaseFilePathRelativeToRepo, file.releaseGpgFilePathRelativeToRepo }.Select(relativeFilePath =>
-                    blobStorage.uploadFile(Path.Combine(repoBaseDir, relativeFilePath), relativeFilePath, Path.GetExtension(relativeFilePath) == ".gpg" ? "application/pgp-signature" : "text/plain",
-                        ct))));
+                    blobStorage.uploadFile(Path.Combine(repoBaseDir, relativeFilePath), relativeFilePath,
+                        ".gpg".Equals(Path.GetExtension(relativeFilePath), StringComparison.OrdinalIgnoreCase) ? "application/pgp-signature" : "text/plain", ct))));
 
             await packageIndexUploads;
             await releaseIndexUploads;
 
-            // Upload badge JSON files to Azure Blob Storage
-            await Task.WhenAll(badgeFiles.Where(file => !file.isUpToDateInBlobStorage)
-                .Select(file => blobStorage.uploadFile(Path.Combine(repoBaseDir, file.filePathRelativeToRepo), file.filePathRelativeToRepo, "application/json", ct)));
+            // Upload badge JSON and other extra files to Azure Blob Storage
+            await Task.WhenAll(badgeFiles.Select(file => blobStorage.uploadFile(Path.Combine(repoBaseDir, file.filePathRelativeToRepo), file.filePathRelativeToRepo, "application/json", ct)));
             await blobStorage.uploadFile(Path.Combine(repoBaseDir, readmeFilename), readmeFilename, "text/plain", ct);
             await blobStorage.uploadFile(Path.Combine(repoBaseDir, gpgPublicKeyFile), gpgPublicKeyFile, "application/pgp-keys", ct);
-
-            // Clear CDN cache
-            await cdnClient.purge(["/dists/*", "/badges/*", "/manifest.json"]);
+            await blobStorage.uploadFile(Path.Combine(repoBaseDir, addRepoScriptFile), addRepoScriptFile, "application/x-sh", ct);
 
             // Upload manifest.json file to Azure Blob Storage
             await blobStorage.uploadFile(manifestManager.manifestFilePath, manifestManager.manifestFilename, "application/json", ct);
+
+            // Clear CDN cache
+            await cdnClient.purge(["/dists/*", "/badges/*", "/manifest.json"]);
 
             // Delete outdated .deb package files from Azure Blob Storage
             await Task.WhenAll(oldManifest?.packages.Except(newManifest.packages).Select(packageToDelete => blobStorage.deleteFile(packageToDelete.filePathRelativeToRepo, ct)) ?? []);

@@ -3,7 +3,7 @@ namespace RaspberryPiDotnetRepository.Data;
 /// <summary>
 /// This represents <c>InRelease</c>, <c>Release</c>, or <c>Release.gpg</c> files in a Debian package repository
 /// </summary>
-public record ReleaseIndexFile(DebianRelease debianVersion, bool isUpToDateInBlobStorage = false) {
+public class ReleaseIndexFile(DebianRelease debianVersion) {
 
     private readonly string parentDirectory = Path.Combine("dists", debianVersion.getCodename());
 

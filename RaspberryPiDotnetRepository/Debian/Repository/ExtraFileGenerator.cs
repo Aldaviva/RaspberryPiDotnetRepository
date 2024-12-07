@@ -14,6 +14,8 @@ public interface ExtraFileGenerator {
 
     string copyGpgPublicKey();
 
+    Task<string> generateAddRepoScript();
+
 }
 
 public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService statistics, ILogger<ExtraFileGeneratorImpl> logger): ExtraFileGenerator {
@@ -59,7 +61,36 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
         const string FILENAME                = "aldaviva.gpg.key";
         string       gpgPublicKeyDestination = Path.Combine(options.Value.repositoryBaseDir, FILENAME);
         File.Copy(options.Value.gpgPublicKeyPath, gpgPublicKeyDestination, true);
+        statistics.onFileWritten(gpgPublicKeyDestination);
         logger.LogDebug("Wrote GPG public key file Debian repository");
+        return FILENAME;
+    }
+
+    public async Task<string> generateAddRepoScript() {
+        const string FILENAME = "addrepo.sh";
+        string       filePath = Path.Combine(options.Value.repositoryBaseDir, FILENAME);
+        const string CONTENTS = """
+                                #!/bin/sh
+
+                                echo Adding repository PGP key
+                                sudo wget -q https://raspbian.aldaviva.com/aldaviva.gpg.key -O /etc/apt/trusted.gpg.d/aldaviva.gpg
+
+                                echo Adding repository
+                                echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
+
+                                echo Finding available packages
+                                sudo apt update
+
+                                echo Ready to install .NET packages, for example:
+                                echo "  sudo apt install dotnet-runtime-latest"
+                                echo "  sudo apt install aspnetcore-runtime-latest-lts"
+                                echo "  sudo apt install dotnet-sdk-8.0"
+                                echo For more information, see https://github.com/Aldaviva/RaspberryPiDotnetRepository
+                                """;
+
+        await File.WriteAllTextAsync(filePath, CONTENTS, Encoding.UTF8);
+        statistics.onFileWritten(filePath);
+        logger.LogDebug("Wrote client-side repository installation script");
         return FILENAME;
     }
 

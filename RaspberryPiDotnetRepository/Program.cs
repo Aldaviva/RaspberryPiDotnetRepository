@@ -17,6 +17,7 @@ using Options = RaspberryPiDotnetRepository.Data.Options;
 using PGP = Unfucked.PGP;
 
 #pragma warning disable CS8634 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'class' constraint. - You can safely try to register a singleton with a null value, it just won't register. Just make sure you inject it as nullable.
+#pragma warning disable IDE0001 // same as above
 
 // apt will get its limbs blown off with "Clearsigned file isn't valid, got 'NOSPLIT' (does the network require authentication?)" if InRelease starts with UTF-8 BOM
 BomSquad.DefuseUtf8Bom();
@@ -24,7 +25,7 @@ BomSquad.DefuseUtf8Bom();
 HostApplicationBuilder appConfig = Host.CreateApplicationBuilder(args);
 appConfig.Configuration.AlsoSearchForJsonFilesInExecutableDirectory();
 
-appConfig.Logging.AddUnfuckedConsole(options => options.IncludeNamespaces = false);
+appConfig.Logging.AddUnfuckedConsole();
 
 appConfig.Services
     .Configure<Options>(appConfig.Configuration)
