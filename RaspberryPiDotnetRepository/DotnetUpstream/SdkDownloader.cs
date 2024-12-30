@@ -18,7 +18,8 @@ public interface SdkDownloader {
 public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options, ILogger<SdkDownloaderImpl> logger): SdkDownloader {
 
     // Found on https://github.com/dotnet/core#release-information
-    private static readonly Uri DOTNET_RELEASE_INDEX = new("https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json");
+    // #34: Use the new Azure Traffic Manager domain name instead of the Azure Blob Storage domain for performance (even though this file itself currently points to uncached Blob Storage URLs), as recommended by https://devblogs.microsoft.com/dotnet/critical-dotnet-install-links-are-changing/#call-to-action
+    private static readonly Uri DOTNET_RELEASE_INDEX = new("https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json");
 
     private readonly CpuArchitecture[] allCpuArchitectures = Enum.GetValues<CpuArchitecture>();
 
