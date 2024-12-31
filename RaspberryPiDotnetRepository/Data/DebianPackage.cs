@@ -116,6 +116,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// <para>Packages that this package depends on. They are mandatory to install when this package is installed, and package managers like apt will install them automatically.</para>
     /// <para> </para>
     /// <para>Microsoft documentation:    https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies</para>
+    /// <para>Microsoft release notes:    https://github.com/dotnet/core/blob/main/release-notes/9.0/os-packages.md#debian</para>
     /// <para>Microsoft container images: https://github.com/dotnet/dotnet-docker/blob/main/src/runtime-deps/8.0/bookworm-slim/arm32v7/Dockerfile</para>
     /// <para>Ubuntu packages:            https://packages.ubuntu.com/mantic/dotnet-runtime-8.0</para>
     /// <para> </para>
