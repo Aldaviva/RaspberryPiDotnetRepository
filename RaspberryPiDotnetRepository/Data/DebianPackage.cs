@@ -7,7 +7,7 @@ namespace RaspberryPiDotnetRepository.Data;
 
 public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version sdkVersion, CpuArchitecture architecture): IEquatable<DebianPackage> {
 
-    public const string VERSION_SUFFIX = "-1";
+    public const string VERSION_SUFFIX = "-2";
 
     /// <summary>
     /// The name of the Debian package, such as <c>dotnet-runtime-8.0</c> or <c>aspnetcore-runtime-latest-lts</c>.

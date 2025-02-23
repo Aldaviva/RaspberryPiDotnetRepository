@@ -132,6 +132,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                 p.isMetaPackage &&
                 p.isMetaPackageSupportedLongTerm == packageToGenerate.mustBeSupportedLongTerm &&
                 p.runtime == packageToGenerate.packageType &&
+                p.architecture == packageToGenerate.architecture &&
                 p.version.AsMinor().Equals(packageToGenerate.concreteMinorVersion) &&
                 p.versionSuffix == DebianPackage.VERSION_SUFFIX) is { } oldPackage) {
             return oldPackage;

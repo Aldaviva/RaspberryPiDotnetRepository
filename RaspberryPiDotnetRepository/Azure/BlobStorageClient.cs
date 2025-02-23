@@ -9,11 +9,11 @@ namespace RaspberryPiDotnetRepository.Azure;
 
 public interface BlobStorageClient {
 
-    Task<IEnumerable<BlobItem>> listFiles(string? baseDir = default, CancellationToken ct = default);
+    Task<IEnumerable<BlobItem>> listFiles(string? baseDir = null, CancellationToken ct = default);
 
     Task<BlobDownloadResult?> readFile(string blobFilePath, CancellationToken ct = default);
 
-    Task<BlobContentInfo?> uploadFile(string filename, string destinationBlobFilePath, string? contentType = default, CancellationToken ct = default);
+    Task<BlobContentInfo?> uploadFile(string filename, string destinationBlobFilePath, string? contentType = null, CancellationToken ct = default);
 
     Task deleteFile(string blobFilePath, CancellationToken ct = default);
 
@@ -41,12 +41,12 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
         }
     }
 
-    public async Task<IEnumerable<BlobItem>> listFiles(string? baseDir = default, CancellationToken ct = default) {
+    public async Task<IEnumerable<BlobItem>> listFiles(string? baseDir = null, CancellationToken ct = default) {
         await using IAsyncEnumerator<BlobItem> enumerator = container.GetBlobsAsync(prefix: baseDir, cancellationToken: ct).GetAsyncEnumerator(ct);
         return await enumerator.ToList();
     }
 
-    protected async Task<BlobContentInfo?> uploadFile(Stream source, string destinationBlobFilePath, string? contentType = default, CancellationToken ct = default) {
+    protected async Task<BlobContentInfo?> uploadFile(Stream source, string destinationBlobFilePath, string? contentType = null, CancellationToken ct = default) {
         destinationBlobFilePath = Paths.Dos2UnixSlashes(destinationBlobFilePath);
         await uploadSemaphore.WaitAsync(ct);
         try {
@@ -72,7 +72,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
         }
     }
 
-    public async Task<BlobContentInfo?> uploadFile(string filename, string destinationBlobFilePath, string? contentType = default, CancellationToken ct = default) {
+    public async Task<BlobContentInfo?> uploadFile(string filename, string destinationBlobFilePath, string? contentType = null, CancellationToken ct = default) {
         await using FileStream fileStream = File.OpenRead(filename);
         return await uploadFile(fileStream, destinationBlobFilePath, contentType, ct);
     }
