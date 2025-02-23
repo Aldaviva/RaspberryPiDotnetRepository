@@ -14,7 +14,6 @@
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <ApplicationIcon>rpi-dotnet.ico</ApplicationIcon>
         <NoWarn>$(NoWarn);IDE0079;8524</NoWarn>
-        <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>false</SelfContained>
         <DebugType>embedded</DebugType>
     </PropertyGroup>
