@@ -41,7 +41,7 @@ You only have to do this step once per Raspberry Pi OS installation.
 wget -qO- https://raspbian.aldaviva.com/addrepo.sh | sh
 ```
 
-Alternatively, you may do this step manually.
+Alternatively, you may do this step manually with the following commands.
 ```sh
 sudo wget -q https://raspbian.aldaviva.com/aldaviva.gpg.key -O /etc/apt/trusted.gpg.d/aldaviva.gpg
 echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
@@ -223,8 +223,8 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 ✅ [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)<br>
 ✅ [Raspberry Pi 3](https://www.raspberrypi.com/products/raspberry-pi-3-model-b/)<br>
 ✅ [Raspberry Pi 2](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) (64-bit OS requires v1.2, not v1.1)<br>
-✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/), [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/) and [4](https://www.raspberrypi.com/products/compute-module-4/), [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/), and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/)<br>
-⛔ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
+✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/); [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/), [4](https://www.raspberrypi.com/products/compute-module-4/), and [5](https://www.raspberrypi.com/products/compute-module-5/); [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/); and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/) and [500](https://www.raspberrypi.com/products/raspberry-pi-500/)<br>
+⛔ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Pi Pico and Pico W](https://www.raspberrypi.com/products/raspberry-pi-pico/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
 
 ## Developer information
 ### Application package dependencies
