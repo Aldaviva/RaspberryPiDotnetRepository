@@ -5,7 +5,7 @@
 
 This public [APT repository](https://github.com/Aldaviva/RaspberryPiDotnetRepository/wiki/Debian-APT-package-repository-format) supplies armhf and arm64 .deb packages of [.NET](https://dotnet.microsoft.com/) runtimes and SDKs to install on [Raspberry Pis](https://www.raspberrypi.com/products/) running [Raspberry Pi OS/Raspbian](https://www.raspberrypi.com/software/operating-systems/).
 
-Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Red Hat](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Canonical](https://packages.ubuntu.com/noble/dotnet8) provide official .deb packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which neither installs system-wide without extra manual steps, nor automatically updates or cleans up previous versions, nor lets you install the latest version without you having to manually look up whether STS or LTS is currently newer.
+Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Red Hat](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Canonical](https://packages.ubuntu.com/noble/dotnet8) provide official .deb packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft's packages only support .NET &ge; 10 and arm64. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which neither installs system-wide without extra manual steps, nor automatically updates or cleans up previous versions, nor lets you install the latest version without you having to manually look up whether STS or LTS is currently newer.
 
 This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the exact same Linux ARM binary archives that the [official .NET download pages](https://dotnet.microsoft.com/en-us/download/dotnet/8.0), [release notes](https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.3/8.0.3.md#downloads), and [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install) use.
 
@@ -88,6 +88,7 @@ See the following sections for explanations all the package name possibilities.
 <li><code>latest</code></li>
 <li><code>latest-lts</code></li>
 <!-- Add new releases here -->
+<li><code>10.0</code></li>
 <li><code>9.0</code></li>
 <li><code>8.0</code></li>
 <li><code>7.0</code></li>
@@ -146,9 +147,9 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 
 |Installation|Package names|Purpose|Also auto-installs|
 |-|-|-|-|
-|.NET Runtime|`dotnet-runtime-9.0`<br>`dotnet-runtime-8.0`<br>`dotnet-runtime-7.0`<br>`dotnet-runtime-6.0`|Run .NET CLI apps||
-|ASP.NET Core Runtime|`aspnetcore-runtime-9.0`<br>`aspnetcore-runtime-8.0`<br>`aspnetcore-runtime-7.0`<br>`aspnetcore-runtime-6.0`|Run .NET web apps|.NET Runtime|
-|.NET SDK|`dotnet-sdk-9.0`<br>`dotnet-sdk-8.0`<br>`dotnet-sdk-7.0`<br>`dotnet-sdk-6.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
+|.NET Runtime|`dotnet-runtime-10.0`<br>`dotnet-runtime-9.0`<br>`dotnet-runtime-8.0`<br>`dotnet-runtime-7.0`<br>`dotnet-runtime-6.0`|Run .NET CLI apps||
+|ASP.NET Core Runtime|`aspnetcore-runtime-10.0`<br>`aspnetcore-runtime-9.0`<br>`aspnetcore-runtime-8.0`<br>`aspnetcore-runtime-7.0`<br>`aspnetcore-runtime-6.0`|Run .NET web apps|.NET Runtime|
+|.NET SDK|`dotnet-sdk-10.0`<br>`dotnet-sdk-9.0`<br>`dotnet-sdk-8.0`<br>`dotnet-sdk-7.0`<br>`dotnet-sdk-6.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
 <!-- Add new releases here -->
 
 ### Update installed packages
@@ -188,16 +189,16 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 
 ### Operating systems and .NET releases
 <!-- Add new releases here -->
-|Raspberry Pi OS|OS architecture|.NET 9|.NET 8|.NET 7|.NET 6|
-|-:|-:|:-|:-|:-|:-|
-|Trixie (13)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Trixie (13)|ARM32|✅|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|
-|Bookworm (12)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Bookworm (12)|ARM32|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Bullseye (11)|ARM64|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Bullseye (11)|ARM32|❌<sup>3</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Buster (10)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
-|Buster (10)|ARM32|❌<sup>3</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Raspberry Pi OS|OS architecture|.NET 10|.NET 9|.NET 8|.NET 7|.NET 6|
+|-:|-:|:-|:-|:-|:-|:-|
+|Trixie (13)|ARM64|✅|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Trixie (13)|ARM32|✅|✅|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|
+|Bookworm (12)|ARM64|✅|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bookworm (12)|ARM32|✅|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bullseye (11)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bullseye (11)|ARM32|❌<sup>3</sup>|❌<sup>3</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Buster (10)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Buster (10)|ARM32|❌<sup>3</sup>|❌<sup>3</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
 
 ✅ = Available, compatible, and currently officially supported<br>
 ☑ = Available and compatible, but not currently officially supported<br>
