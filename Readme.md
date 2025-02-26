@@ -215,8 +215,9 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 In addition to Raspberry Pi OS, you should also be able to install these .deb packages on ARM builds of [Debian](https://raspi.debian.net) and other Debian-based distributions like [Ubuntu](https://ubuntu.com/download/raspberry-pi) and [Mobian](https://wiki.debian.org/Mobian/), because these packages are not specific to Raspberry Pi OS and only [depend on packages in the standard Debian repository](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies).
 
 ### CPU architectures
-✅ 64-bit ARM64/AArch64/ARMv8<br>
-✅ 32-bit ARM32/AArch32/ARMv7/armhf
+✅ 64-bit ARMv8/ARM64/AArch64<br>
+✅ 32-bit ARMv7/ARM32/AArch32/armhf<br>
+⛔ 32-bit ARMv6
 
 ### Raspberry Pis
 ✅ [Raspberry Pi 5](https://www.raspberrypi.com/products/raspberry-pi-5/)<br>
