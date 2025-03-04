@@ -2,9 +2,9 @@ using DataSizeUnits;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
 using System.Diagnostics;
-using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
+using Unfucked.HTTP;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 
 namespace RaspberryPiDotnetRepository.DotnetUpstream;
@@ -18,7 +18,7 @@ public interface SdkDownloader {
 public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options, ILogger<SdkDownloaderImpl> logger): SdkDownloader {
 
     // Found on https://github.com/dotnet/core#release-information
-    // #34: Use the new Azure Traffic Manager domain name instead of the Azure Blob Storage domain for performance (even though this file itself currently points to uncached Blob Storage URLs), as recommended by https://devblogs.microsoft.com/dotnet/critical-dotnet-install-links-are-changing/#call-to-action
+    // #34: Use the new Azure Traffic Manager domain name instead of the Azure Blob Storage domain for performance, as recommended by https://devblogs.microsoft.com/dotnet/critical-dotnet-install-links-are-changing/#call-to-action
     private static readonly Uri DOTNET_RELEASE_INDEX = new("https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json");
 
     private readonly CpuArchitecture[] allCpuArchitectures = Enum.GetValues<CpuArchitecture>();
@@ -26,8 +26,10 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
     /// <param name="minMinorVersion">The oldest upstream minor version we want to package. Should be 6.0.</param>
     /// <param name="ct"></param>
     private async Task<IEnumerable<JsonNode>> listReleasesToPackage(Version minMinorVersion, CancellationToken ct = default) =>
-        (await httpClient.GetFromJsonAsync<JsonNode>(DOTNET_RELEASE_INDEX, cancellationToken: ct))!["releases-index"]!
-        .AsArray().Compact()
+        (await httpClient.Target(DOTNET_RELEASE_INDEX).Get<JsonNode>(ct))
+        ["releases-index"]!
+        .AsArray()
+        .Compact()
         .Where(release => release["support-phase"]!.GetValue<string>() is "active" or "maintenance" or "eol"
             && Version.Parse(release["channel-version"]!.GetValue<string>()).AsMinor() >= minMinorVersion.AsMinor());
 
@@ -37,7 +39,7 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
             .Select(async upstreamRelease => {
                 Uri      patchVersionUrl     = new(upstreamRelease["releases.json"]!.GetValue<string>());
                 bool     isSupportedLongTerm = upstreamRelease["release-type"]!.GetValue<string>() == "lts";
-                JsonNode patchVersions       = (await httpClient.GetFromJsonAsync<JsonNode>(patchVersionUrl, cancellationToken: ct))!;
+                JsonNode patchVersions       = await httpClient.Target(patchVersionUrl).Get<JsonNode>(ct);
 
                 // this will always find at least one because we're excluding preview support phases from releasesToPackage above
                 JsonNode latestSdk = patchVersions["releases"]!.AsArray().First(isStableVersion)!["sdk"]!;
@@ -60,7 +62,7 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
                     if (fileDownloadStream.Length == 0) {
                         logger.LogInformation("Downloading .NET SDK {version} {arch}...", dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix());
                         downloadTimer.Start();
-                        await using Stream downloadStream = await httpClient.GetStreamAsync(sdkDownloadUrl, ct);
+                        await using Stream downloadStream = await httpClient.Target(sdkDownloadUrl).Get<Stream>(ct);
                         await downloadStream.CopyToAsync(fileDownloadStream, ct);
                         await fileDownloadStream.FlushAsync(ct);
                         downloadTimer.Stop();

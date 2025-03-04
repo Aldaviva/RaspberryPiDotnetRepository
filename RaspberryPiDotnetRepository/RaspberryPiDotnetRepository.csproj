@@ -5,7 +5,7 @@
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.1.2</Version>
+        <Version>1.1.3</Version>
         <Authors>Ben Hutchison</Authors>
         <Copyright>© 2025 $(Authors)</Copyright>
         <Company>$(Authors)</Company>
@@ -32,10 +32,19 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
         <PackageReference Include="PgpCore" Version="6.5.1" />
         <PackageReference Include="ThrottleDebounce" Version="3.0.0-beta1" />
-        <PackageReference Include="Unfucked" Version="0.0.0-beta4" />
-        <PackageReference Include="Unfucked.Compression" Version="0.0.0-beta3" />
-        <PackageReference Include="Unfucked.DI" Version="0.0.0-beta4" />
-        <PackageReference Include="Unfucked.PGP" Version="0.0.0-beta2" />
+        <!-- <PackageReference Include="Unfucked" Version="0.0.0-beta4" /> -->
+        <!-- <PackageReference Include="Unfucked.Compression" Version="0.0.0-beta3" /> -->
+        <!-- <PackageReference Include="Unfucked.DI" Version="0.0.0-beta4" /> -->
+        <!-- <PackageReference Include="Unfucked.PGP" Version="0.0.0-beta2" /> -->
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Unfucked" HintPath="..\..\Unfucked\Unfucked\bin\Debug\net8.0\Unfucked.dll" />
+        <Reference Include="Unfucked.Compression" HintPath="..\..\Unfucked\Compression\bin\Debug\netstandard2.0\Unfucked.Compression.dll" />
+        <PackageReference Include="SharpCompress" Version="0.39.0" />
+        <Reference Include="Unfucked.DI" HintPath="..\..\Unfucked\DI\bin\Debug\net8.0\Unfucked.DI.dll" />
+        <Reference Include="Unfucked.HTTP" HintPath="..\..\Unfucked\HTTP\bin\Debug\net8.0\Unfucked.HTTP.dll" />
+        <Reference Include="Unfucked.PGP" HintPath="..\..\Unfucked\PGP\bin\Debug\net8.0\Unfucked.PGP.dll" />
     </ItemGroup>
 
     <ItemGroup>
