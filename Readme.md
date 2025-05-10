@@ -255,16 +255,17 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
     ❌ If you want the latest version, you must have prior knowledge of which channel, LTS or STS, is the latest at any given time, which is difficult to automate<br>
     ❌ More steps to make a system-wide installation, since this tool is meant for temporary non-root cases like CI build machines
 
-- **Bundle the runtime inside each app**
+- **Bundle the runtime inside each app, instead of installing the runtime system-wide with a package or script**
     ```sh
     dotnet publish -r linux-arm -p:PublishSingleFile=true --self-contained # runtime must be linux-arm or linux-arm64
     ```
-    ✅ If you want [Native AOT compilation](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/) then this is the only way to do it, although you can also publish self-contained apps without Native AOT. Apps compiled with Native AOT are usually smaller and start faster than regular .NET JIT binaries, but they have extremely limited reflection support and many libraries (especially deserialization) are not compatible with AOT.<br>
+    ✅ If you want to make your app smaller and start faster with [Native AOT compilation](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), then this self-contained publishing is required, although you can also publish self-contained apps without Native AOT<br>
     ❌ Installing multiple .NET JIT apps takes more time and storage space, and wears out your SD card faster<br>
-    ❌ Updating the runtime requires recompiling and reinstalling all .NET apps running on the system instead of just running `apt upgrade` once<br>
-    ❌ App compilation takes a longer time (self-contained JIT publishing is slow, and AOT compilation is even slower)<br>
-    ❌ AOT compilation requires you to install the Microsoft Visual C++ compiler and Windows SDK on your development machine, which take up a lot of space and aren't needed for normal .NET development<br>
-    ❌ Only useful for cross-compilation from another machine, and does not let you install the SDK on a Raspberry Pi, if you wanted it
+    ❌ Updating the runtime requires recompiling and reinstalling all .NET apps running on the system, instead of just running `apt upgrade` once<br>
+    ❌ Only useful for cross-compilation from another machine, and does not let you install the SDK on a Raspberry Pi, if you wanted it<br>
+    ❌ Native AOT has extremely limited reflection support and is incompatible with many libraries, especially for deserialization<br>
+    ❌ Native AOT compilation takes a longer time (self-contained JIT publishing is slow, and AOT compilation is even slower)<br>
+    ❌ Native AOT compilation requires you to install the Microsoft Visual C++ compiler and Windows SDK on your development machine, which take up a lot of space and aren't needed for normal .NET development
 
 - **Install an alternative operating system distribution**<br>
     ✅ [**Fedora** can run on Raspberry Pis](https://docs.fedoraproject.org/en-US/quick-docs/raspberry-pi/) and [provides official ARM64 packages for .NET](https://packages.fedoraproject.org/pkgs/dotnet9.0/dotnet-runtime-9.0/)<br>
