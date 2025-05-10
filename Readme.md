@@ -26,6 +26,7 @@ This repository comprises unofficial packages that install **official .NET Linux
     1. [Operating systems and .NET releases](#operating-systems-and-net-releases)
     1. [CPU architectures](#cpu-architectures)
     1. [Raspberry Pis](#raspberry-pis)
+- [Alternatives](#alternatives)
 - [Developer information](#developer-information)
     1. [Application package dependencies](#application-package-dependencies)
     1. [DEB package and APT repository formats](#deb-package-and-apt-repository-formats)
@@ -227,6 +228,54 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 ✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/), [4](https://www.raspberrypi.com/products/compute-module-4/), and [5](https://www.raspberrypi.com/products/compute-module-5/); [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/); and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/) and [500](https://www.raspberrypi.com/products/raspberry-pi-500/)<br>
 ⛔ [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) and [Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/) are _**not compatible with .NET**_ because they don't run Linux, and only support embedded C, C++, and Python<br>
 ⛔ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
+
+## Alternatives
+Here are other ways to run .NET applications on a Raspberry Pi besides installing the packages from this repository.
+- **Add the [Microsoft Linux Package Repositories from PMC (packages.microsoft.com)](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#debian-12)**
+    ```sh
+    wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    sudo dpkg -i packages-microsoft-prod.deb
+    rm packages-microsoft-prod.deb
+    ```
+    ✅ [Hosted by Microsoft](https://github.com/microsoft/linux-package-repositories)<br>
+    ❌ [Not available until .NET 10 is released in November 2025](https://github.com/dotnet/runtime/issues/3298#issuecomment-2573369838)<br>
+    ❌ Does not support .NET 9 or earlier<br>
+    ❌ Does not support Debian 11 or earlier<br>
+    ❌ Does not support armhf operating systems like 32-bit Raspberry Pi OS, even if your CPU architecture is arm64
+
+- **Run the [dotnet-install script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install)**
+    ```sh
+    wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
+    sudo bash dotnet-install.sh --channel LTS --runtime dotnet --install-dir /usr/share/dotnet/ # --channel must be LTS or STS
+    sudo ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+    rm dotnet-install.sh
+    ```
+    ✅ [Hosted by Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet/scripts)<br>
+    ❌ Must re-run `dotnet-install.sh` each time you want to update .NET<br>
+    ❌ If you want the latest version, you must have prior knowledge of which channel, LTS or STS, is the latest at any given time, which is difficult to automate<br>
+    ❌ More steps to make a system-wide installation, since this tool is meant for temporary non-root cases like CI build machines
+
+- **Bundle the runtime inside each app**
+    ```sh
+    dotnet publish -r linux-arm -p:PublishSingleFile=true --self-contained # runtime must be linux-arm or linux-arm64
+    ```
+    ✅ If you want [Native AOT compilation](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/) then this is the only way to do it, although you can also publish self-contained apps without Native AOT. Apps compiled with Native AOT are usually smaller and start faster than regular .NET JIT binaries, but they have extremely limited reflection support and many libraries (especially deserialization) are not compatible with AOT.<br>
+    ❌ Installing multiple .NET JIT apps takes more time and storage space, and wears out your SD card faster<br>
+    ❌ Updating the runtime requires recompiling and reinstalling all .NET apps running on the system instead of just running `apt upgrade` once<br>
+    ❌ App compilation takes a longer time (self-contained JIT publishing is slow, and AOT compilation is even slower)<br>
+    ❌ AOT compilation requires you to install the Microsoft Visual C++ compiler and Windows SDK on your development machine, which take up a lot of space and aren't needed for normal .NET development<br>
+    ❌ Only useful for cross-compilation from another machine, and does not let you install the SDK on a Raspberry Pi, if you wanted it
+
+- **Install an alternative operating system distribution**<br>
+    ✅ [**Fedora** can run on Raspberry Pis](https://docs.fedoraproject.org/en-US/quick-docs/raspberry-pi/) and [provides official ARM64 packages for .NET](https://packages.fedoraproject.org/pkgs/dotnet9.0/dotnet-runtime-9.0/)<br>
+    ✅ [**Ubuntu** can run on Raspberry Pis](https://ubuntu.com/download/raspberry-pi) and [provides official ARM64 packages for .NET](https://packages.ubuntu.com/plucky/dotnet-runtime-9.0)<br>
+    ❌ Raspberry Pi OS is the default and most popular distro choice for Raspberry Pis, so it's extremely well tested and easy to find answers to any questions<br>
+    ❌ Neither Fedora nor Ubuntu run on 32-bit armhf CPUs, such as the Raspberry Pi 2 v1.1
+
+- **Install Mono**<br>
+    ❌ Horrifically outdated and useless, and should not be used anymore<br>
+    ❌ Whatever you do, don't pick this technique, all of the other options are better<br>
+    ❌ This is why .NET (Core) was created to replace .NET Framework on non-Windows operating systems
 
 ## Developer information
 ### Application package dependencies
