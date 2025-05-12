@@ -79,7 +79,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
                                 echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
 
                                 echo Finding available packages
-                                sudo apt update
+                                sudo apt-get update
 
                                 echo Ready to install .NET packages, for example:
                                 echo "  sudo apt install dotnet-runtime-latest"
