@@ -46,7 +46,7 @@ Alternatively, you may do this step manually with the following commands.
 ```sh
 sudo wget -q https://raspbian.aldaviva.com/aldaviva.gpg.key -O /etc/apt/trusted.gpg.d/aldaviva.gpg
 echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
-sudo apt update
+sudo apt-get update
 ```
 
 The OpenPGP key fingerprint is [`B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A`](https://keys.openpgp.org/search?q=B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A). You may verify this with 
@@ -108,6 +108,9 @@ There are also three types of version specification suffixes to choose from, whi
 - [**`latest-lts`**](#latest-lts-version) installs the LTS release with the greatest version number
 - [**Specific minor versions**](#specific-minor-version) install and stick with one release permanently, like 8.0.*, only installing patch updates like 8.0.1
 
+> [!NOTE]  
+> Version numbers are described with the semantic version nomenclature of *major*.*minor*.*patch*. For example, .NET 9.0.4 has a major version of 9, a minor version of 0, and a patch version of 4.
+
 > [!NOTE]
 > [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released each November of odd-numbered years like 2023, have even major version numbers, and come with 3 years of support.<br>
 > *Standard Term Support (STS)* versions like 7.0 are released each November of even-numbered years like 2022, with odd version numbers and 1.5 years of support.
@@ -159,8 +162,8 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 When a new .NET patch version is released, you can update the installed packages to the new version.
 
 ```sh
-sudo apt update
-sudo apt upgrade
+sudo apt-get update
+sudo apt-get upgrade
 ```
 
 > [!IMPORTANT]  
@@ -168,13 +171,13 @@ sudo apt upgrade
 
 #### Major and minor versions
 
-**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt update && apt upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt upgrade --autoremove`.
+**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt-get update && apt-get upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt upgrade --autoremove`.
 
 **Specific minor version installed:** If you aren't using a `latest[-lts]` package, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`. Afterwards, you may clean up previous versions using a command like `sudo apt remove dotnet-runtime-7.0`.
 
 #### Automatic updates
 
-To automatically install package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages).
+To automatically install package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages) and [this quick summary](https://gist.github.com/Aldaviva/9db64e47324f467a7c9b7e468a454c76#file-debian-autoupdate-md).
 
 ### List installed versions
 
