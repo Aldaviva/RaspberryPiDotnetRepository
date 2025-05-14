@@ -94,6 +94,9 @@ public class Orchestrator(
             // Delete outdated .deb package files from Azure Blob Storage
             await Task.WhenAll(oldManifest?.packages.Except(newManifest.packages).Select(packageToDelete => blobStorage.deleteFile(packageToDelete.filePathRelativeToRepo, ct)) ?? []);
 
+            // Delete old downloaded SDK .tar.gz files from previous patch versions
+            sdkDownloader.deleteSdksExcept(upstreamReleases);
+
         } else {
             logger.LogInformation("Repository is already up to date according to the manifest file, stopping without generating or uploading any files.");
         }

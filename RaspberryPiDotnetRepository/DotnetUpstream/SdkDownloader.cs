@@ -13,6 +13,8 @@ public interface SdkDownloader {
 
     Task<UpstreamReleasesState> downloadSdks(Version minMinorVersion, CancellationToken ct = default);
 
+    void deleteSdksExcept(IEnumerable<DotnetRelease> sdksToKeep);
+
 }
 
 public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options, ILogger<SdkDownloaderImpl> logger): SdkDownloader {
@@ -101,6 +103,20 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
             knownReleaseMinorRuntimeVersions: dotnetReleases.Select(release => release.runtimeVersion.AsMinor()).ToList().AsReadOnly(),
             knownReleaseSdkVersions: dotnetReleases.Select(release => release.sdkVersion).ToList().AsReadOnly(),
             leastProvidedReleaseMinorVersion: dotnetReleases.Last().sdkVersion.AsMinor()));
+    }
+
+    public void deleteSdksExcept(IEnumerable<DotnetRelease> sdksToKeep) {
+        IEnumerable<string> allSdks      = Directory.EnumerateFiles(options.Value.tempDir, "*.tar.gz", SearchOption.TopDirectoryOnly);
+        IEnumerable<string> sdksToDelete = allSdks.Except(sdksToKeep.SelectMany(sdkToKeep => sdkToKeep.downloadedSdkArchiveFilePaths.Values));
+
+        foreach (string sdkToDelete in sdksToDelete) {
+            if (!options.Value.dryRun) {
+                File.Delete(sdkToDelete);
+                logger.LogDebug("Deleted outdated SDK file {file}", sdkToDelete);
+            } else {
+                logger.LogDebug("Would have deleted outdated SDK file {file} if not in dry-run mode", sdkToDelete);
+            }
+        }
     }
 
     private static bool isStableVersion(JsonNode? release) {
