@@ -126,7 +126,7 @@ Then, once you know which package you want, you can install it with `apt install
 #### Latest version
 This will install the latest .NET version, regardless of whether it is an LTS or STS release. It will upgrade to greater major and minor versions, including new STS versions. It will never install previews or release candidates.
 
-For example, if you `apt install dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8. Later, if you run `apt upgrade` in December 2024, .NET 9 will have been released, so it will install .NET Runtime 9.
+For example, if you `apt install dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8. Later, if you run `apt full-upgrade` in December 2024, .NET 9 will have been released, so it will install .NET Runtime 9.
 
 |Installation|Package name|Purpose|Also auto-installs|
 |-|-|-|-|
@@ -137,7 +137,7 @@ For example, if you `apt install dotnet-runtime-latest` in March 2024, it will i
 #### Latest LTS version
 This will install the latest Long Term Support .NET version. It can upgrade to greater major and minor LTS versions. It will never install an STS, release candidate, or preview release.
 
-For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8. Later, if you run `apt upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but will not install the newly released .NET 9, because 9 is an STS release instead of LTS. It will stay on .NET 8 until November 2025, when .NET 10 is released, which will be installed because it's an LTS version like 8.
+For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8. Later, if you run `apt full-upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but will not install the newly released .NET 9, because 9 is an STS release instead of LTS. It will stay on .NET 8 until November 2025, when .NET 10 is released, which will be installed because it's an LTS version like 8.
 
 |Installation|Package name|Purpose|Also auto-installs|
 |-|-|-|-|
@@ -163,7 +163,7 @@ When a new .NET patch version is released, you can update the installed packages
 
 ```sh
 sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get full-upgrade
 ```
 
 > [!IMPORTANT]  
@@ -171,7 +171,7 @@ sudo apt-get upgrade
 
 #### Major and minor versions
 
-**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt-get update && apt-get upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt upgrade --autoremove`.
+**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt-get update && apt-get full-upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt full-upgrade --autoremove`.
 
 **Specific minor version installed:** If you aren't using a `latest[-lts]` package, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`. Afterwards, you may clean up previous versions using a command like `sudo apt remove dotnet-runtime-7.0`.
 
@@ -264,7 +264,7 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
     ```
     ✅ If you want to make your app smaller and start faster with [Native AOT compilation](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), then this self-contained publishing is required, although you can also publish self-contained apps without Native AOT<br>
     ❌ Installing multiple .NET JIT apps takes more time and storage space, and wears out your SD card faster<br>
-    ❌ Updating the runtime requires recompiling and reinstalling all .NET apps running on the system, instead of just running `apt upgrade` once<br>
+    ❌ Updating the runtime requires recompiling and reinstalling all .NET apps running on the system, instead of just running `apt full-upgrade` once<br>
     ❌ Only useful for cross-compilation from another machine, and does not let you install the SDK on a Raspberry Pi, if you wanted it<br>
     ❌ Native AOT has extremely limited reflection support and is incompatible with many libraries, especially for deserialization<br>
     ❌ Native AOT compilation takes a longer time (self-contained JIT publishing is slow, and AOT compilation is even slower)<br>
