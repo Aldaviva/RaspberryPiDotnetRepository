@@ -134,7 +134,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
             new DependencyAlternatives(new DependencyPackage("libgcc-s1"), new DependencyPackage("libgcc1")),
             new DependencyPackage("libgssapi-krb5-2"),
             new DependencyAlternatives(Enum.GetValues<DebianRelease>().OrderDescending().Select(release => new DependencyPackage(release.getLibIcuDependencyName()))),
-            new DependencyAlternatives(new DependencyPackage("libssl3"), new DependencyPackage("libssl1.1")), // Trixie and Noble Numbat use libssl3t64
+            new DependencyAlternatives(new DependencyPackage("libssl3t64"), new DependencyPackage("libssl3"), new DependencyPackage("libssl1.1")),
             new DependencyPackage("libstdc++6"),
             new DependencyPackage("tzdata"),
             new DependencyPackage("ca-certificates"),
