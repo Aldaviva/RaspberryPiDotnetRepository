@@ -17,7 +17,7 @@ public static class Extensions {
     public static Options options(this IServiceProvider serviceProvider) => serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Options>>().Value;
 
     /// <summary>
-    /// This is slow and assumes there are no duplicates in either collection.
+    /// This is slow O(n²) and assumes there are no duplicates in either collection.
     /// </summary>
     public static bool EqualsUnordered<T>(this ICollection<T> source, ICollection<T> other, IEqualityComparer<T>? equalityComparer = null) {
         equalityComparer ??= EqualityComparer<T>.Default;

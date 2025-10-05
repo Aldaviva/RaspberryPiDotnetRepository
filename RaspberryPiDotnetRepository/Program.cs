@@ -13,6 +13,7 @@ using RaspberryPiDotnetRepository.Debian.Repository;
 using RaspberryPiDotnetRepository.DotnetUpstream;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using Unfucked.HTTP;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 using PGP = Unfucked.PGP;
 
@@ -45,7 +46,7 @@ appConfig.Services
     .SetExitCodeOnBackgroundServiceException()
 
     // HTTP client
-    .AddSingleton(new HttpClient(new SocketsHttpHandler { MaxConnectionsPerServer = 16 }) { Timeout = TimeSpan.FromSeconds(30) })
+    .AddSingleton<HttpClient>(new UnfuckedHttpClient(new SocketsHttpHandler { MaxConnectionsPerServer = 16 }) { Timeout = TimeSpan.FromSeconds(30) })
 
     // Azure Blob Storage
     .AddSingleton(provider => new BlobServiceClient(provider.options().storageConnection,

@@ -22,7 +22,7 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
     private const CompressionLevel PACKAGE_INDEX_COMPRESSION = CompressionLevel.Optimal;
 
     public async Task<IEnumerable<IGrouping<DebianRelease, PackageIndexFile>>> generatePackageIndex(IEnumerable<DebianPackage> packages, UpstreamReleasesSecondaryInfo upstreamInfo) {
-        (DebianRelease debianVersion, IEnumerable<PackageIndexFile> packageIndexFiles)[] allSuites = await Task.WhenAll(groupPackagesIntoIndices(packages)
+        (DebianRelease debianVersion, IEnumerable<PackageIndexFile> packageIndexFiles)[] allSuites = await Task.WhenAll(groupPackagesIntoIndexes(packages)
             .Select(async suitePackages =>
                 (suitePackages.Key.debianVersion,
                  packageIndexFiles: await generateIndexOfPackagesInDebianReleaseAndArchitecture(suitePackages.Key.debianVersion, suitePackages.Key.architecture,
@@ -33,7 +33,7 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
             .GroupBy(suitePackages => suitePackages.debianVersion, suitePackages => suitePackages.packageIndexFile);
     }
 
-    private static IDictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groupPackagesIntoIndices(IEnumerable<DebianPackage> packages) {
+    private static IDictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groupPackagesIntoIndexes(IEnumerable<DebianPackage> packages) {
         DebianRelease[] allDebianReleases = Enum.GetValues<DebianRelease>();
 
         Dictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groups = [];
@@ -109,19 +109,19 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
 
         string filePath = Path.Combine(repositoryBaseDir, releaseIndexFile.releaseFilePathRelativeToRepo);
         await File.WriteAllTextAsync(filePath, releaseFileCleartext, Encoding.UTF8); // Bom.Squad has already defused this UTF-8 BOM, or else apt will get its limbs blown off
-        logger.LogDebug("Wrote unsigned Release meta-index of package indices for Debian {debian}", debianRelease.getCodename());
+        logger.LogDebug("Wrote unsigned Release meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
         statistics.onFileWritten(filePath);
 
         // gpg --sign --detach-sign --armor
         filePath = Path.Combine(repositoryBaseDir, releaseIndexFile.releaseGpgFilePathRelativeToRepo);
         await File.WriteAllTextAsync(filePath, await pgp.DetachedSignAsync(releaseFileCleartext), Encoding.UTF8);
-        logger.LogDebug("Wrote Release.gpg signature of Release meta-index of package indices for Debian {debian}", debianRelease.getCodename());
+        logger.LogDebug("Wrote Release.gpg signature of Release meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
         statistics.onFileWritten(filePath);
 
         // gpg --sign --clearsign --armor
         filePath = Path.Combine(repositoryBaseDir, releaseIndexFile.inreleaseFilePathRelativeToRepo);
         await File.WriteAllTextAsync(filePath, await pgp.ClearSignAsync(releaseFileCleartext), Encoding.UTF8);
-        logger.LogDebug("Wrote signed InRelease meta-index of package indices for Debian {debian}", debianRelease.getCodename());
+        logger.LogDebug("Wrote signed InRelease meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
         statistics.onFileWritten(filePath);
 
         logger.LogInformation("Generated Release index files for Debian {debian}", debianRelease.getCodename());

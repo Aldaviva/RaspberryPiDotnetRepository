@@ -49,10 +49,10 @@ public class Orchestrator(
             await File.WriteAllTextAsync(manifestManager.manifestFilePath, newManifestJson, Encoding.UTF8, ct);
 
             // Generate Packages.gz index files
-            IEnumerable<IGrouping<DebianRelease, PackageIndexFile>> packageIndicesByDebianRelease = (await indexer.generatePackageIndex(generatedPackages, upstreamInfo)).ToList();
+            IEnumerable<IGrouping<DebianRelease, PackageIndexFile>> packageIndexesByDebianRelease = (await indexer.generatePackageIndex(generatedPackages, upstreamInfo)).ToList();
 
             // Generate InRelease index files
-            ReleaseIndexFile[] releaseIndexFiles = await Task.WhenAll(packageIndicesByDebianRelease.Select(releaseFiles => indexer.generateReleaseIndex(releaseFiles.Key, releaseFiles)));
+            ReleaseIndexFile[] releaseIndexFiles = await Task.WhenAll(packageIndexesByDebianRelease.Select(releaseFiles => indexer.generateReleaseIndex(releaseFiles.Key, releaseFiles)));
 
             // Write readme, badges, and GPG public key
             string                      readmeFilename    = await extraFileGenerator.generateReadme();
@@ -65,12 +65,12 @@ public class Orchestrator(
             await Task.WhenAll(generatedPackages.Where(p => !p.isUpToDateInBlobStorage).Select(p =>
                 blobStorage.uploadFile(Path.Combine(repoBaseDir, p.filePathRelativeToRepo), p.filePathRelativeToRepo, "application/vnd.debian.binary-package", ct)));
 
-            // Upload Packages.gz indices to Azure Blob Storage
-            Task<BlobContentInfo?[]> packageIndexUploads = Task.WhenAll(packageIndicesByDebianRelease.SelectMany(debianRelease => debianRelease).Select(packageIndexFile =>
+            // Upload Packages.gz indexes to Azure Blob Storage
+            Task<BlobContentInfo?[]> packageIndexUploads = Task.WhenAll(packageIndexesByDebianRelease.SelectMany(debianRelease => debianRelease).Select(packageIndexFile =>
                 blobStorage.uploadFile(Path.Combine(repoBaseDir, packageIndexFile.filePathRelativeToRepo), packageIndexFile.filePathRelativeToRepo,
                     packageIndexFile.isCompressed ? "application/gzip" : "text/plain", ct)));
 
-            // Upload InRelease indices to Azure Blob Storage
+            // Upload InRelease indexes to Azure Blob Storage
             Task<BlobContentInfo?[]> releaseIndexUploads = Task.WhenAll(releaseIndexFiles.SelectMany(file =>
                 new[] { file.inreleaseFilePathRelativeToRepo, file.releaseFilePathRelativeToRepo, file.releaseGpgFilePathRelativeToRepo }.Select(relativeFilePath =>
                     blobStorage.uploadFile(Path.Combine(repoBaseDir, relativeFilePath), relativeFilePath,
@@ -93,6 +93,9 @@ public class Orchestrator(
 
             // Delete outdated .deb package files from Azure Blob Storage
             await Task.WhenAll(oldManifest?.packages.Except(newManifest.packages).Select(packageToDelete => blobStorage.deleteFile(packageToDelete.filePathRelativeToRepo, ct)) ?? []);
+
+            // Delete old downloaded SDK .tar.gz files from previous patch versions
+            sdkDownloader.deleteSdksExcept(upstreamReleases);
 
         } else {
             logger.LogInformation("Repository is already up to date according to the manifest file, stopping without generating or uploading any files.");

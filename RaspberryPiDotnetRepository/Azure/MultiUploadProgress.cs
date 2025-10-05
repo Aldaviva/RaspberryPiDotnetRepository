@@ -18,8 +18,8 @@ public interface DisposableProgress<in T>: IProgress<T>, IDisposable;
 
 public class MultiUploadProgress: UploadProgressFactory {
 
-    private static readonly CultureInfo CULTURE          = CultureInfo.CurrentCulture;
-    private static readonly TimeSpan    MIN_LOG_INTERVAL = TimeSpan.FromSeconds(3);
+    private static readonly CultureInfo CULTURE      = CultureInfo.CurrentCulture;
+    private static readonly TimeSpan    LOG_INTERVAL = TimeSpan.FromSeconds(3);
 
     private readonly ILogger<MultiUploadProgress>                        logger;
     private readonly IDictionary<string, FileUploadProgress>             activeUploads;
@@ -35,7 +35,7 @@ public class MultiUploadProgress: UploadProgressFactory {
         int storageParallelUploads = options.Value.storageParallelUploads;
         activeUploads          = new Dictionary<string, FileUploadProgress>(storageParallelUploads * 2);
         snapshots              = ArrayPool<KeyValuePair<string, FileUploadProgress>>.Create(storageParallelUploads * 2, storageParallelUploads);
-        printProgressThrottled = Throttler.Throttle(printProgress, MIN_LOG_INTERVAL, false);
+        printProgressThrottled = Throttler.Throttle(printProgress, LOG_INTERVAL, leading: false);
     }
 
     public DisposableProgress<long> registerFile(string filename, long totalSizeBytes) {
@@ -67,13 +67,14 @@ public class MultiUploadProgress: UploadProgressFactory {
             activeUploads.CopyTo(snapshot, 0);
         }
 
-        string? message = fileCount > 0 ? string.Join(", ", snapshot
+        string? message = fileCount > 0 ? snapshot
             .Take(fileCount)
             .Select(pair => pair.Value)
             .Where(progress => progress.uploadedBytes < progress.totalBytes)
             .Order()
             .Select(progress => string.Format(CULTURE, "{0} {1,3:P0}", Path.GetFileName(progress.name),
-                Math.Round((double) progress.uploadedBytes / progress.totalBytes, 2, MidpointRounding.ToZero)))) : null;
+                Math.Round((double) progress.uploadedBytes / progress.totalBytes, 2, MidpointRounding.ToZero)))
+            .Join(", ") : null;
 
         snapshots.Return(snapshot);
 
@@ -81,6 +82,17 @@ public class MultiUploadProgress: UploadProgressFactory {
             logger.LogDebug("{progress}", message);
             mostRecentMessage = message;
         }
+    }
+
+    public void Dispose() {
+        printProgressThrottled.Dispose();
+        lock (activeUploads) {
+            foreach (KeyValuePair<string, FileUploadProgress> entry in activeUploads) {
+                entry.Value.PropertyChanged -= onUploadProgress;
+            }
+            activeUploads.Clear();
+        }
+        GC.SuppressFinalize(this);
     }
 
     private class ProgressHandler: DisposableProgress<long> {
@@ -110,27 +122,16 @@ public class MultiUploadProgress: UploadProgressFactory {
             set {
                 if (value == _uploadedBytes) return;
                 _uploadedBytes = value;
-                OnPropertyChanged();
+                onPropertyChanged();
             }
         }
 
-        private void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
+        private void onPropertyChanged([CallerMemberName] string? propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public int CompareTo(FileUploadProgress? other) => ReferenceEquals(this, other) ? 0 : other is null ? 1 : registrationOrder.CompareTo(other.registrationOrder);
 
-    }
-
-    public void Dispose() {
-        printProgressThrottled.Dispose();
-        lock (activeUploads) {
-            foreach (KeyValuePair<string, FileUploadProgress> entry in activeUploads) {
-                entry.Value.PropertyChanged -= onUploadProgress;
-            }
-            activeUploads.Clear();
-        }
-        GC.SuppressFinalize(this);
     }
 
 }

@@ -36,7 +36,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
 
         DebianRelease latestDebianVersion = Enum.GetValues<DebianRelease>().Max();
 
-        var debianBadge = new { latestVersion = $"{latestDebianVersion.getCodename()} ({latestDebianVersion.getMajorVersion():D})" };
+        var debianBadge = new { latestVersion = $"{latestDebianVersion.getMajorVersion():D} ({latestDebianVersion.getCodename()})" };
 
         UploadableFile debianBadgeFile = new(Path.Combine(BADGE_DIR, "raspbian.json"));
         files.Add(debianBadgeFile);
@@ -79,7 +79,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
                                 echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
 
                                 echo Finding available packages
-                                sudo apt update
+                                sudo apt-get update
 
                                 echo Ready to install .NET packages, for example:
                                 echo "  sudo apt install dotnet-runtime-latest"
