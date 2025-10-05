@@ -195,7 +195,7 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 |Raspberry Pi OS|OS architecture|.NET 9|.NET 8|.NET 7|.NET 6|
 |-:|-:|:-|:-|:-|:-|
 |Trixie (13)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Trixie (13)|ARM32|✅|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|❓<sup><a href="https://github.com/Aldaviva/RaspberryPiDotnetRepository/issues/36">#36</a></sup>|
+|Trixie (13)|ARM32|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
 |Bookworm (12)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
 |Bookworm (12)|ARM32|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
 |Bullseye (11)|ARM64|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
@@ -230,7 +230,7 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 ✅ [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)<br>
 ✅ [Raspberry Pi 3](https://www.raspberrypi.com/products/raspberry-pi-3-model-b/)<br>
 ✅ [Raspberry Pi 2](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) (64-bit OS requires Pi 2 v1.2, not v1.1)<br>
-✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/), [4](https://www.raspberrypi.com/products/compute-module-4/), and [5](https://www.raspberrypi.com/products/compute-module-5/); [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/); and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/) and [500](https://www.raspberrypi.com/products/raspberry-pi-500/)<br>
+✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/), [4](https://www.raspberrypi.com/products/compute-module-4/), and [5](https://www.raspberrypi.com/products/compute-module-5/); [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/); and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/), [500](https://www.raspberrypi.com/products/raspberry-pi-500/), and [500+](https://www.raspberrypi.com/products/raspberry-pi-500-plus/)<br>
 ❌ [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) and [Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/) are _**not compatible with .NET**_ because they don't run Linux, and only support embedded C, C++, and Python<br>
 ❌ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
 
@@ -251,7 +251,7 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
 - **Run the [dotnet-install script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install)**
     ```sh
     wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
-    sudo bash dotnet-install.sh --channel LTS --runtime dotnet --install-dir /usr/share/dotnet/ # --channel must be LTS or STS
+    sudo bash dotnet-install.sh --channel LTS --runtime dotnet --install-dir /usr/share/dotnet/ # channel must be LTS, STS, or a minor version
     sudo ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
     rm dotnet-install.sh
     ```

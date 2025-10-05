@@ -36,7 +36,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
 
         DebianRelease latestDebianVersion = Enum.GetValues<DebianRelease>().Max();
 
-        var debianBadge = new { latestVersion = $"{latestDebianVersion.getCodename()} ({latestDebianVersion.getMajorVersion():D})" };
+        var debianBadge = new { latestVersion = $"{latestDebianVersion.getMajorVersion():D} ({latestDebianVersion.getCodename()})" };
 
         UploadableFile debianBadgeFile = new(Path.Combine(BADGE_DIR, "raspbian.json"));
         files.Add(debianBadgeFile);

@@ -26,8 +26,6 @@ public enum DebianRelease {
     /// </summary>
     TRIXIE = 13
 
-    // TRIXIE is the current testing version as of 2025-05. It has no release date yet, but it may be released around mid-2025. https://www.debian.org/releases/trixie/
-
     // When adding a new Debian release, make sure to also add the version of libicu it provides below in DebianVersionMethods.getLibIcuDependencyName
 
 }
@@ -52,8 +50,6 @@ public static class DebianVersionsMethods {
         DebianRelease.BULLSEYE => "67",
         DebianRelease.BOOKWORM => "72",
         DebianRelease.TRIXIE   => "76",
-        // Debian 13 Trixie seems to use libicu76 as of 2025-05-14: https://packages.debian.org/search?suite=trixie&searchon=names&keywords=libicu
-        // Ubuntu 24.04 Noble Numbat uses libicu74
         _ => throw new ArgumentOutOfRangeException(nameof(release), release,
             $"Please update {nameof(DebianVersionsMethods)}.{nameof(getLibIcuDependencyName)}({nameof(DebianRelease)}) to handle Debian {release.getCodename()} based on https://packages.debian.org/search?suite={release.getCodename()}&searchon=names&keywords=libicu")
     };

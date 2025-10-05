@@ -7,7 +7,7 @@ namespace RaspberryPiDotnetRepository.Data;
 
 public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version sdkVersion, CpuArchitecture architecture): IEquatable<DebianPackage> {
 
-    public const string VERSION_SUFFIX = "-2";
+    public const string VERSION_SUFFIX = "-3";
 
     /// <summary>
     /// The name of the Debian package, such as <c>dotnet-runtime-8.0</c> or <c>aspnetcore-runtime-latest-lts</c>.
@@ -98,7 +98,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// <summary>
     /// Debian-specific revision to the package, not from upstream. Incremented if packages need to be regenerated before a new .NET upstream release.
     /// </summary>
-    public string versionSuffix => VERSION_SUFFIX;
+    public string versionSuffix { get; init; } = VERSION_SUFFIX;
 
     [JsonIgnore]
     public Section section { get; } = Section.DEVEL;
@@ -173,7 +173,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
         RuntimeType.CLI                                         => ".NET CLI tool (without runtime)",
         RuntimeType.RUNTIME                                     => ".NET CLI tools and runtime",
         RuntimeType.ASPNETCORE_RUNTIME                          => "ASP.NET Core runtime",
-        RuntimeType.SDK                                         => $".NET Software Development Kit",
+        RuntimeType.SDK                                         => ".NET Software Development Kit",
         _                                                       => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, "Unhandled runtime")
     };
 
