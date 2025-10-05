@@ -173,7 +173,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
         RuntimeType.CLI                                         => ".NET CLI tool (without runtime)",
         RuntimeType.RUNTIME                                     => ".NET CLI tools and runtime",
         RuntimeType.ASPNETCORE_RUNTIME                          => "ASP.NET Core runtime",
-        RuntimeType.SDK                                         => $".NET {minorVersion} Software Development Kit",
+        RuntimeType.SDK                                         => $".NET Software Development Kit",
         _                                                       => throw new ArgumentOutOfRangeException(nameof(runtime), runtime, "Unhandled runtime")
     };
 
@@ -216,7 +216,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
              """,
         RuntimeType.RUNTIME =>
             """
-            .NET is a fast, lightweight, and modular platform for creating cross platform applications that work on GNU/Linux, Mac OS, and Windows.
+            .NET is a fast, lightweight, and modular platform for creating cross-platform applications that work on GNU/Linux, Mac OS, and Windows.
 
             It particularly focuses on creating console applications, web applications, and microservices.
 
@@ -226,7 +226,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
             """
             The ASP.NET Core runtime contains everything needed to run .NET web applications. It includes a high performance Virtual Machine as well as the framework libraries used by .NET applications.
 
-            ASP.NET Core is a fast, lightweight, and modular platform for creating cross platform applications that work on GNU/Linux, Mac OS, and Windows.
+            .NET is a fast, lightweight, and modular platform for creating cross-platform applications that work on GNU/Linux, Mac OS, and Windows.
 
             It particularly focuses on creating console applications, web applications, and microservices.
             """,
@@ -234,7 +234,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
             """
             The .NET SDK is a collection of command-line applications to create, build, publish, and run .NET applications.
 
-            .NET is a fast, lightweight, and modular platform for creating cross platform applications that work on GNU/Linux, Mac OS, and Windows.
+            .NET is a fast, lightweight, and modular platform for creating cross-platform applications that work on GNU/Linux, Mac OS, and Windows.
 
             It particularly focuses on creating console applications, web applications, and microservices.
             """,

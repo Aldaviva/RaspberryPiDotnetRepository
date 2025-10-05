@@ -26,6 +26,7 @@ This repository comprises unofficial packages that install **official .NET Linux
     1. [Operating systems and .NET releases](#operating-systems-and-net-releases)
     1. [CPU architectures](#cpu-architectures)
     1. [Raspberry Pis](#raspberry-pis)
+- [Alternatives](#alternatives)
 - [Developer information](#developer-information)
     1. [Application package dependencies](#application-package-dependencies)
     1. [DEB package and APT repository formats](#deb-package-and-apt-repository-formats)
@@ -45,7 +46,7 @@ Alternatively, you may do this step manually with the following commands.
 ```sh
 sudo wget -q https://raspbian.aldaviva.com/aldaviva.gpg.key -O /etc/apt/trusted.gpg.d/aldaviva.gpg
 echo "deb https://raspbian.aldaviva.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/aldaviva.list > /dev/null
-sudo apt update
+sudo apt-get update
 ```
 
 The OpenPGP key fingerprint is [`B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A`](https://keys.openpgp.org/search?q=B3BF3504BBD0A81DD82A8DFB45D66F054AB9A66A). You may verify this with 
@@ -55,7 +56,7 @@ gpg --show-keys /etc/apt/trusted.gpg.d/aldaviva.gpg
 
 ### Install package
 
-First, to install a package, choose the package name you want. The name is the concatenation of a name prefix and a versioning suffix. For example, if you want the latest version of the .NET Runtime, the package name would be `dotnet-runtime-latest`, which you could install by running
+First, to install a package, choose the package name you want. The name is the concatenation of a type prefix and a versioning suffix. For example, if you want the latest version of the .NET Runtime, the package name would be `dotnet-runtime-latest`, which you could install by running
 
 ```sh
 sudo apt install dotnet-runtime-latest
@@ -107,6 +108,9 @@ There are also three types of version specification suffixes to choose from, whi
 - [**`latest-lts`**](#latest-lts-version) installs the LTS release with the greatest version number
 - [**Specific minor versions**](#specific-minor-version) install and stick with one release permanently, like 8.0.*, only installing patch updates like 8.0.1
 
+> [!NOTE]  
+> Version numbers are described with the nomenclature *major*.*minor*.*patch*. For example, .NET 9.0.4 has a major version of 9, a minor version of 0, and a patch version of 4.
+
 > [!NOTE]
 > [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released each November of odd-numbered years like 2023, have even major version numbers, and come with 3 years of support.<br>
 > *Standard Term Support (STS)* versions like 7.0 are released each November of even-numbered years like 2022, with odd version numbers and 1.5 years of support.
@@ -122,7 +126,7 @@ Then, once you know which package you want, you can install it with `apt install
 #### Latest version
 This will install the latest .NET version, regardless of whether it is an LTS or STS release. It will upgrade to greater major and minor versions, including new STS versions. It will never install previews or release candidates.
 
-For example, if you `apt install dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8. Later, if you run `apt upgrade` in December 2024, .NET 9 will have been released, so it will install .NET Runtime 9.
+For example, if you `apt install dotnet-runtime-latest` in March 2024, it will install .NET Runtime 8. Later, if you run `apt full-upgrade` in December 2024, .NET 9 will have been released, so it will install .NET Runtime 9.
 
 |Installation|Package name|Purpose|Also auto-installs|
 |-|-|-|-|
@@ -133,7 +137,7 @@ For example, if you `apt install dotnet-runtime-latest` in March 2024, it will i
 #### Latest LTS version
 This will install the latest Long Term Support .NET version. It can upgrade to greater major and minor LTS versions. It will never install an STS, release candidate, or preview release.
 
-For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8. Later, if you run `apt upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but will not install the newly released .NET 9, because 9 is an STS release. It will stay on .NET 8 until November 2025, when .NET 10 is released, which is an LTS version like 8.
+For example, if you `apt install dotnet-runtime-latest-lts` in March 2024, it will install .NET Runtime 8. Later, if you run `apt full-upgrade` in December 2024, it will upgrade to the latest 8.0.* release, but will not install the newly released .NET 9, because 9 is an STS release instead of LTS. It will stay on .NET 8 until November 2025, when .NET 10 is released, which will be installed because it's an LTS version like 8.
 
 |Installation|Package name|Purpose|Also auto-installs|
 |-|-|-|-|
@@ -158,8 +162,8 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 When a new .NET patch version is released, you can update the installed packages to the new version.
 
 ```sh
-sudo apt update
-sudo apt upgrade
+sudo apt-get update
+sudo apt-get full-upgrade
 ```
 
 > [!IMPORTANT]  
@@ -167,13 +171,13 @@ sudo apt upgrade
 
 #### Major and minor versions
 
-**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt update && apt upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt upgrade --autoremove`.
+**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt-get update && apt-get full-upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt full-upgrade --autoremove`.
 
 **Specific minor version installed:** If you aren't using a `latest[-lts]` package, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`. Afterwards, you may clean up previous versions using a command like `sudo apt remove dotnet-runtime-7.0`.
 
 #### Automatic updates
 
-To automatically install daily package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages) and [my quick reference](https://gist.github.com/Aldaviva/9db64e47324f467a7c9b7e468a454c76#file-debian-autoupdate-md).
+To automatically install package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages) and [this quick summary](https://gist.github.com/Aldaviva/9db64e47324f467a7c9b7e468a454c76#file-debian-autoupdate-md).
 
 ### List installed versions
 
@@ -219,15 +223,65 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 ### CPU architectures
 ✅ 64-bit ARMv8/ARM64/AArch64<br>
 ✅ 32-bit ARMv7/ARM32/AArch32/armhf<br>
-⛔ 32-bit ARMv6
+❌ 32-bit ARMv6
 
 ### Raspberry Pis
 ✅ [Raspberry Pi 5](https://www.raspberrypi.com/products/raspberry-pi-5/)<br>
 ✅ [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)<br>
 ✅ [Raspberry Pi 3](https://www.raspberrypi.com/products/raspberry-pi-3-model-b/)<br>
-✅ [Raspberry Pi 2](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) (64-bit OS requires v1.2, not v1.1)<br>
-✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/); [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/), [4](https://www.raspberrypi.com/products/compute-module-4/), and [5](https://www.raspberrypi.com/products/compute-module-5/); [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/); and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/) and [500](https://www.raspberrypi.com/products/raspberry-pi-500/)<br>
-⛔ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Pi Pico and Pico W](https://www.raspberrypi.com/products/raspberry-pi-pico/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
+✅ [Raspberry Pi 2](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) (64-bit OS requires Pi 2 v1.2, not v1.1)<br>
+✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/), [4](https://www.raspberrypi.com/products/compute-module-4/), and [5](https://www.raspberrypi.com/products/compute-module-5/); [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/); and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/) and [500](https://www.raspberrypi.com/products/raspberry-pi-500/)<br>
+❌ [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) and [Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/) are _**not compatible with .NET**_ because they don't run Linux, and only support embedded C, C++, and Python<br>
+❌ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
+
+## Alternatives
+Here are other ways to run .NET applications on a Raspberry Pi besides installing the packages from this repository.
+- **Add the [Microsoft Linux Package Repositories from PMC (packages.microsoft.com)](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#debian-12)**
+    ```sh
+    wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    sudo dpkg -i packages-microsoft-prod.deb
+    rm packages-microsoft-prod.deb
+    ```
+    ✅ [Hosted by Microsoft](https://github.com/microsoft/linux-package-repositories)<br>
+    ❌ [Not available until .NET 10 is released in November 2025](https://github.com/dotnet/runtime/issues/3298#issuecomment-2573369838)<br>
+    ❌ Does not support .NET 9 or earlier<br>
+    ❌ Does not support Debian 11 or earlier<br>
+    ❌ Does not support armhf operating systems like 32-bit Raspberry Pi OS, even if your CPU architecture is arm64
+
+- **Run the [dotnet-install script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install)**
+    ```sh
+    wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
+    sudo bash dotnet-install.sh --channel LTS --runtime dotnet --install-dir /usr/share/dotnet/ # --channel must be LTS or STS
+    sudo ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+    rm dotnet-install.sh
+    ```
+    ✅ [Hosted by Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet/scripts)<br>
+    ❌ Must re-run `dotnet-install.sh` each time you want to update .NET<br>
+    ❌ If you want the latest version, you must have prior knowledge of which channel, LTS or STS, is the latest at any given time, which is difficult to automate<br>
+    ❌ More steps to make a system-wide installation, since this tool is meant for temporary non-root cases like CI build machines
+
+- **Bundle the runtime inside each app, instead of installing the runtime system-wide with a package or script**
+    ```sh
+    dotnet publish -r linux-arm -p:PublishSingleFile=true --self-contained # runtime must be linux-arm or linux-arm64
+    ```
+    ✅ If you want to make your app smaller and start faster with [Native AOT compilation](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), then this self-contained publishing is required, although you can also publish self-contained apps without Native AOT<br>
+    ❌ Installing multiple .NET JIT apps takes more time and storage space, and wears out your SD card faster<br>
+    ❌ Updating the runtime requires recompiling and reinstalling all .NET apps running on the system, instead of just running `apt full-upgrade` once<br>
+    ❌ Only useful for cross-compilation from another machine, and does not let you install the SDK on a Raspberry Pi, if you wanted it<br>
+    ❌ Native AOT has extremely limited reflection support and is incompatible with many libraries, especially for deserialization<br>
+    ❌ Native AOT compilation takes a longer time (self-contained JIT publishing is slow, and AOT compilation is even slower)<br>
+    ❌ Native AOT compilation requires you to install the Microsoft Visual C++ compiler and Windows SDK on your development machine, which take up a lot of space and aren't needed for normal .NET development
+
+- **Install an alternative operating system distribution**<br>
+    ✅ [**Fedora** can run on Raspberry Pis](https://docs.fedoraproject.org/en-US/quick-docs/raspberry-pi/) and [provides official ARM64 packages for .NET](https://packages.fedoraproject.org/pkgs/dotnet9.0/dotnet-runtime-9.0/)<br>
+    ✅ [**Ubuntu** can run on Raspberry Pis](https://ubuntu.com/download/raspberry-pi) and [provides official ARM64 packages for .NET](https://packages.ubuntu.com/plucky/dotnet-runtime-9.0)<br>
+    ❌ Raspberry Pi OS is the default and most popular distro choice for Raspberry Pis, so it's extremely well tested and easy to find answers to any questions<br>
+    ❌ Neither Fedora nor Ubuntu run on 32-bit armhf CPUs, such as the Raspberry Pi 2 v1.1
+
+- **Install Mono**<br>
+    ❌ Horrifically outdated and useless, and should not be used anymore<br>
+    ❌ Whatever you do, don't pick this technique, all of the other options are better<br>
+    ❌ This is why .NET (Core) was created to replace .NET Framework on non-Windows operating systems
 
 ## Developer information
 ### Application package dependencies
