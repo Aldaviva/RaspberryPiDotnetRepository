@@ -38,12 +38,15 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     public CpuArchitecture architecture { get; } = architecture;
 
     /// <summary>
-    /// <para>The oldest version of Debian that this package can run on, usually dictated by its libc6 version</para>
+    /// <para>Whether this package can run on a given Debian version, usually dictated by its libc version</para>
     /// <para>See <see href="https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility"/></para>
     /// <para>#28: .NET 9 and later don't run on ARM32 Debian 10 or 11</para>
+    /// <para>#36: .NET 7 and 8 can't use OpenSSL on ARM32 Debian 13</para>
     /// </summary>
-    [JsonIgnore]
-    public DebianRelease minimumDebianRelease => architecture == CpuArchitecture.ARM32 && version >= new Version(9, 0, 0) ? DebianRelease.BOOKWORM : DebianRelease.BUSTER;
+    public bool isCompatibleWithDebianRelease(DebianRelease debian) =>
+        !(architecture == CpuArchitecture.ARM32 && (
+            (version >= new Version(9, 0, 0) && debian <= DebianRelease.BULLSEYE) ||                                 // runtime crash on launch from old glibc
+            (version >= new Version(7, 0, 0) && version < new Version(9, 0, 0) && debian >= DebianRelease.TRIXIE))); // HTTPS AuthenticationException from newer glibc and OpenSSL
 
     /// <summary>
     /// Like <c>packages/dotnet-runtime-8.0.5-0-armhf.deb</c> or <c>packages/aspnetcore-runtime-8.0-0-arm64-latest-lts.deb</c>

@@ -1,4 +1,4 @@
-﻿<img src=".github/images/rpi-dotnet.svg" height="25" alt="logo" /> Raspberry Pi OS .NET APT Package Repository
+<img src=".github/images/rpi-dotnet.svg" height="25" alt="logo" /> Raspberry Pi OS .NET APT Package Repository
 ===
 
 ![latest .NET version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraspbian.aldaviva.com%2Fbadges%2Fdotnet.json&query=%24.latestVersion&logo=dotnet&label=latest%20version&color=success) ![latest Raspberry Pi OS version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraspbian.aldaviva.com%2Fbadges%2Fraspbian.json&query=%24.latestVersion&logo=raspberrypi&label=latest%20version&color=success) [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/Aldaviva/RaspberryPiDotnetRepository/dotnet.yml?branch=master&logo=github)](https://github.com/Aldaviva/RaspberryPiDotnetRepository/actions/workflows/dotnet.yml)
@@ -195,7 +195,7 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 |Raspberry Pi OS|OS architecture|.NET 9|.NET 8|.NET 7|.NET 6|
 |-:|-:|:-|:-|:-|:-|
 |Trixie (13)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Trixie (13)|ARM32|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
+|Trixie (13)|ARM32|✅|❌<sup>4</sup>|❌<sup>4</sup>|☑<sup>1</sup>|
 |Bookworm (12)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
 |Bookworm (12)|ARM32|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
 |Bullseye (11)|ARM64|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
@@ -211,6 +211,7 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 > 1. [This older version of .NET is no longer updated or supported by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
 > 1. [This combination of .NET and Debian versions was never supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
 > 1. [Due to Y2038 compatibility](https://github.com/dotnet/core/discussions/9285), [.NET &ge; 9 on ARM32 Linux requires a newer version of glibc/libc6 (&ge; 2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility) than is provided by Debian 10 ([2.28](https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
+> 1. [Due to Y2038 compatibility](https://github.com/dotnet/runtime/issues/101444), .NET 7–8 will throw an `AuthenticationException` from HTTPS connections because of the newer glibc and OpenSSL dependencies in ARM32 Debian &ge; 13.
 
 ##### Release information
 - [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/) and [hardware compatibility](https://en.wikipedia.org/wiki/Raspberry_Pi_OS#Releases)
