@@ -39,7 +39,7 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
         Dictionary<(DebianRelease debianVersion, CpuArchitecture architecture), IList<DebianPackage>> groups = [];
         foreach (DebianPackage package in packages) {
             foreach (DebianRelease debianRelease in allDebianReleases) {
-                if (package.minimumDebianRelease <= debianRelease) {
+                if (package.isCompatibleWithDebianRelease(debianRelease)) {
                     groups.GetOrAdd((debianRelease, package.architecture), [], out _).Add(package);
                 }
             }

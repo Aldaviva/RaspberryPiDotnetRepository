@@ -36,7 +36,7 @@ public class Orchestrator(
         (IList<DotnetRelease> upstreamReleases, UpstreamReleasesSecondaryInfo upstreamInfo) = await sdkDownloader.downloadSdks(MIN_DOTNET_MINOR_VERSION, ct);
 
         // Stop early if repo is already up to date
-        if (!oldManifest?.isUpToDate(upstreamInfo.knownReleaseSdkVersions) ?? true) {
+        if (options.Value.forceRegenerate || (!oldManifest?.isUpToDate(upstreamInfo.knownReleaseSdkVersions) ?? true)) {
 
             // Generate .deb package files
             IEnumerable<PackageRequest> packagesToRequest = packageRequester.listPackagesToRequest(upstreamReleases);

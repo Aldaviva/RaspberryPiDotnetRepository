@@ -17,7 +17,7 @@ public record Options {
 
     public bool dryRun { get; init; }
 
-    // public bool forceRegenerate { get; init; }
+    public bool forceRegenerate { get; init; }
 
     public string? cdnTenantId { get; set; }
 
