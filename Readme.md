@@ -171,13 +171,21 @@ sudo apt-get full-upgrade
 
 #### Major and minor versions
 
-**Latest or Latest LTS installed:** If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `apt-get update && apt-get full-upgrade`. You may clean up previous versions afterwards using `sudo apt autoremove`, or at installation time using `sudo apt full-upgrade --autoremove`.
+##### Latest or Latest LTS installed
+If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `sudo apt-get update && sudo apt-get full-upgrade`.
 
-**Specific minor version installed:** If you aren't using a `latest[-lts]` package, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`. Afterwards, you may clean up previous versions using a command like `sudo apt remove dotnet-runtime-7.0`.
+Using `full-upgrade` instead of `upgrade` is recommended because `full-upgrade` allows removal of packages and thus enables major and minor version upgrades, in addition to patch upgrades. The difference is shown in the following example where you had .NET Runtime 9.0.10 installed with `dotnet-runtime-latest` when .NET 10.0.0 was released on 2025-11-11.
+- **`apt-get full-upgrade`**: installs .NET Runtime **10.0.0**, removes .NET Runtime 9.0.10
+- **`apt-get upgrade`**: installs .NET Runtime **9.0.11**, removes .NET Runtime 9.0.10
+
+If any unneeded, automatically installed packages are left installed after upgrading, you may remove them with `sudo apt autoremove`.
+
+##### Specific minor version installed
+If you aren't using a `latest[-lts]` package, you can manually choose a new minor version to install using a command like `sudo apt install dotnet-runtime-8.0`. Afterwards, you may clean up previous versions using a command like `sudo apt remove dotnet-runtime-7.0`.
 
 #### Automatic updates
 
-To automatically install package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages) and [this quick summary](https://gist.github.com/Aldaviva/9db64e47324f467a7c9b7e468a454c76#file-debian-autoupdate-md).
+To automatically install package updates without any user interaction, see [Debian Reference § 2.7.3: Automatic download and upgrade of packages](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_automatic_download_and_upgrade_of_packages) and [this quick summary](https://gist.github.com/Aldaviva/9db64e47324f467a7c9b7e468a454c76#file-debian-autoupdate-md). This uses the `apt full-upgrade` [behavior](#latest-or-latest-lts-installed), which will install new major or minor versions if you have one of the `-latest` packages installed, and will automatically remove the old version.
 
 ### List installed versions
 
