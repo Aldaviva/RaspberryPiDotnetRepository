@@ -114,7 +114,7 @@ There are also three types of version specification suffixes to choose from, whi
 
 > [!NOTE]
 > [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released each November of odd-numbered years like 2023, have even major version numbers, and come with 3 years of support.<br>
-> *Standard Term Support (STS)* versions like 7.0 are released each November of even-numbered years like 2022, with odd version numbers and 1.5 years of support.
+> *Standard Term Support (STS)* versions like 7.0 are released each November of even-numbered years like 2022, with odd version numbers and 2 years of support.
 
 Then, once you know which package you want, you can install it with `apt install <packagename>`, for example, **`sudo apt install dotnet-runtime-latest`**.
 
