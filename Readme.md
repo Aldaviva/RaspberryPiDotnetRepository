@@ -246,14 +246,15 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 
 ## Alternatives
 Here are other ways to run .NET applications on a Raspberry Pi besides installing the packages from this repository.
-- **Add the [Microsoft Linux Package Repositories from PMC (packages.microsoft.com)](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#debian-12)**
+- **Add the [Microsoft Linux Package Repositories from PMC (packages.microsoft.com)](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#debian-13)**
     ```sh
-    wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    wget https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
     sudo dpkg -i packages-microsoft-prod.deb
     rm packages-microsoft-prod.deb
+    sudo apt-get update
+    sudo apt-get install dotnet-runtime-10.0
     ```
     ✅ [Hosted by Microsoft](https://github.com/microsoft/linux-package-repositories)<br>
-    ❌ [Not available until .NET 10 is released in November 2025](https://github.com/dotnet/runtime/issues/3298#issuecomment-2573369838)<br>
     ❌ Does not support .NET 9 or earlier<br>
     ❌ Does not support Debian 11 or earlier<br>
     ❌ Does not support armhf operating systems like 32-bit Raspberry Pi OS, even if your CPU architecture is arm64
@@ -272,7 +273,7 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
 
 - **Bundle the runtime inside each app, instead of installing the runtime system-wide with a package or script**
     ```sh
-    dotnet publish -r linux-arm -p:PublishSingleFile=true --self-contained # runtime must be linux-arm or linux-arm64
+    dotnet publish -r linux-arm -p:PublishSingleFile=true --self-contained # runtime ID must be linux-arm or linux-arm64
     ```
     ✅ If you want to make your app smaller and start faster with [Native AOT compilation](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), then this self-contained publishing is required, although you can also publish self-contained apps without Native AOT<br>
     ❌ Installing multiple .NET JIT apps takes more time and storage space, and wears out your SD card faster<br>
@@ -283,8 +284,8 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
     ❌ Native AOT compilation requires you to install the Microsoft Visual C++ compiler and Windows SDK on your development machine, which take up a lot of space and aren't needed for normal .NET development
 
 - **Install an alternative operating system distribution**<br>
-    ✅ [**Fedora** can run on Raspberry Pis](https://docs.fedoraproject.org/en-US/quick-docs/raspberry-pi/) and [provides official ARM64 packages for .NET](https://packages.fedoraproject.org/pkgs/dotnet9.0/dotnet-runtime-9.0/)<br>
-    ✅ [**Ubuntu** can run on Raspberry Pis](https://ubuntu.com/download/raspberry-pi) and [provides official ARM64 packages for .NET](https://packages.ubuntu.com/plucky/dotnet-runtime-9.0)<br>
+    ✅ [**Fedora** can run on Raspberry Pis](https://docs.fedoraproject.org/en-US/quick-docs/raspberry-pi/) and [provides official ARM64 packages for .NET](https://packages.fedoraproject.org/pkgs/dotnet10.0/dotnet-runtime-10.0/)<br>
+    ✅ [**Ubuntu** can run on Raspberry Pis](https://ubuntu.com/download/raspberry-pi) and [provides official ARM64 packages for .NET](https://packages.ubuntu.com/questing/dotnet-runtime-10.0)<br>
     ❌ Raspberry Pi OS is the default and most popular distro choice for Raspberry Pis, so it's extremely well tested and easy to find answers to any questions<br>
     ❌ Neither Fedora nor Ubuntu run on 32-bit armhf CPUs, such as the Raspberry Pi 2 v1.1
 
