@@ -5,9 +5,9 @@
 
 This public [APT repository](https://github.com/Aldaviva/RaspberryPiDotnetRepository/wiki/Debian-APT-package-repository-format) supplies armhf and arm64 .deb packages of [.NET](https://dotnet.microsoft.com/) runtimes and SDKs to install on [Raspberry Pis](https://www.raspberrypi.com/products/) running [Raspberry Pi OS/Raspbian](https://www.raspberrypi.com/software/operating-systems/).
 
-Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Red Hat](https://packages.fedoraproject.org/pkgs/dotnet8.0/), and [Canonical](https://packages.ubuntu.com/noble/dotnet8) provide official .deb packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft's packages only support .NET &ge; 10 and arm64. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which neither installs system-wide without extra manual steps, nor automatically updates or cleans up previous versions, nor lets you install the latest version without you having to manually look up whether STS or LTS is currently newer.
+Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Red Hat](https://packages.fedoraproject.org/pkgs/dotnet10.0/), and [Canonical](https://packages.ubuntu.com/questing/dotnet10) provide official .deb packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft's packages only support .NET &ge; 10 and arm64. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which doesn't install system-wide without extra manual steps, doesn't automatically update, doesn't clean up previous versions, and doesn't let you install the latest version without you having to manually look up whether STS or LTS is currently newer.
 
-This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the exact same Linux ARM binary archives that the [official .NET download pages](https://dotnet.microsoft.com/en-us/download/dotnet/8.0), [release notes](https://github.com/dotnet/core/blob/main/release-notes/8.0/8.0.3/8.0.3.md#downloads), and [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install) use.
+This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the exact same Linux ARM binary archives that the [official .NET download pages](https://dotnet.microsoft.com/en-us/download/dotnet/10.0), [release notes](https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.0/10.0.0.md#downloads), and [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install) use.
 
 <!-- MarkdownTOC autolink="true" bracket="round" autoanchor="false" levels="1,2,3,4" bullets="-,1.,-" -->
 
@@ -168,16 +168,17 @@ sudo apt-get full-upgrade
 ```
 
 > [!IMPORTANT]  
-> Be sure to restart any running .NET applications after installing a new version of the runtime they were using, or else they may mysteriously crash much later when a dynamically-loaded file cannot be found in an old, now-deleted versioned directory.
+> Be sure to restart any running .NET applications after installing a new version of the runtime they were using, or else they may mysteriously crash much later when a dynamically-loaded file cannot be found in an old, now-deleted versioned directory.<br>
+> For developers, you can automatically restart your running app when its .NET Runtime is upgraded using [RuntimeUpgradeNotifier](https://www.nuget.org/packages/RuntimeUpgradeNotifier/).
 
 #### Major and minor versions
 
 ##### Latest or Latest LTS installed
-If you want to update to a new major or minor version, you will need to have installed one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `sudo apt-get update && sudo apt-get full-upgrade`.
+If you want to update to a new major or minor version, you will need to have one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `sudo apt-get update && sudo apt-get full-upgrade`.
 
 Using `full-upgrade` instead of `upgrade` is recommended because `full-upgrade` allows removal of packages and thus enables major and minor version upgrades, in addition to patch upgrades. The difference is shown in the following example where you had .NET Runtime 9.0.10 installed with `dotnet-runtime-latest` when .NET 10.0.0 was released on 2025-11-11.
-- **`apt-get full-upgrade`**: installs .NET Runtime **10.0.0**, removes .NET Runtime 9.0.10
-- **`apt-get upgrade`**: installs .NET Runtime **9.0.11**, removes .NET Runtime 9.0.10
+- **`apt-get full-upgrade`**: installs .NET Runtime **10.0.0** and removes .NET Runtime 9.0.10, which is possible because `full-upgrade` allows 9.0 to be removed in favor of 10.0
+- **`apt-get upgrade`**: installs .NET Runtime **9.0.11** and removes .NET Runtime 9.0.10, because `upgrade` does not allow 9.0 to be removed in favor of 10.0
 
 If any unneeded, automatically installed packages are left installed after upgrading, you may remove them with `sudo apt autoremove`.
 
