@@ -247,7 +247,7 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 
 ## Alternatives
 Here are other ways to run .NET applications on a Raspberry Pi besides installing the packages from this repository.
-- **Add the [Microsoft Linux Package Repositories from PMC (packages.microsoft.com)](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#debian-13)**
+- **Add the [Microsoft Linux Package Repositories from packages.microsoft.com](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#debian-13)**
     ```sh
     wget https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
     sudo dpkg -i packages-microsoft-prod.deb
@@ -269,8 +269,10 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
     ```
     ✅ [Hosted by Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet/scripts)<br>
     ❌ Must re-run `dotnet-install.sh` each time you want to update .NET<br>
+    ❌ No built-in way to easily automate upgrades<br>
     ❌ If you want the latest version, you must have prior knowledge of which channel, LTS or STS, is the latest at any given time, which is difficult to automate<br>
-    ❌ More steps to make a system-wide installation, since this tool is meant for temporary non-root cases like CI build machines
+    ❌ More steps to make a system-wide installation, since this tool is meant for temporary non-root cases like CI build machines<br>
+    ❌ Does not clean up old patch versions, so every time you upgrade .NET it will consume more storage space until you remember to manually find and delete the correct directories
 
 - **Bundle the runtime inside each app, instead of installing the runtime system-wide with a package or script**
     ```sh
@@ -282,7 +284,7 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
     ❌ Only useful for cross-compilation from another machine, and does not let you install the SDK on a Raspberry Pi, if you wanted it<br>
     ❌ Native AOT has extremely limited reflection support and is incompatible with many libraries, especially for deserialization<br>
     ❌ Native AOT compilation takes a longer time (self-contained JIT publishing is slow, and AOT compilation is even slower)<br>
-    ❌ Native AOT compilation requires you to install the Microsoft Visual C++ compiler and Windows SDK on your development machine, which take up a lot of space and aren't needed for normal .NET development
+    ❌ Native AOT compilation on Windows requires you to install the Microsoft Visual C++ compiler and Windows SDK on your development machine, which take up an extra 4.1 GB and aren't needed for normal .NET development
 
 - **Install an alternative operating system distribution**<br>
     ✅ [**Fedora** can run on Raspberry Pis](https://docs.fedoraproject.org/en-US/quick-docs/raspberry-pi/) and [provides official ARM64 packages for .NET](https://packages.fedoraproject.org/pkgs/dotnet10.0/dotnet-runtime-10.0/)<br>
