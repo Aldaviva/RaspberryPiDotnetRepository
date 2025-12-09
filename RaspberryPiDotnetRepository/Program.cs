@@ -55,9 +55,9 @@ appConfig.Services
     .AddSingleton<BlobStorageClient, BlobStorageClientImpl>()
 
     // Azure CDN
-    .AddSingleton<ArmClient?>(provider => provider.options() is { cdnTenantId: { } tenantId, cdnClientId: { } clientId, cdnCertFilePath: { } certPath } opts
-        ? new ArmClient(new ClientCertificateCredential(tenantId, clientId, new X509Certificate2(certPath, opts.cdnCertPassword))) : null)
-    .AddSingleton<CdnEndpointResource?>(provider => provider.options() is { cdnSubscriptionId: { } s, cdnResourceGroup: { } r, cdnProfile: { } p, cdnEndpointName: { } e } ?
+    .AddSingleton<ArmClient?>(provider => provider.options() is { cdnTenantId: {} tenantId, cdnClientId: {} clientId, cdnCertFilePath: {} certPath } opts
+        ? new ArmClient(new ClientCertificateCredential(tenantId, clientId, X509CertificateLoader.LoadPkcs12FromFile(certPath, opts.cdnCertPassword))) : null)
+    .AddSingleton<CdnEndpointResource?>(provider => provider.options() is { cdnSubscriptionId: {} s, cdnResourceGroup: {} r, cdnProfile: {} p, cdnEndpointName: {} e } ?
         provider.GetService<ArmClient>()?.GetCdnEndpointResource(CdnEndpointResource.CreateResourceIdentifier(s, r, p, e)).Get().AsNullable() : null)
     .AddSingleton<CdnClient, CdnClientImpl>()
 
