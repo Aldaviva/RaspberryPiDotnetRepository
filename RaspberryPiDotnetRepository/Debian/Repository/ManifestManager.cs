@@ -34,7 +34,7 @@ public class ManifestManagerImpl(BlobStorageClient blobStorage, IOptions<Options
             try {
                 repositoryManifest = (await JsonSerializer.DeserializeAsync<RepositoryManifest>(oldManifestStream, JSON_OPTIONS, ct))!;
             } catch (JsonException e) {
-                logger.LogWarning(e, "Package manifest JSON file {filename} was corrupted, ignoring it and regenerating all packages", manifestFilename);
+                logger.Warn(e, "Package manifest JSON file {filename} was corrupted, ignoring it and regenerating all packages", manifestFilename);
                 return null;
             }
 

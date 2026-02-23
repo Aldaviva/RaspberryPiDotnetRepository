@@ -79,7 +79,7 @@ public class MultiUploadProgress: UploadProgressFactory {
         snapshots.Return(snapshot);
 
         if (message?.Length > 0 && message != mostRecentMessage) {
-            logger.LogDebug("{progress}", message);
+            logger.Debug("{progress}", message);
             mostRecentMessage = message;
         }
     }

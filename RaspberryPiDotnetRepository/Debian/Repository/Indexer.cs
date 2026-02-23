@@ -52,28 +52,28 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
                                                                                                             IEnumerable<DebianPackage> debPackages, UpstreamReleasesSecondaryInfo upstreamInfo) {
         string packageFileContents = string.Join("\n\n", debPackages.Select(package =>
             $"""
-                 {package.getControl(upstreamInfo).serialize().Trim()}
-                 Filename: {package.filePathRelativeToRepo}
-                 Size: {package.downloadSize.ConvertToUnit(Unit.Byte).Quantity:F0}
-                 SHA256: {package.fileHashSha256}
-                 """.ReplaceLineEndings("\n")));
+                {package.getControl(upstreamInfo).serialize().Trim()}
+                Filename: {package.filePathRelativeToRepo}
+                Size: {package.downloadSize.ConvertToUnit(Unit.Byte).Quantity:F0}
+                SHA256: {package.fileHashSha256}
+                """.ReplaceLineEndings("\n")));
 
         string packageFileRelativeToSuite = Path.Combine("main", $"binary-{cpuArchitecture.toDebian()}", "Packages");
         string packageFileAbsolutePath    = Path.Combine(options.Value.repositoryBaseDir, "dists", debianRelease.getCodename(), packageFileRelativeToSuite);
         Directory.CreateDirectory(Path.GetDirectoryName(packageFileAbsolutePath)!);
         await using StreamWriter packageIndexStreamWriter = new(packageFileAbsolutePath, false, Encoding.UTF8);
         await packageIndexStreamWriter.WriteAsync(packageFileContents);
-        logger.LogDebug("Wrote uncompressed Packages index for Debian {debian} {arch}", debianRelease.getCodename(), cpuArchitecture.toDebian());
+        logger.Debug("Wrote uncompressed Packages index for Debian {debian} {arch}", debianRelease.getCodename(), cpuArchitecture.toDebian());
         statistics.onFileWritten(packageFileAbsolutePath);
 
         await using FileStream   compressedPackageIndexFileStream   = File.Create(Path.ChangeExtension(packageFileAbsolutePath, "gz"));
         await using GZipStream   gzipStream                         = new(compressedPackageIndexFileStream, PACKAGE_INDEX_COMPRESSION);
         await using StreamWriter compressedPackageIndexStreamWriter = new(gzipStream, Encoding.UTF8);
         await compressedPackageIndexStreamWriter.WriteAsync(packageFileContents);
-        logger.LogDebug("Wrote compressed Packages.gz index for Debian {debian} {arch}", debianRelease.getCodename(), cpuArchitecture.toDebian());
+        logger.Debug("Wrote compressed Packages.gz index for Debian {debian} {arch}", debianRelease.getCodename(), cpuArchitecture.toDebian());
         statistics.onFileWritten(packageFileAbsolutePath);
 
-        logger.LogInformation("Generated Packages index files for Debian {debian} {arch}", debianRelease.getCodename(), cpuArchitecture.toDebian());
+        logger.Info("Generated Packages index files for Debian {debian} {arch}", debianRelease.getCodename(), cpuArchitecture.toDebian());
 
         return [
             new PackageIndexFile(debianRelease, cpuArchitecture, true),
@@ -93,38 +93,38 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
 
         string releaseFileCleartext =
             $"""
-                 Origin: Ben Hutchison
-                 Label: .NET for Raspberry Pi OS
-                 Codename: {debianRelease.getCodename()}
-                 Suite: {debianRelease.getSuiteName()}
-                 Architectures: {string.Join(' ', Enum.GetValues<CpuArchitecture>().Select(c => c.toDebian()))}
-                 Components: main
-                 Description: ARM packages of .NET Runtimes and SDKs for Raspberry Pi OS
-                 Date: {DateTime.UtcNow:R}
-                 SHA256:
-                 {indexSha256Hashes}
-                 """.ReplaceLineEndings("\n");
+                Origin: Ben Hutchison
+                Label: .NET for Raspberry Pi OS
+                Codename: {debianRelease.getCodename()}
+                Suite: {debianRelease.getSuiteName()}
+                Architectures: {string.Join(' ', Enum.GetValues<CpuArchitecture>().Select(c => c.toDebian()))}
+                Components: main
+                Description: ARM packages of .NET Runtimes and SDKs for Raspberry Pi OS
+                Date: {DateTime.UtcNow:R}
+                SHA256:
+                {indexSha256Hashes}
+                """.ReplaceLineEndings("\n");
 
         ReleaseIndexFile releaseIndexFile = new(debianRelease);
 
         string filePath = Path.Combine(repositoryBaseDir, releaseIndexFile.releaseFilePathRelativeToRepo);
         await File.WriteAllTextAsync(filePath, releaseFileCleartext, Encoding.UTF8); // Bom.Squad has already defused this UTF-8 BOM, or else apt will get its limbs blown off
-        logger.LogDebug("Wrote unsigned Release meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
+        logger.Debug("Wrote unsigned Release meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
         statistics.onFileWritten(filePath);
 
         // gpg --sign --detach-sign --armor
         filePath = Path.Combine(repositoryBaseDir, releaseIndexFile.releaseGpgFilePathRelativeToRepo);
         await File.WriteAllTextAsync(filePath, await pgp.DetachedSignAsync(releaseFileCleartext), Encoding.UTF8);
-        logger.LogDebug("Wrote Release.gpg signature of Release meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
+        logger.Debug("Wrote Release.gpg signature of Release meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
         statistics.onFileWritten(filePath);
 
         // gpg --sign --clearsign --armor
         filePath = Path.Combine(repositoryBaseDir, releaseIndexFile.inreleaseFilePathRelativeToRepo);
         await File.WriteAllTextAsync(filePath, await pgp.ClearSignAsync(releaseFileCleartext), Encoding.UTF8);
-        logger.LogDebug("Wrote signed InRelease meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
+        logger.Debug("Wrote signed InRelease meta-index of package indexes for Debian {debian}", debianRelease.getCodename());
         statistics.onFileWritten(filePath);
 
-        logger.LogInformation("Generated Release index files for Debian {debian}", debianRelease.getCodename());
+        logger.Info("Generated Release index files for Debian {debian}", debianRelease.getCodename());
 
         return releaseIndexFile;
     }

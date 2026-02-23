@@ -7,7 +7,7 @@ namespace RaspberryPiDotnetRepository.Data;
 
 public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version sdkVersion, CpuArchitecture architecture): IEquatable<DebianPackage> {
 
-    public const string VERSION_SUFFIX = "-3";
+    public const string VERSION_SUFFIX = "-4";
 
     /// <summary>
     /// The name of the Debian package, such as <c>dotnet-runtime-8.0</c> or <c>aspnetcore-runtime-latest-lts</c>.
@@ -187,36 +187,36 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     public string descriptionBody => runtime switch {
         _ when isMetaPackage && isMetaPackageSupportedLongTerm =>
             $"""
-             This is a dependency metapackage that installs the current latest Long Term Support (LTS) version of {runtime.getFriendlyName()}. Does not include preview or release candidate versions.
+            This is a dependency metapackage that installs the current latest Long Term Support (LTS) version of {runtime.getFriendlyName()}. Does not include preview or release candidate versions.
 
-             Install this package if you want to always have the greatest LTS {runtime.getFriendlyName()} version installed. This will perform major and minor version upgrades — for example, if {runtime.getPackageName()}-6.0 were already installed, `apt upgrade` would install {runtime.getPackageName()}-{minorVersion}.
+            Install this package if you want to always have the greatest LTS {runtime.getFriendlyName()} version installed. This will perform major and minor version upgrades — for example, if {runtime.getPackageName()}-6.0 were already installed, `apt upgrade` would install {runtime.getPackageName()}-{minorVersion}.
 
-             If you instead want to always stay on the latest version, even if that means sometimes using an STS (Standard Term Support) release, then install {runtime.getPackageName()}-latest.
+            If you instead want to always stay on the latest version, even if that means sometimes using an STS (Standard Term Support) release, then install {runtime.getPackageName()}-latest.
 
-             If you instead want to always stay on a specific minor version, then install a numbered release, such as {runtime.getPackageName()}-{minorVersion}.
+            If you instead want to always stay on a specific minor version, then install a numbered release, such as {runtime.getPackageName()}-{minorVersion}.
 
-             If you are a developer who wants your application package to depend upon a certain minimum version of {runtime.getPackageName()}, it is suggested that you add a dependency on `{runtime.getPackageName()}-latest | {runtime.getPackageName()}-{minorVersion}-or-greater` (replace {minorVersion} with the minimum .NET version your app targets).
-             """,
+            If you are a developer who wants your application package to depend upon a certain minimum version of {runtime.getPackageName()}, it is suggested that you add a dependency on `{runtime.getPackageName()}-latest | {runtime.getPackageName()}-{minorVersion}-or-greater` (replace {minorVersion} with the minimum .NET version your app targets).
+            """,
         _ when isMetaPackage && !isMetaPackageSupportedLongTerm =>
             $"""
-             This is a dependency metapackage that installs the current latest version of {runtime.getFriendlyName()}, whether that is LTS (Long Term Support) or STS (Standard Term Support), whichever version number is greater. Does not include preview or release candidate versions.
+            This is a dependency metapackage that installs the current latest version of {runtime.getFriendlyName()}, whether that is LTS (Long Term Support) or STS (Standard Term Support), whichever version number is greater. Does not include preview or release candidate versions.
 
-             Install this package if you want to always have the highest stable .NET version installed, even if that version is not LTS. This will perform major and minor version upgrades — for example, if {runtime.getPackageName()}-{minorVersion} were already installed, `apt upgrade` would install {runtime.getPackageName()}-{new Version(version.Major + 1, 0)} when it was released.
+            Install this package if you want to always have the highest stable .NET version installed, even if that version is not LTS. This will perform major and minor version upgrades — for example, if {runtime.getPackageName()}-{minorVersion} were already installed, `apt upgrade` would install {runtime.getPackageName()}-{new Version(version.Major + 1, 0)} when it was released.
 
-             If you instead want to always stay on the latest LTS release and avoid STS, then install {runtime.getPackageName()}-latest-lts.
+            If you instead want to always stay on the latest LTS release and avoid STS, then install {runtime.getPackageName()}-latest-lts.
 
-             If you instead want to always stay on a specific minor version, then install a numbered release, such as {runtime.getPackageName()}-{minorVersion}.
+            If you instead want to always stay on a specific minor version, then install a numbered release, such as {runtime.getPackageName()}-{minorVersion}.
 
-             If you are a developer who wants your application package to depend upon a certain minimum version of {runtime.getPackageName()}, it is suggested that you add a dependency on `{runtime.getPackageName()}-latest | {runtime.getPackageName()}-{minorVersion}-or-greater` (replace {minorVersion} with the minimum .NET version your app targets).
-             """,
+            If you are a developer who wants your application package to depend upon a certain minimum version of {runtime.getPackageName()}, it is suggested that you add a dependency on `{runtime.getPackageName()}-latest | {runtime.getPackageName()}-{minorVersion}-or-greater` (replace {minorVersion} with the minimum .NET version your app targets).
+            """,
         RuntimeType.CLI =>
             $"""
-             This package installs the '/usr/bin/dotnet' command-line interface, which is part of all .NET installations.
+            This package installs the '/usr/bin/dotnet' command-line interface, which is part of all .NET installations.
 
-             This package does not install any .NET runtimes or SDKs by itself, so .NET applications won't run with only this package. This is just a common dependency used by the other .NET packages.
+            This package does not install any .NET runtimes or SDKs by itself, so .NET applications won't run with only this package. This is just a common dependency used by the other .NET packages.
 
-             To actually run or build .NET applications, you must also install one of the .NET runtime or SDK packages, such as {RuntimeType.RUNTIME.getPackageName()}-{minorVersion}, {RuntimeType.ASPNETCORE_RUNTIME.getPackageName()}-{minorVersion}, or {RuntimeType.SDK.getPackageName()}-{minorVersion}.
-             """,
+            To actually run or build .NET applications, you must also install one of the .NET runtime or SDK packages, such as {RuntimeType.RUNTIME.getPackageName()}-{minorVersion}, {RuntimeType.ASPNETCORE_RUNTIME.getPackageName()}-{minorVersion}, or {RuntimeType.SDK.getPackageName()}-{minorVersion}.
+            """,
         RuntimeType.RUNTIME =>
             """
             .NET is a fast, lightweight, and modular platform for creating cross-platform applications that work on GNU/Linux, Mac OS, and Windows.

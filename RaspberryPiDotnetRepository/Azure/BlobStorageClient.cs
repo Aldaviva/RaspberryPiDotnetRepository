@@ -29,7 +29,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
     private BlobClient openFile(string blobFilePath) => container.GetBlobClient(blobFilePath);
 
     public async Task<BlobDownloadResult?> readFile(string blobFilePath, CancellationToken ct = default) {
-        logger.LogDebug("Downloading {file}", blobFilePath);
+        logger.Debug("Downloading {file}", blobFilePath);
         try {
             return (await openFile(blobFilePath).DownloadContentAsync(ct)).AsNullable();
         } catch (RequestFailedException e) {
@@ -42,7 +42,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
     }
 
     public async Task<IEnumerable<BlobItem>> listFiles(string? baseDir = null, CancellationToken ct = default) {
-        await using IAsyncEnumerator<BlobItem> enumerator = container.GetBlobsAsync(prefix: baseDir, cancellationToken: ct).GetAsyncEnumerator(ct);
+        await using IAsyncEnumerator<BlobItem> enumerator = container.GetBlobsAsync(new GetBlobsOptions { Prefix = baseDir }, cancellationToken: ct).GetAsyncEnumerator(ct);
         return await enumerator.ToList();
     }
 
@@ -51,7 +51,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
         await uploadSemaphore.WaitAsync(ct);
         try {
             if (!options.Value.dryRun) {
-                logger.LogInformation("Uploading to {dest}", destinationBlobFilePath);
+                logger.Info("Uploading to {dest}", destinationBlobFilePath);
                 using DisposableProgress<long> progressHandler = uploadProgress.registerFile(destinationBlobFilePath, source.Length);
                 return (await openFile(destinationBlobFilePath).UploadAsync(source, new BlobHttpHeaders {
                         ContentType  = contentType,
@@ -61,11 +61,11 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
                     transferOptions: new StorageTransferOptions { MaximumConcurrency = options.Value.storageParallelUploads },
                     cancellationToken: ct)).AsNullable();
             } else {
-                logger.LogInformation("Would have uploaded to {dest} if not in dry run", destinationBlobFilePath);
+                logger.Info("Would have uploaded to {dest} if not in dry run", destinationBlobFilePath);
                 return null;
             }
         } catch (Exception e) when (e is not OutOfMemoryException) {
-            logger.LogError(e, "Failed to upload to {dest}", destinationBlobFilePath);
+            logger.Error(e, "Failed to upload to {dest}", destinationBlobFilePath);
             throw;
         } finally {
             uploadSemaphore.Release();
@@ -79,10 +79,10 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
 
     public async Task deleteFile(string blobFilePath, CancellationToken ct = default) {
         if (!options.Value.dryRun) {
-            logger.LogDebug("Deleting {file}", blobFilePath);
+            logger.Debug("Deleting {file}", blobFilePath);
             await container.DeleteBlobIfExistsAsync(blobFilePath, DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: ct);
         } else {
-            logger.LogDebug("Would have deleted {file} if not in dry run", blobFilePath);
+            logger.Debug("Would have deleted {file} if not in dry run", blobFilePath);
         }
     }
 

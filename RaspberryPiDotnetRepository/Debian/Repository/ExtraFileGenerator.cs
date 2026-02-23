@@ -32,7 +32,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
         await using FileStream dotnetBadgeFileStream = File.Create(Path.Combine(options.Value.repositoryBaseDir, dotnetBadgeFile.filePathRelativeToRepo));
         await JsonSerializer.SerializeAsync(dotnetBadgeFileStream, dotnetBadge);
         statistics.onFileWritten(dotnetBadgeFileStream.Name);
-        logger.LogDebug("Wrote badge JSON file that shows the latest .NET version");
+        logger.Debug("Wrote badge JSON file that shows the latest .NET version");
 
         DebianRelease latestDebianVersion = Enum.GetValues<DebianRelease>().Max();
 
@@ -43,7 +43,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
         await using FileStream debianBadgeFileStream = File.Create(Path.Combine(options.Value.repositoryBaseDir, debianBadgeFile.filePathRelativeToRepo));
         await JsonSerializer.SerializeAsync(debianBadgeFileStream, debianBadge);
         statistics.onFileWritten(debianBadgeFileStream.Name);
-        logger.LogDebug("Wrote badge JSON file that shows the latest Debian version");
+        logger.Debug("Wrote badge JSON file that shows the latest Debian version");
 
         return files;
     }
@@ -53,7 +53,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
         string       readmePath = Path.Combine(options.Value.repositoryBaseDir, FILENAME);
         await File.WriteAllTextAsync(readmePath, "https://github.com/Aldaviva/RaspberryPiDotnetRepository", Encoding.UTF8);
         statistics.onFileWritten(readmePath);
-        logger.LogDebug("Wrote readme file to Debian repository");
+        logger.Debug("Wrote readme file to Debian repository");
         return FILENAME;
     }
 
@@ -62,7 +62,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
         string       gpgPublicKeyDestination = Path.Combine(options.Value.repositoryBaseDir, FILENAME);
         File.Copy(options.Value.gpgPublicKeyPath, gpgPublicKeyDestination, true);
         statistics.onFileWritten(gpgPublicKeyDestination);
-        logger.LogDebug("Wrote GPG public key file Debian repository");
+        logger.Debug("Wrote GPG public key file Debian repository");
         return FILENAME;
     }
 
@@ -90,7 +90,7 @@ public class ExtraFileGeneratorImpl(IOptions<Options> options, StatisticsService
 
         await File.WriteAllTextAsync(filePath, CONTENTS, Encoding.UTF8);
         statistics.onFileWritten(filePath);
-        logger.LogDebug("Wrote client-side repository installation script");
+        logger.Debug("Wrote client-side repository installation script");
         return FILENAME;
     }
 

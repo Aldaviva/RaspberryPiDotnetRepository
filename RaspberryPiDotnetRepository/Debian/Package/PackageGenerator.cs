@@ -40,7 +40,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                 p.architecture == packageToGenerate.architecture &&
                 p.runtime == packageToGenerate.packageType &&
                 p.sdkVersion.Equals(packageToGenerate.dotnetRelease.sdkVersion) &&
-                p.versionSuffix == DebianPackage.VERSION_SUFFIX) is { } oldPackage) {
+                p.versionSuffix == DebianPackage.VERSION_SUFFIX) is {} oldPackage) {
             return oldPackage;
         }
 
@@ -61,12 +61,12 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                 string sourcePath = entry.Key.TrimStart("./");
                 int? fileMode = generatedPackage.runtime switch {
                     RuntimeType.CLI when sourcePath == "dotnet" => o(755),
-                    RuntimeType.RUNTIME when sourcePath.StartsWith("shared/Microsoft.NETCore.App/") => Path.GetExtension(sourcePath) == ".so" || Path.GetFileName(sourcePath) == "createdump"
-                        ? o(755) : o(644),
+                    RuntimeType.RUNTIME when sourcePath.StartsWith("shared/Microsoft.NETCore.App/") =>
+                        Path.GetExtension(sourcePath) == ".so" || Path.GetFileName(sourcePath) == "createdump" ? o(755) : o(644),
                     RuntimeType.RUNTIME when sourcePath.StartsWith("host/fxr")                                    => o(755),
                     RuntimeType.ASPNETCORE_RUNTIME when sourcePath.StartsWith("shared/Microsoft.AspNetCore.App/") => o(644),
-                    RuntimeType.SDK when sourcePath.StartsWith("packs/") || sourcePath.StartsWith("sdk") || sourcePath.StartsWith("templates/") => Path.GetExtension(sourcePath) == ".so"
-                        || Path.GetFileName(sourcePath) is "apphost" or "singlefilehost" ? o(744) : o(644),
+                    RuntimeType.SDK when sourcePath.StartsWith("packs/") || sourcePath.StartsWith("sdk") || sourcePath.StartsWith("templates/") =>
+                        Path.GetExtension(sourcePath) == ".so" || Path.GetFileName(sourcePath) is "apphost" or "singlefilehost" or "csc" or "VBCSCompiler" or "vbc" ? o(755) : o(644),
                     _ => null //exclude file
                 };
 
@@ -114,7 +114,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
             generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).Length;
         }
 
-        logger.LogInformation("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture.toDebian() ?? "all", generatedPackage.runtime.getFriendlyName(),
+        logger.Info("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture.toDebian(), generatedPackage.runtime.getFriendlyName(),
             generatedPackage.minorVersion, debFileAbsolutePath);
         statistics.onFileWritten(debFileAbsolutePath);
         return generatedPackage;
@@ -134,7 +134,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                 p.runtime == packageToGenerate.packageType &&
                 p.architecture == packageToGenerate.architecture &&
                 p.version.AsMinor().Equals(packageToGenerate.concreteMinorVersion) &&
-                p.versionSuffix == DebianPackage.VERSION_SUFFIX) is { } oldPackage) {
+                p.versionSuffix == DebianPackage.VERSION_SUFFIX) is {} oldPackage) {
             return oldPackage;
         }
 
@@ -147,7 +147,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
             generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).Length;
         }
 
-        logger.LogInformation("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture.toDebian() ?? "all", generatedPackage.runtime.getFriendlyName(),
+        logger.Info("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture.toDebian(), generatedPackage.runtime.getFriendlyName(),
             generatedPackage.minorVersion, debFileAbsolutePath);
         statistics.onFileWritten(debFileAbsolutePath);
         return generatedPackage;

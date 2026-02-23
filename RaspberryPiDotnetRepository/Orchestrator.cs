@@ -98,11 +98,11 @@ public class Orchestrator(
             sdkDownloader.deleteSdksExcept(upstreamReleases);
 
         } else {
-            logger.LogInformation("Repository is already up to date according to the manifest file, stopping without generating or uploading any files.");
+            logger.Info("Repository is already up to date according to the manifest file, stopping without generating or uploading any files.");
         }
 
         TimeSpan elapsed = statistics.stopTimer();
-        logger.LogInformation(@"Finished in {elapsed:m\m\ ss\s}. Wrote {size} to {files:N0} files.", elapsed, statistics.dataWritten.ToString(1, true), statistics.filesWritten);
+        logger.Info(@"Finished in {elapsed:m\m\ ss\s}. Wrote {size} to {files:N0} files.", elapsed, statistics.dataWritten.ToString(1, true), statistics.filesWritten);
 
         appLifetime.StopApplication();
     }
