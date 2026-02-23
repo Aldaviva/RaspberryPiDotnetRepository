@@ -19,7 +19,7 @@
 
     <ItemGroup>
         <Content Include="rpi-dotnet.ico" />
-        <None Include="..\Readme.md" />
+        <None Include="..\Readme.md;..\.github*\**" />
     </ItemGroup>
 
     <ItemGroup>

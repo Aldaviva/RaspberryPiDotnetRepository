@@ -15,20 +15,20 @@ jobs:
 
     steps:
     - name: Clone
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
         
     - name: Restore
-      run: dotnet restore ${{ env.ProjectName }} --locked-mode --verbosity normal
+      run: dotnet restore ${{ env.ProjectName }} --locked-mode
 
     - name: Build
-      run: dotnet build ${{ env.ProjectName }} --no-restore --runtime ${{ env.TargetPlatform }} --configuration Release --no-self-contained --verbosity normal
+      run: dotnet build ${{ env.ProjectName }} --no-restore --runtime ${{ env.TargetPlatform }} --configuration Release --no-self-contained
 
     - name: Publish
       run: dotnet publish ${{ env.ProjectName }} --no-build --configuration Release -p:PublishSingleFile=true --runtime ${{ env.TargetPlatform }} --self-contained false
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ env.ProjectName }}.exe
-        path: ${{ env.ProjectName }}/bin/Release/net8.0/${{ env.TargetPlatform }}/publish/*.exe
+        path: ${{ env.ProjectName }}/bin/Release/net10.0/${{ env.TargetPlatform }}/publish/*.exe
         if-no-files-found: error
