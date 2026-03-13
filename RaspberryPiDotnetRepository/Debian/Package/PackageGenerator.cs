@@ -1,3 +1,4 @@
+using DataSizeUnits;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
 using RaspberryPiDotnetRepository.DotnetUpstream;
@@ -44,17 +45,14 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
             return oldPackage;
         }
 
-        ISet<string> existingDirectories = new HashSet<string> {
-            "./usr/share",
-            "./usr/bin"
-        };
+        HashSet<string> existingDirectories = ["./usr/share", "./usr/bin"];
 
         await using PackageBuilder debPackageBuilder = new PackageBuilderImpl { gzipCompressionLevel = DEB_TGZ_COMPRESSION };
 
         await using (FileStream sdkArchiveStream = File.OpenRead(packageToGenerate.sdkArchivePath))
-        using (IReader downloadReader = ReaderFactory.Open(sdkArchiveStream))
-        using (TarWriter dataArchiveWriter = debPackageBuilder.data) {
-            while (downloadReader.MoveToNextEntry()) {
+        await using (IAsyncReader downloadReader = await ReaderFactory.OpenAsyncReader(sdkArchiveStream))
+        await using (TarWriter dataArchiveWriter = debPackageBuilder.data) {
+            while (await downloadReader.MoveToNextEntryAsync()) {
                 IEntry entry = downloadReader.Entry;
                 if (entry.IsDirectory || entry.Key == null) continue;
 
@@ -94,7 +92,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                     DateTime lastModified = entry.LastModifiedTime ?? entry.CreatedTime ?? entry.ArchivedTime ?? DateTime.Now;
 
                     // It is critical to dispose each EntryStream, otherwise the IReader will randomly throw an IncompleteArchiveException on a later file in the archive
-                    await using EntryStream downloadedInnerFileStream = downloadReader.OpenEntryStream();
+                    await using EntryStream downloadedInnerFileStream = await downloadReader.OpenEntryStreamAsync();
                     dataArchiveWriter.WriteFile(destinationPath, downloadedInnerFileStream, lastModified, entry.Size, fileMode);
                     generatedPackage.installationSize += entry.Size;
 
@@ -111,7 +109,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
         await using (Stream debStream = File.Create(debFileAbsolutePath)) {
             await debPackageBuilder.build(generatedPackage.getControl(secondaryInfo), debStream);
             generatedPackage.fileHashSha256 = await hashStream(debStream);
-            generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).Length;
+            generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).FileSize;
         }
 
         logger.Info("Generated package for Debian {arch} {name} {version} ({file})", generatedPackage.architecture.toDebian(), generatedPackage.runtime.getFriendlyName(),

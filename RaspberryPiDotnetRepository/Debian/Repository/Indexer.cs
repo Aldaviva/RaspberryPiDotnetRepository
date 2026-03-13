@@ -1,4 +1,3 @@
-using DataSizeUnits;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
 using RaspberryPiDotnetRepository.DotnetUpstream;
@@ -54,7 +53,7 @@ public class IndexerImpl(StatisticsService statistics, IPGP pgp, IOptions<Option
             $"""
                 {package.getControl(upstreamInfo).serialize().Trim()}
                 Filename: {package.filePathRelativeToRepo}
-                Size: {package.downloadSize.ConvertToUnit(Unit.Byte).Quantity:F0}
+                Size: {package.downloadSize.Bytes:F0}
                 SHA256: {package.fileHashSha256}
                 """.ReplaceLineEndings("\n")));
 

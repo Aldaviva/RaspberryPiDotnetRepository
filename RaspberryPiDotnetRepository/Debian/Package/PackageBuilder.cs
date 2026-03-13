@@ -35,14 +35,15 @@ public class PackageBuilderImpl: PackageBuilder {
     }
 
     public async Task build(Control control, Stream output) {
-        data.Dispose();
+        await data.DisposeAsync();
         await dataGzipStream.DisposeAsync();
         dataArchiveStream.Position = 0;
 
         await using Stream controlArchiveStream = new MemoryStream();
-        using (IWriter controlArchiveWriter = WriterFactory.Open(controlArchiveStream, ArchiveType.Tar, new GZipWriterOptions { CompressionLevel = (int) gzipCompressionLevel })) {
+        await using (IAsyncWriter controlArchiveWriter =
+                     WriterFactory.OpenAsyncWriter(controlArchiveStream, ArchiveType.Tar, new GZipWriterOptions { CompressionLevel = (int) gzipCompressionLevel })) {
             await using Stream controlFileBuffer = control.serialize().ToByteStream();
-            controlArchiveWriter.Write("./control", controlFileBuffer);
+            await controlArchiveWriter.WriteAsync("./control", controlFileBuffer);
         }
 
         controlArchiveStream.Position = 0;
@@ -72,7 +73,7 @@ public class PackageBuilderImpl: PackageBuilder {
     }
 
     public async ValueTask DisposeAsync() {
-        data.Dispose();
+        await data.DisposeAsync();
         await dataGzipStream.DisposeAsync();
         await dataArchiveStream.DisposeAsync();
         GC.SuppressFinalize(this);
@@ -80,7 +81,7 @@ public class PackageBuilderImpl: PackageBuilder {
 
 }
 
-internal class IndisposableStream(Stream inner): Stream {
+internal sealed class IndisposableStream(Stream inner): Stream {
 
     public override void Flush() => inner.Flush();
     public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);

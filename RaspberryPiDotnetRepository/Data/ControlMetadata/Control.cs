@@ -4,13 +4,13 @@ using System.Text;
 
 namespace RaspberryPiDotnetRepository.Data.ControlMetadata;
 
-public record Control(
-    string          name,
-    string          version,
+public sealed record Control(
+    string name,
+    string version,
     PersonWithEmail maintainer,
-    DataSize        installedSize,
-    string          descriptionSummary,
-    string          descriptionBody
+    DataSize installedSize,
+    string descriptionSummary,
+    string descriptionBody
 ): DebianSerializable {
 
     public Section? section { get; init; }
@@ -32,7 +32,7 @@ public record Control(
         { "Version", version },
         { "Architecture", architecture?.toDebian() ?? "all" },
         { "Maintainer", maintainer.serialize() },
-        { "Installed-Size", Math.Round(installedSize.ConvertToUnit(Unit.Kilobyte).Quantity).ToString("F0") },
+        { "Installed-Size", Math.Round(installedSize.AsUnit(DataSizeUnit.Kilobyte)).ToString("F0") },
         { "Depends", string.Join(", ", dependencies.serializeAll()) },
         { "Recommends", string.Join(", ", recommendations.serializeAll()) },
         { "Suggests", string.Join(", ", suggestions.serializeAll()) },
