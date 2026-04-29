@@ -14,11 +14,14 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    - name: Unfuck Git
+      run: git config set --global core.autocrlf false
+
     - name: Clone
       uses: actions/checkout@v6
         
     - name: Restore
-      run: dotnet restore ${{ env.ProjectName }} --locked-mode
+      run: dotnet restore ${{ env.ProjectName }} --locked-mode --runtime ${{ env.TargetPlatform }}
 
     - name: Build
       run: dotnet build ${{ env.ProjectName }} --no-restore --runtime ${{ env.TargetPlatform }} --configuration Release --no-self-contained
@@ -27,7 +30,7 @@ jobs:
       run: dotnet publish ${{ env.ProjectName }} --no-build --configuration Release -p:PublishSingleFile=true --runtime ${{ env.TargetPlatform }} --self-contained false
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.ProjectName }}.exe
         path: ${{ env.ProjectName }}/bin/Release/net10.0/${{ env.TargetPlatform }}/publish/*.exe
