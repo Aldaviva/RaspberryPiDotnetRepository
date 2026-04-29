@@ -33,7 +33,7 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
         .AsArray()
         .Compact()
         .Where(release => release["support-phase"]!.GetValue<string>() is "active" or "maintenance" or "eol"
-            && Version.Parse(release["channel-version"]!.GetValue<string>()).AsMinor() >= minMinorVersion.AsMinor());
+            && Version.Parse(release["channel-version"]!.GetValue<string>()).AsMinor >= minMinorVersion.AsMinor);
 
     public async Task<UpstreamReleasesState> downloadSdks(Version minMinorVersion, CancellationToken ct = default) {
         Directory.CreateDirectory(options.Value.tempDir);
@@ -55,13 +55,19 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
                     JsonNode archSpecificFiles     = latestSdk["files"]!.AsArray().First(file => file?["rid"]?.GetValue<string>() == rid)!;
                     Uri      sdkDownloadUrl        = new(archSpecificFiles["url"]!.GetValue<string>());
                     byte[]   expectedSdkSha512Hash = Convert.FromHexString(archSpecificFiles["hash"]!.GetValue<string>());
+                    byte[]   actualSdkSha512Hash   = [];
 
-                    Stopwatch downloadTimer         = new();
-                    string    downloadedSdkFilename = Path.Combine(options.Value.tempDir, Path.GetFileName(sdkDownloadUrl.LocalPath));
+                    Stopwatch downloadTimer             = new();
+                    string    downloadedSdkFilename     = Path.Combine(options.Value.tempDir, Path.GetFileName(sdkDownloadUrl.LocalPath));
+                    string    downloadedSdkHashFilename = downloadedSdkFilename + ".sha512";
                     dotnetRelease.downloadedSdkArchiveFilePaths[cpuArchitecture] = downloadedSdkFilename;
                     await using FileStream fileDownloadStream = File.Open(downloadedSdkFilename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
 
-                    if (fileDownloadStream.Length == 0) {
+                    try {
+                        actualSdkSha512Hash = await File.ReadAllBytesAsync(downloadedSdkHashFilename, ct);
+                    } catch (FileNotFoundException) {}
+
+                    if (fileDownloadStream.Length == 0 || !actualSdkSha512Hash.SequenceEqual(expectedSdkSha512Hash)) {
                         logger.Info("Downloading .NET SDK {version} {arch}...", dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix());
                         downloadTimer.Start();
                         await using Stream downloadStream = await httpClient.Target(sdkDownloadUrl).Get<Stream>(ct);
@@ -72,22 +78,23 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
                         DataSize fileSizeOnDisk         = new(fileDownloadStream.Length);
                         DataSize downloadSpeedPerSecond = fileSizeOnDisk / downloadTimer.Elapsed.TotalSeconds;
                         logger.Info(@"Downloaded .NET SDK {version} {arch} in {time:m\m\ ss\s} ({size} at {speed}/s)", dotnetRelease.sdkVersion.ToString(3),
-                            cpuArchitecture.toRuntimeIdentifierSuffix(), downloadTimer.Elapsed, fileSizeOnDisk.ToString(1, true), downloadSpeedPerSecond.ToString(1, true));
+                            cpuArchitecture.toRuntimeIdentifierSuffix(), downloadTimer.Elapsed, fileSizeOnDisk.ToString(1), downloadSpeedPerSecond.ToString(1));
+
+                        fileDownloadStream.Position = 0;
+                        actualSdkSha512Hash         = await SHA512.HashDataAsync(fileDownloadStream, ct);
+                        await File.WriteAllBytesAsync(downloadedSdkHashFilename, actualSdkSha512Hash, ct);
+                        if (!actualSdkSha512Hash.SequenceEqual(expectedSdkSha512Hash)) {
+                            logger.Error("""
+                                Failed to verify .NET SDK {version} {arch}!
+                                Expected SHA-512 hash of {url}: {expected}
+                                Actual SHA-512 hash of {filename}: {actual}
+                                """, dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix(), sdkDownloadUrl, Convert.ToHexString(expectedSdkSha512Hash),
+                                downloadedSdkFilename, Convert.ToHexString(actualSdkSha512Hash));
+                            throw new ApplicationException($"Verification failed after downloading {sdkDownloadUrl}");
+                        }
                     }
 
-                    fileDownloadStream.Position = 0;
-                    byte[] actualSdkSha512Hash = await SHA512.HashDataAsync(fileDownloadStream, ct);
-                    if (actualSdkSha512Hash.SequenceEqual(expectedSdkSha512Hash)) {
-                        logger.Info("Successfully verified .NET SDK {version} {arch} file hash.", dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix());
-                    } else {
-                        logger.Error("""
-                            Failed to verify .NET SDK {version} {arch}!
-                            Expected SHA-512 hash of {url}: {expected}
-                            Actual SHA-512 hash of {filename}: {actual}
-                            """, dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix(), sdkDownloadUrl, Convert.ToHexString(expectedSdkSha512Hash),
-                            downloadedSdkFilename, Convert.ToHexString(actualSdkSha512Hash));
-                        throw new ApplicationException($"Verification failed after downloading {sdkDownloadUrl}");
-                    }
+                    logger.Info("Successfully verified .NET SDK {version} {arch} file hash.", dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix());
                 }));
 
                 return dotnetRelease;
@@ -100,9 +107,9 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
         }
 
         return new UpstreamReleasesState(dotnetReleases, new UpstreamReleasesSecondaryInfo(
-            knownReleaseMinorRuntimeVersions: dotnetReleases.Select(release => release.runtimeVersion.AsMinor()).ToList().AsReadOnly(),
+            knownReleaseMinorRuntimeVersions: dotnetReleases.Select(release => release.runtimeVersion.AsMinor).ToList().AsReadOnly(),
             knownReleaseSdkVersions: dotnetReleases.Select(release => release.sdkVersion).ToList().AsReadOnly(),
-            leastProvidedReleaseMinorVersion: dotnetReleases.Last().sdkVersion.AsMinor()));
+            leastProvidedReleaseMinorVersion: dotnetReleases.Last().sdkVersion.AsMinor));
     }
 
     public void deleteSdksExcept(IEnumerable<DotnetRelease> sdksToKeep) {
@@ -111,6 +118,7 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
 
         foreach (string sdkToDelete in sdksToDelete) {
             if (!options.Value.dryRun) {
+                File.Delete(sdkToDelete + ".sha512");
                 File.Delete(sdkToDelete);
                 logger.Debug("Deleted outdated SDK file {file}", sdkToDelete);
             } else {

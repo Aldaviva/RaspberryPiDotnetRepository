@@ -3,6 +3,8 @@ using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
+using RaspberryPiDotnetRepository.Data;
+using System.Net;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 
 namespace RaspberryPiDotnetRepository.Azure;
@@ -11,7 +13,7 @@ public interface BlobStorageClient {
 
     Task<IEnumerable<BlobItem>> listFiles(string? baseDir = null, CancellationToken ct = default);
 
-    Task<BlobDownloadResult?> readFile(string blobFilePath, CancellationToken ct = default);
+    Task<(HttpStatusCode status, BlobDownloadResult? response)> readFile(string blobFilePath, FileCacheState? cacheState = null, CancellationToken ct = default);
 
     Task<BlobContentInfo?> uploadFile(string filename, string destinationBlobFilePath, string? contentType = null, CancellationToken ct = default);
 
@@ -28,16 +30,20 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
 
     private BlobClient openFile(string blobFilePath) => container.GetBlobClient(blobFilePath);
 
-    public async Task<BlobDownloadResult?> readFile(string blobFilePath, CancellationToken ct = default) {
+    public async Task<(HttpStatusCode status, BlobDownloadResult? response)> readFile(string blobFilePath, FileCacheState? cacheState = null, CancellationToken ct = default) {
         logger.Debug("Downloading {file}", blobFilePath);
         try {
-            return (await openFile(blobFilePath).DownloadContentAsync(ct)).AsNullable();
+            BlobDownloadOptions? downloadOptions = cacheState.HasValue ? new BlobDownloadOptions {
+                Conditions = new BlobRequestConditions {
+                    IfModifiedSince = cacheState.Value.lastModified,
+                    IfNoneMatch     = cacheState.Value.etag is {} etag ? new ETag(etag) : null
+                }
+            } : null;
+
+            Response<BlobDownloadResult> response = await openFile(blobFilePath).DownloadContentAsync(downloadOptions, ct);
+            return (status: (HttpStatusCode) response.GetRawResponse().Status, response: response.AsNullable);
         } catch (RequestFailedException e) {
-            if (e.ErrorCode == "BlobNotFound") {
-                return null;
-            } else {
-                throw;
-            }
+            return (status: (HttpStatusCode) e.Status, response: null);
         }
     }
 
@@ -47,7 +53,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
     }
 
     protected async Task<BlobContentInfo?> uploadFile(Stream source, string destinationBlobFilePath, string? contentType = null, CancellationToken ct = default) {
-        destinationBlobFilePath = Paths.Dos2UnixSlashes(destinationBlobFilePath);
+        destinationBlobFilePath = Path.Dos2UnixSlashes(destinationBlobFilePath);
         await uploadSemaphore.WaitAsync(ct);
         try {
             if (!options.Value.dryRun) {
@@ -59,7 +65,7 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
                     },
                     progressHandler: progressHandler,
                     transferOptions: new StorageTransferOptions { MaximumConcurrency = options.Value.storageParallelUploads },
-                    cancellationToken: ct)).AsNullable();
+                    cancellationToken: ct)).AsNullable;
             } else {
                 logger.Info("Would have uploaded to {dest} if not in dry run", destinationBlobFilePath);
                 return null;

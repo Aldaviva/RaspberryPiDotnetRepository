@@ -49,20 +49,20 @@ appConfig.Services
     .AddSingleton<HttpClient>(new UnfuckedHttpClient(new SocketsHttpHandler { MaxConnectionsPerServer = 16 }) { Timeout = TimeSpan.FromSeconds(30) })
 
     // Azure Blob Storage
-    .AddSingleton(provider => new BlobServiceClient(provider.options().storageConnection,
+    .AddSingleton(provider => new BlobServiceClient(provider.options.storageConnection,
         new BlobClientOptions { Retry = { MaxRetries = 3, Delay = TimeSpan.FromSeconds(2), Mode = RetryMode.Fixed, NetworkTimeout = TimeSpan.FromMinutes(30) } }))
-    .AddSingleton(provider => provider.GetRequiredService<BlobServiceClient>().GetBlobContainerClient(provider.options().storageContainerName))
+    .AddSingleton(provider => provider.GetRequiredService<BlobServiceClient>().GetBlobContainerClient(provider.options.storageContainerName))
     .AddSingleton<BlobStorageClient, BlobStorageClientImpl>()
 
     // Azure CDN
-    .AddSingleton<ArmClient?>(provider => provider.options() is { cdnTenantId: {} tenantId, cdnClientId: {} clientId, cdnCertFilePath: {} certPath } opts
+    .AddSingleton<ArmClient?>(provider => provider.options is { cdnTenantId: {} tenantId, cdnClientId: {} clientId, cdnCertFilePath: {} certPath } opts
         ? new ArmClient(new ClientCertificateCredential(tenantId, clientId, X509CertificateLoader.LoadPkcs12FromFile(certPath, opts.cdnCertPassword))) : null)
-    .AddSingleton<CdnEndpointResource?>(provider => provider.options() is { cdnSubscriptionId: {} s, cdnResourceGroup: {} r, cdnProfile: {} p, cdnEndpointName: {} e } ?
-        provider.GetService<ArmClient>()?.GetCdnEndpointResource(CdnEndpointResource.CreateResourceIdentifier(s, r, p, e)).Get().AsNullable() : null)
+    .AddSingleton<CdnEndpointResource?>(provider => provider.options is { cdnSubscriptionId: {} s, cdnResourceGroup: {} r, cdnProfile: {} p, cdnEndpointName: {} e } ?
+        provider.GetService<ArmClient>()?.GetCdnEndpointResource(CdnEndpointResource.CreateResourceIdentifier(s, r, p, e)).Get().AsNullable : null)
     .AddSingleton<CdnClient, CdnClientImpl>()
 
     // Facades
-    .AddSingleton<IPGP>(provider => new PGP(new EncryptionKeys(File.ReadAllText(provider.options().gpgPrivateKeyPath, Encoding.UTF8), string.Empty)) { HashAlgorithmTag = HashAlgorithmTag.Sha256 });
+    .AddSingleton<IPGP>(provider => new PGP(new EncryptionKeys(File.ReadAllText(provider.options.gpgPrivateKeyPath, Encoding.UTF8), string.Empty)) { HashAlgorithmTag = HashAlgorithmTag.Sha256 });
 
 using IHost app = appConfig.Build();
 await app.RunAsync();

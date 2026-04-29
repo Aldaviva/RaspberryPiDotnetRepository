@@ -51,7 +51,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// <summary>
     /// Like <c>packages/dotnet-runtime-8.0.5-0-armhf.deb</c> or <c>packages/aspnetcore-runtime-8.0-0-arm64-latest-lts.deb</c>
     /// </summary>
-    public string filePathRelativeToRepo => Paths.Dos2UnixSlashes(Path.Combine("packages",
+    public string filePathRelativeToRepo => Path.Dos2UnixSlashes(Path.Combine("packages",
         string.Join(null, runtime.getPackageName(), "-", version.ToString(isMetaPackage ? 2 : 3), versionSuffix, $"-{architecture.toDebian()}", isMetaPackage ? "-latest" : "",
             isMetaPackageSupportedLongTerm ? "-lts" : "", ".deb")));
 
@@ -163,7 +163,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     /// <param name="knownReleaseMinorVersions">a list of the latest minor versions of each .NET release in this repo >= 6.0, like [6.0, 7.0, 8.0]</param>
     /// <returns></returns>
     private IEnumerable<Dependency> providedPackages(IEnumerable<Version> knownReleaseMinorVersions) => runtime != RuntimeType.CLI && !isMetaPackage
-        ? knownReleaseMinorVersions.Where(knownMinorVersion => knownMinorVersion <= version.AsMinor())
+        ? knownReleaseMinorVersions.Where(knownMinorVersion => knownMinorVersion <= version.AsMinor)
             .Select(knownMinorVersion => new DependencyPackage($"{runtime.getPackageName()}-{knownMinorVersion.ToString(2)}-or-greater")) : [];
 
     /// <summary>

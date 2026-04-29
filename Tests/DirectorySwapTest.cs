@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 
 namespace Tests;
 
@@ -25,14 +25,14 @@ public class DirectorySwapTest {
         string oldFilename = Path.Combine(oldDir, "oldFile.txt");
         string newFilename = Path.Combine(newDir, "newFile.txt");
 
-        await File.WriteAllTextAsync(oldFilename, "Old file");
-        await File.WriteAllTextAsync(newFilename, "New file");
+        await File.WriteAllTextAsync(oldFilename, "Old file", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(newFilename, "New file", TestContext.Current.CancellationToken);
 
         Directory.Move(oldDir, dirToDelete);
         Directory.Move(newDir, oldDir);
         Directory.Delete(dirToDelete, true);
 
-        string actual = await File.ReadAllTextAsync(Path.Combine(oldDir, "newFile.txt"));
+        string actual = await File.ReadAllTextAsync(Path.Combine(oldDir, "newFile.txt"), TestContext.Current.CancellationToken);
         actual.Should().Be("New file");
 
         Directory.Exists(dirToDelete).Should().BeFalse();

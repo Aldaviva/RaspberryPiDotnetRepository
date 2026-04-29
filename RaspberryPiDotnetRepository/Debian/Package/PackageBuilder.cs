@@ -3,6 +3,7 @@ using RaspberryPiDotnetRepository.Data.ControlMetadata;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Readers;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
 using SharpCompress.Writers.Tar;
@@ -30,7 +31,7 @@ public class PackageBuilderImpl: PackageBuilder {
     private readonly GZipStream dataGzipStream;
 
     public PackageBuilderImpl() {
-        dataGzipStream = new GZipStream(new IndisposableStream(dataArchiveStream), CompressionMode.Compress, gzipCompressionLevel);
+        dataGzipStream = new GZipStream(dataArchiveStream, CompressionMode.Compress, gzipCompressionLevel, new ReaderOptions { LeaveStreamOpen = true });
         data           = new TarWriter(dataGzipStream, new TarWriterOptions(CompressionType.None, true));
     }
 
@@ -41,7 +42,7 @@ public class PackageBuilderImpl: PackageBuilder {
 
         await using Stream controlArchiveStream = new MemoryStream();
         await using (IAsyncWriter controlArchiveWriter =
-                     WriterFactory.OpenAsyncWriter(controlArchiveStream, ArchiveType.Tar, new GZipWriterOptions { CompressionLevel = (int) gzipCompressionLevel })) {
+                     await WriterFactory.OpenAsyncWriter(controlArchiveStream, ArchiveType.Tar, new GZipWriterOptions { CompressionLevel = (int) gzipCompressionLevel })) {
             await using Stream controlFileBuffer = control.serialize().ToByteStream();
             await controlArchiveWriter.WriteAsync("./control", controlFileBuffer);
         }
@@ -77,25 +78,6 @@ public class PackageBuilderImpl: PackageBuilder {
         await dataGzipStream.DisposeAsync();
         await dataArchiveStream.DisposeAsync();
         GC.SuppressFinalize(this);
-    }
-
-}
-
-internal sealed class IndisposableStream(Stream inner): Stream {
-
-    public override void Flush() => inner.Flush();
-    public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
-    public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
-    public override void SetLength(long value) => inner.SetLength(value);
-    public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
-
-    public override bool CanRead => inner.CanRead;
-    public override bool CanSeek => inner.CanSeek;
-    public override bool CanWrite => inner.CanWrite;
-    public override long Length => inner.Length;
-    public override long Position {
-        get => inner.Position;
-        set => inner.Position = value;
     }
 
 }

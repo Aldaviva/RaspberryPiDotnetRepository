@@ -46,13 +46,13 @@ public record Options {
 
     internal void sanitize() {
         storageParallelUploads = Math.Max(1, storageParallelUploads);
-        cdnTenantId            = cdnTenantId?.EmptyToNull();
-        cdnClientId            = cdnClientId?.EmptyToNull();
-        cdnCertFilePath        = cdnCertFilePath?.EmptyToNull();
-        cdnSubscriptionId      = cdnSubscriptionId?.EmptyToNull();
-        cdnResourceGroup       = cdnResourceGroup?.EmptyToNull();
-        cdnProfile             = cdnProfile?.EmptyToNull();
-        cdnEndpointName        = cdnEndpointName?.EmptyToNull();
+        cdnTenantId            = cdnTenantId?.EmptyToNull;
+        cdnClientId            = cdnClientId?.EmptyToNull;
+        cdnCertFilePath        = cdnCertFilePath?.EmptyToNull;
+        cdnSubscriptionId      = cdnSubscriptionId?.EmptyToNull;
+        cdnResourceGroup       = cdnResourceGroup?.EmptyToNull;
+        cdnProfile             = cdnProfile?.EmptyToNull;
+        cdnEndpointName        = cdnEndpointName?.EmptyToNull;
     }
 
 }

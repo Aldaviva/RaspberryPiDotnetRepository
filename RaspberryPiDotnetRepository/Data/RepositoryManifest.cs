@@ -1,6 +1,6 @@
 namespace RaspberryPiDotnetRepository.Data;
 
-public record RepositoryManifest(ICollection<DebianPackage> packages, ISet<DebianRelease> debianReleases, string versionSuffix, ISet<Version> dotnetSdkVersions) {
+public record RepositoryManifest(ICollection<DebianPackage> packages, ISet<DebianRelease> debianReleases, string versionSuffix, ISet<Version> dotnetSdkVersions): CachedBlob {
 
     public virtual bool Equals(RepositoryManifest? other) => other is not null && (ReferenceEquals(this, other)
         || (packages.EqualsUnordered(other.packages) &&
@@ -14,5 +14,7 @@ public record RepositoryManifest(ICollection<DebianPackage> packages, ISet<Debia
         dotnetSdkVersions.SetEquals(newDotnetSdkVersions) &&
         debianReleases.SetEquals(Enum.GetValues<DebianRelease>()) &&
         versionSuffix == DebianPackage.VERSION_SUFFIX;
+
+    public FileCacheState? cacheState { get; set; }
 
 }

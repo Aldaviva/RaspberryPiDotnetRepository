@@ -77,9 +77,9 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                 if (fileMode != null) {
                     string        destinationPath  = $"./usr/share/dotnet/{sourcePath}";
                     IList<string> directoriesToAdd = [];
-                    for (string destinationDirectory = Paths.Dos2UnixSlashes(Path.GetDirectoryName(destinationPath)!);
+                    for (string destinationDirectory = Path.Dos2UnixSlashes(Path.GetDirectoryName(destinationPath)!);
                          existingDirectories.Add(destinationDirectory);
-                         destinationDirectory = Paths.Dos2UnixSlashes(Path.GetDirectoryName(destinationDirectory)!)) {
+                         destinationDirectory = Path.Dos2UnixSlashes(Path.GetDirectoryName(destinationDirectory)!)) {
 
                         directoriesToAdd.Add(destinationDirectory);
                     }
@@ -131,7 +131,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                 p.isMetaPackageSupportedLongTerm == packageToGenerate.mustBeSupportedLongTerm &&
                 p.runtime == packageToGenerate.packageType &&
                 p.architecture == packageToGenerate.architecture &&
-                p.version.AsMinor().Equals(packageToGenerate.concreteMinorVersion) &&
+                p.version.AsMinor.Equals(packageToGenerate.concreteMinorVersion) &&
                 p.versionSuffix == DebianPackage.VERSION_SUFFIX) is {} oldPackage) {
             return oldPackage;
         }

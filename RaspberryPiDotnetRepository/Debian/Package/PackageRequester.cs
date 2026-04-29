@@ -17,9 +17,7 @@ public class PackageRequesterImpl: PackageRequester {
 
     private static readonly CpuArchitecture[] CPU_ARCHITECTURES = Enum.GetValues<CpuArchitecture>();
 
-    private static readonly RuntimeType[] DOTNET_RUNTIMES = Enum.GetValues<RuntimeType>()
-        // .Where(type => type is not RuntimeType.SDK)
-        .ToArray();
+    private static readonly RuntimeType[] DOTNET_RUNTIMES = Enum.GetValues<RuntimeType>();
 
     public IEnumerable<PackageRequest> listPackagesToRequest(IEnumerable<DotnetRelease> upstreamReleases) {
         upstreamReleases = upstreamReleases.ToList();
@@ -31,9 +29,9 @@ public class PackageRequesterImpl: PackageRequester {
 
                     if (dotnetRuntime != RuntimeType.CLI) {
                         if (dotnetRelease.isSupportedLongTerm) {
-                            packageRequests.Add(new MetaPackageRequest(dotnetRuntime, cpuArchitecture, true, dotnetRelease.sdkVersion.AsMinor()));
+                            packageRequests.Add(new MetaPackageRequest(dotnetRuntime, cpuArchitecture, true, dotnetRelease.sdkVersion.AsMinor));
                         }
-                        packageRequests.Add(new MetaPackageRequest(dotnetRuntime, cpuArchitecture, false, dotnetRelease.sdkVersion.AsMinor()));
+                        packageRequests.Add(new MetaPackageRequest(dotnetRuntime, cpuArchitecture, false, dotnetRelease.sdkVersion.AsMinor));
                     }
                 }
             }

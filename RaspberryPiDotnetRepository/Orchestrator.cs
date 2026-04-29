@@ -30,7 +30,8 @@ public class Orchestrator(
     protected override async Task ExecuteAsync(CancellationToken ct) {
         statistics.startTimer();
 
-        RepositoryManifest? oldManifest = await manifestManager.downloadManifest(ct);
+        RepositoryManifest? oldManifest           = await manifestManager.downloadManifest(ct);
+        string?             newManifestCacheState = null;
 
         // Download .NET SDK .tar.gz binaries from Microsoft
         (IList<DotnetRelease> upstreamReleases, UpstreamReleasesSecondaryInfo upstreamInfo) = await sdkDownloader.downloadSdks(MIN_DOTNET_MINOR_VERSION, ct);
@@ -45,7 +46,7 @@ public class Orchestrator(
             // Generate manifest.json file
             RepositoryManifest newManifest = new(generatedPackages, Enum.GetValues<DebianRelease>().ToHashSet(),
                 generatedPackages[0].versionSuffix, upstreamReleases.Select(release => release.sdkVersion).ToHashSet());
-            string newManifestJson = manifestManager.serializeManifest(newManifest);
+            (string newManifestJson, newManifestCacheState) = manifestManager.serializeManifest(newManifest);
             await File.WriteAllTextAsync(manifestManager.manifestFilePath, newManifestJson, Encoding.UTF8, ct);
 
             // Generate Packages.gz index files
@@ -101,8 +102,13 @@ public class Orchestrator(
             logger.Info("Repository is already up to date according to the manifest file, stopping without generating or uploading any files.");
         }
 
+        if (newManifestCacheState != null || !File.Exists(manifestManager.manifestCacheStateFilePath)) {
+            await File.WriteAllTextAsync(manifestManager.manifestCacheStateFilePath, newManifestCacheState ?? manifestManager.serializeManifest(oldManifest!).cacheState, Encoding.UTF8, ct);
+            logger.Debug("Wrote manifest cache state file.");
+        }
+
         TimeSpan elapsed = statistics.stopTimer();
-        logger.Info(@"Finished in {elapsed:m\m\ ss\s}. Wrote {size} to {files:N0} files.", elapsed, statistics.dataWritten.ToString(1, true), statistics.filesWritten);
+        logger.Info(@"Finished in {elapsed:m\m\ ss\s}. Wrote {size} to {files:N0} files.", elapsed, statistics.dataWritten.ToString(1), statistics.filesWritten);
 
         appLifetime.StopApplication();
     }
