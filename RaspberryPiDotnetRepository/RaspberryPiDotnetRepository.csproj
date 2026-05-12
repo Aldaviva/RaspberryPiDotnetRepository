@@ -5,7 +5,7 @@
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.4.0</Version>
+        <Version>1.4.1</Version>
         <Authors>Ben Hutchison</Authors>
         <Copyright>© 2026 $(Authors)</Copyright>
         <Company>$(Authors)</Company>
@@ -29,11 +29,11 @@
         <PackageReference Include="Bom.Squad" Version="0.3.0" />
         <PackageReference Include="DataSizeUnits" Version="4.0.0-beta.3" />
         <PackageReference Include="LibObjectFile" Version="2.1.1" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
         <PackageReference Include="PgpCore" Version="7.0.0" />
         <PackageReference Include="ThrottleDebounce" Version="3.0.0-beta6" />
-        <PackageReference Include="Unfucked" Version="0.0.1-beta.41" />
-        <PackageReference Include="Unfucked.Compression" Version="0.0.1-beta.4" />
+        <PackageReference Include="Unfucked" Version="0.0.1-beta.43" />
+        <PackageReference Include="Unfucked.Compression" Version="0.0.1-beta.5" />
         <PackageReference Include="Unfucked.DI" Version="0.0.1-beta.16" />
         <PackageReference Include="Unfucked.HTTP" Version="0.0.1-beta.30" />
         <PackageReference Include="Unfucked.PGP" Version="0.0.1-beta.3" />
@@ -44,7 +44,7 @@
         <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
-    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' or '$(Configuration)' == 'Release'">
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' or '$(Configuration)' != 'Debug'">
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
