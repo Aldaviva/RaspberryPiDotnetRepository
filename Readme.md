@@ -220,7 +220,7 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 > [!NOTE]
 > 1. [This older version of .NET is no longer updated or supported by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
 > 1. [This combination of .NET and Debian versions was never supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
-> 1. [Due to Y2038 compatibility](https://github.com/dotnet/core/discussions/9285), [.NET &ge; 9 on ARM32 Linux requires a newer version of glibc/libc6 (&ge; 2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#linux-compatibility) than is provided by Debian 10 ([2.28](https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
+> 1. [Due to Y2038 compatibility](https://github.com/dotnet/core/discussions/9285), [.NET &ge; 9 on ARM32 Linux requires a newer version of glibc (&ge; 2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#libc) than is provided by Debian 10 ([2.28](https://web.archive.org/web/20250423191347/https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
 > 1. [Due to Y2038 compatibility](https://github.com/dotnet/runtime/issues/101444), .NET 7–8 will throw an `AuthenticationException` from HTTPS connections because of the newer glibc and OpenSSL versions in ARM32 Debian &ge; 13.
 
 ##### Release information
