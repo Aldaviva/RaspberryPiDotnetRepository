@@ -18,7 +18,9 @@ jobs:
       run: git config set --global core.autocrlf false
 
     - name: Standardize editorconfig
-      run: curl https://raw.githubusercontent.com/Aldaviva/.github/refs/heads/master/.editorconfig -o ~/.editorconfig
+      run: |
+          curl https://raw.githubusercontent.com/Aldaviva/.github/refs/heads/master/.editorconfig -o ../.editorconfig
+          ls ..
 
     - name: Clone
       uses: actions/checkout@v6
