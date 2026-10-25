@@ -17,6 +17,9 @@ jobs:
     - name: Unfuck Git
       run: git config set --global core.autocrlf false
 
+    - name: Standardize editorconfig
+      run: curl https://raw.githubusercontent.com/Aldaviva/.github/refs/heads/master/.editorconfig -o ~/.editorconfig
+
     - name: Clone
       uses: actions/checkout@v6
         

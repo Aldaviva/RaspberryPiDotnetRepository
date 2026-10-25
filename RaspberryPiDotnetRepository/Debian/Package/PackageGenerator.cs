@@ -58,7 +58,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
 
                 string sourcePath = entry.Key.TrimStart("./");
                 int? fileMode = generatedPackage.runtime switch {
-                    RuntimeType.CLI when sourcePath == "dotnet" => o(755),
+                    RuntimeType.CLI when sourcePath is "dotnet" or "dnx" => o(755),
                     RuntimeType.RUNTIME when sourcePath.StartsWith("shared/Microsoft.NETCore.App/") =>
                         Path.GetExtension(sourcePath) == ".so" || Path.GetFileName(sourcePath) == "createdump" ? o(755) : o(644),
                     RuntimeType.RUNTIME when sourcePath.StartsWith("host/fxr")                                    => o(755),
@@ -86,7 +86,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
 
                     foreach (string directoryToAdd in directoriesToAdd.Reverse()) {
                         dataArchiveWriter.WriteDirectory(directoryToAdd, null, o(755));
-                        generatedPackage.installationSize += 1024;
+                        generatedPackage.installationSize += 4096;
                     }
 
                     DateTime lastModified = entry.LastModifiedTime ?? entry.CreatedTime ?? entry.ArchivedTime ?? DateTime.Now;
@@ -96,10 +96,10 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                     dataArchiveWriter.WriteFile(destinationPath, downloadedInnerFileStream, lastModified, entry.Size, fileMode);
                     generatedPackage.installationSize += entry.Size;
 
-                    if (sourcePath == "dotnet") {
+                    if (sourcePath is "dotnet" or "dnx") {
                         // can't figure out how to make absolute symlinks in deb packages, so making it relative
-                        dataArchiveWriter.WriteSymLink("./usr/bin/dotnet", "../share/dotnet/dotnet", lastModified);
-                        generatedPackage.installationSize += 1024;
+                        dataArchiveWriter.WriteSymLink($"./usr/bin/{sourcePath}", $"../share/dotnet/{sourcePath}", lastModified);
+                        generatedPackage.installationSize += 22;
                     }
                 }
             }

@@ -5,9 +5,9 @@
 
 This public [APT repository](https://github.com/Aldaviva/RaspberryPiDotnetRepository/wiki/Debian-APT-package-repository-format) supplies armhf and arm64 .deb packages of [.NET](https://dotnet.microsoft.com/) runtimes and SDKs to install on [Raspberry Pis](https://www.raspberrypi.com/products/) running [Raspberry Pi OS/Raspbian](https://www.raspberrypi.com/software/operating-systems/).
 
-Vendors like [Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian), [Red Hat](https://packages.fedoraproject.org/pkgs/dotnet10.0/), and [Canonical](https://packages.ubuntu.com/questing/dotnet10) provide official .deb packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft's packages only support .NET &ge; 10 and arm64. Microsoft [recommends](https://learn.microsoft.com/en-us/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install), which doesn't install system-wide without extra manual steps, doesn't automatically update, doesn't clean up previous versions, and doesn't let you install the latest version without you having to manually look up whether STS or LTS is currently newer.
+Vendors like [Microsoft](https://learn.microsoft.com/dotnet/core/install/linux-debian), [Red Hat](https://packages.fedoraproject.org/pkgs/dotnet10.0/), and [Canonical](https://packages.ubuntu.com/questing/dotnet10) provide official .deb packages for .NET, but none of them support armhf, so they can't be installed on Raspberry Pi OS with the default 32-bit architecture. Microsoft's packages only support .NET &ge; 10 and arm64. Microsoft [recommends](https://learn.microsoft.com/dotnet/iot/deployment) installing .NET on Raspberry Pis using their build-machine–oriented [installation script](https://learn.microsoft.com/dotnet/core/install/linux-scripted-manual#scripted-install), which doesn't install system-wide without extra manual steps, doesn't automatically update, doesn't clean up previous versions, and doesn't let you install the latest version without you having to manually look up whether STS or LTS is currently newer.
 
-This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the exact same Linux ARM binary archives that the [official .NET download pages](https://dotnet.microsoft.com/en-us/download/dotnet/10.0), [release notes](https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.0/10.0.0.md#downloads), and [installation script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install) use.
+This repository comprises unofficial packages that install **official .NET Linux ARM releases built by Microsoft**, created from the exact same Linux ARM binary archives that the [official .NET download pages](https://dotnet.microsoft.com/download/dotnet/10.0), [release notes](https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.0/10.0.0.md#downloads), and [installation script](https://learn.microsoft.com/dotnet/core/install/linux-scripted-manual#scripted-install) use.
 
 <!-- MarkdownTOC autolink="true" bracket="round" autoanchor="false" levels="1,2,3,4" bullets="-,1.,-" -->
 
@@ -113,7 +113,7 @@ There are also three types of version specification suffixes to choose from, whi
 > Version numbers are described with the nomenclature *major*.*minor*.*patch*. For example, .NET 9.0.4 has a major version of 9, a minor version of 0, and a patch version of 4.
 
 > [!NOTE]
-> [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released each November of odd-numbered years like 2023, have even major version numbers, and come with 3 years of support.<br>
+> [*Long-Term Support (LTS)*](https://dotnet.microsoft.com/platform/support/policy/dotnet-core#cadence) versions like 8.0 are released each November of odd-numbered years like 2023, have even major version numbers, and come with 3 years of support.<br>
 > *Standard Term Support (STS)* versions like 7.0 are released each November of even-numbered years like 2022, with odd version numbers and 2 years of support.
 
 Then, once you know which package you want, you can install it with `apt install <packagename>`, for example, **`sudo apt install dotnet-runtime-latest`**.
@@ -122,7 +122,7 @@ Then, once you know which package you want, you can install it with `apt install
 > Multiple .NET packages can be safely installed at the same time, even from different versions. For example, you can have both .NET 6 Runtime and .NET 8 Runtime installed side-by-side without causing a conflict. At run time, the .NET host framework resolver will choose the correct .NET runtime with which to launch each app based on Roll Forward settings and the app's target framework.
 
 > [!TIP]
-> If you find that a .NET application does not run after a major version upgrade, you can choose a different [Roll Forward](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#framework-dependent-apps-roll-forward) behavior. For example, you can set the `DOTNET_ROLL_FORWARD` environment variable to `LatestMajor`.
+> If you find that a .NET application does not run after a major version upgrade, you can choose a different [Roll Forward](https://learn.microsoft.com/dotnet/core/versions/selection#framework-dependent-apps-roll-forward) behavior. For example, you can set the `DOTNET_ROLL_FORWARD` environment variable to `LatestMajor`.
 
 #### Latest version
 This will install the latest .NET version, regardless of whether it is an LTS or STS release. It will upgrade to greater major and minor versions, including new STS versions. It will never install previews or release candidates.
@@ -218,18 +218,18 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 ❌ = Unavailable, incompatible, and unsupported
 
 > [!NOTE]
-> 1. [This older version of .NET is no longer updated or supported by Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), although it still works.
-> 1. [This combination of .NET and Debian versions was never supported by Microsoft](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#supported-distributions), although it does work.
+> 1. [This older version of .NET is no longer updated or supported by Microsoft](https://dotnet.microsoft.com/platform/support/policy/dotnet-core), although it still works.
+> 1. [This combination of .NET and Debian versions was never supported by Microsoft](https://learn.microsoft.com/dotnet/core/install/linux-debian#supported-distributions), although it does work.
 > 1. [Due to Y2038 compatibility](https://github.com/dotnet/core/discussions/9285), [.NET &ge; 9 on ARM32 Linux requires a newer version of glibc (&ge; 2.34)](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md#libc) than is provided by Debian 10 ([2.28](https://web.archive.org/web/20250423191347/https://packages.debian.org/buster/libc6)) or 11 ([2.31](https://packages.debian.org/bullseye/libc6)), where the runtime will crash on launch.
 > 1. [Due to Y2038 compatibility](https://github.com/dotnet/runtime/issues/101444), .NET 7–8 will throw an `AuthenticationException` from HTTPS connections because of the newer glibc and OpenSSL versions in ARM32 Debian &ge; 13.
 
 ##### Release information
 - [Raspberry Pi OS releases](https://www.raspberrypi.com/software/operating-systems/) and [hardware compatibility](https://en.wikipedia.org/wiki/Raspberry_Pi_OS#Releases)
 - [Debian releases](https://www.debian.org/releases/) and [details](https://wiki.debian.org/DebianReleases)
-- [.NET releases](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core#lifecycle), [details](https://github.com/dotnet/core/blob/main/releases.md), [Release Policies](https://github.com/dotnet/core/blob/main/release-policies.md), and [Supported OS Policy](https://github.com/dotnet/core/blob/main/os-lifecycle-policy.md)
+- [.NET releases](https://dotnet.microsoft.com/platform/support/policy/dotnet-core#lifecycle), [details](https://github.com/dotnet/core/blob/main/releases.md), [Release Policies](https://github.com/dotnet/core/blob/main/release-policies.md), and [Supported OS Policy](https://github.com/dotnet/core/blob/main/os-lifecycle-policy.md)
 
 ##### Other OS distributions
-In addition to Raspberry Pi OS, you should also be able to install these .deb packages on ARM builds of [Debian](https://raspi.debian.net) and other Debian-based distributions like [Ubuntu](https://ubuntu.com/download/raspberry-pi) and [Mobian](https://wiki.debian.org/Mobian/), because these packages are not specific to Raspberry Pi OS and only [depend on packages in the standard Debian repository](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#dependencies).
+In addition to Raspberry Pi OS, you should also be able to install these .deb packages on ARM builds of [Debian](https://raspi.debian.net) and other Debian-based distributions like [Ubuntu](https://ubuntu.com/download/raspberry-pi) and [Mobian](https://wiki.debian.org/Mobian/), because these packages are not specific to Raspberry Pi OS and only [depend on packages in the standard Debian repository](https://learn.microsoft.com/dotnet/core/install/linux-debian#dependencies).
 
 ### CPU architectures
 ✅ 64-bit ARMv8/ARM64/AArch64<br>
@@ -243,11 +243,11 @@ In addition to Raspberry Pi OS, you should also be able to install these .deb pa
 ✅ [Raspberry Pi 2](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) (64-bit OS requires Pi 2 v1.2, not v1.1)<br>
 ✅ Other Raspberry Pis that have an ARMv7 or greater CPU, such as [Compute Module 3](https://www.raspberrypi.com/products/compute-module-3-plus/), [4](https://www.raspberrypi.com/products/compute-module-4/), and [5](https://www.raspberrypi.com/products/compute-module-5/); [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/); and [Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/), [500](https://www.raspberrypi.com/products/raspberry-pi-500/), and [500+](https://www.raspberrypi.com/products/raspberry-pi-500-plus/)<br>
 ❌ [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) and [Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/) are _**not compatible with .NET**_ because they don't run Linux, and only support embedded C, C++, and Python<br>
-❌ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/en-us/dotnet/iot/intro#supported-hardware-platforms)
+❌ [Raspberry Pi 1](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/), [Compute Module 1](https://www.raspberrypi.com/products/compute-module-1/), and [Pi Zero](https://www.raspberrypi.com/products/raspberry-pi-zero/) are [_**not compatible with .NET**_](https://github.com/dotnet/core/issues/1232#issuecomment-359519481) because they only have an [ARMv6 CPU](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications), and [.NET requires ARMv7 or later](https://learn.microsoft.com/dotnet/iot/intro#supported-hardware-platforms)
 
 ## Alternatives
 Here are other ways to run .NET applications on a Raspberry Pi besides installing the packages from this repository.
-- **Add the [Microsoft Linux Package Repositories from packages.microsoft.com](https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian#debian-13)**
+- **Add the [Microsoft Linux Package Repositories from packages.microsoft.com](https://learn.microsoft.com/dotnet/core/install/linux-debian#debian-13)**
     ```sh
     wget https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
     sudo dpkg -i packages-microsoft-prod.deb
@@ -260,14 +260,14 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
     ❌ Does not support Debian 11 or earlier<br>
     ❌ Does not support armhf operating systems like 32-bit Raspberry Pi OS, even if your CPU architecture is arm64
 
-- **Run the [dotnet-install script](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install)**
+- **Run the [dotnet-install script](https://learn.microsoft.com/dotnet/core/install/linux-scripted-manual#scripted-install)**
     ```sh
     wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
     sudo bash dotnet-install.sh --channel LTS --runtime dotnet --install-dir /usr/share/dotnet/ # channel must be LTS, STS, or a minor version
     sudo ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
     rm dotnet-install.sh
     ```
-    ✅ [Hosted by Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet/scripts)<br>
+    ✅ [Hosted by Microsoft](https://dotnet.microsoft.com/download/dotnet/scripts)<br>
     ❌ Must re-run `dotnet-install.sh` each time you want to update .NET<br>
     ❌ No built-in way to easily automate upgrades<br>
     ❌ If you want the latest version, you must have prior knowledge of which channel, LTS or STS, is the latest at any given time, which is difficult to automate<br>
@@ -278,7 +278,7 @@ Here are other ways to run .NET applications on a Raspberry Pi besides installin
     ```sh
     dotnet publish -r linux-arm -p:PublishSingleFile=true --self-contained # runtime ID must be linux-arm or linux-arm64
     ```
-    ✅ If you want to make your app smaller and start faster with [Native AOT compilation](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), then this self-contained publishing is required, although you can also publish self-contained apps without Native AOT<br>
+    ✅ If you want to make your app smaller and start faster with [Native AOT compilation](https://learn.microsoft.com/dotnet/core/deploying/native-aot/), then this self-contained publishing is required, although you can also publish self-contained apps without Native AOT<br>
     ❌ Installing multiple .NET JIT apps takes more time and storage space, and wears out your SD card faster<br>
     ❌ Updating the runtime requires recompiling and reinstalling all .NET apps running on the system, instead of just running `apt full-upgrade` once<br>
     ❌ Only useful for cross-compilation from another machine, and does not let you install the SDK on a Raspberry Pi, if you wanted it<br>
@@ -311,7 +311,7 @@ If the user already has .NET Runtime 6, 7, or 8 installed, your app can launch w
 
 There are virtual packages to represent minor version inequalities for other packages too, not just the above example (like `aspnetcore-6.0-or-greater` and `dotnet-sdk-6.0-or-greater`) and other versions (like `dotnet-runtime-7.0-or-greater` and `dotnet-runtime-8.0-or-greater`).
 
-To allow your application to run with newer major runtime versions, be sure to add a [Roll Forward](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#framework-dependent-apps-roll-forward) behavior to your `.csproj` project file or `*.runtimeconfig.json` runtime configuration file.
+To allow your application to run with newer major runtime versions, be sure to add a [Roll Forward](https://learn.microsoft.com/dotnet/core/versions/selection#framework-dependent-apps-roll-forward) behavior to your `.csproj` project file or `*.runtimeconfig.json` runtime configuration file.
 
 ```xml
 <PropertyGroup>
