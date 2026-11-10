@@ -89,6 +89,7 @@ See the following sections for explanations all the package name possibilities.
 <li><code>latest</code></li>
 <li><code>latest-lts</code></li>
 <!-- Add new releases here -->
+<li><code>11.0</code></li>
 <li><code>10.0</code></li>
 <li><code>9.0</code></li>
 <li><code>8.0</code></li>
@@ -151,9 +152,9 @@ If you want to stay on a specific minor version of .NET, such as 8.0, then you c
 
 |Installation|Package names|Purpose|Also auto-installs|
 |-|-|-|-|
-|.NET Runtime|`dotnet-runtime-10.0`<br>`dotnet-runtime-9.0`<br>`dotnet-runtime-8.0`<br>`dotnet-runtime-7.0`<br>`dotnet-runtime-6.0`|Run .NET CLI apps||
-|ASP.NET Core Runtime|`aspnetcore-runtime-10.0`<br>`aspnetcore-runtime-9.0`<br>`aspnetcore-runtime-8.0`<br>`aspnetcore-runtime-7.0`<br>`aspnetcore-runtime-6.0`|Run .NET web apps|.NET Runtime|
-|.NET SDK|`dotnet-sdk-10.0`<br>`dotnet-sdk-9.0`<br>`dotnet-sdk-8.0`<br>`dotnet-sdk-7.0`<br>`dotnet-sdk-6.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
+|.NET Runtime|`dotnet-runtime-11.0`<br>`dotnet-runtime-10.0`<br>`dotnet-runtime-9.0`<br>`dotnet-runtime-8.0`<br>`dotnet-runtime-7.0`<br>`dotnet-runtime-6.0`|Run .NET CLI apps||
+|ASP.NET Core Runtime|`aspnetcore-runtime-11.0`<br>`aspnetcore-runtime-10.0`<br>`aspnetcore-runtime-9.0`<br>`aspnetcore-runtime-8.0`<br>`aspnetcore-runtime-7.0`<br>`aspnetcore-runtime-6.0`|Run .NET web apps|.NET Runtime|
+|.NET SDK|`dotnet-sdk-11.0`<br>`dotnet-sdk-10.0`<br>`dotnet-sdk-9.0`<br>`dotnet-sdk-8.0`<br>`dotnet-sdk-7.0`<br>`dotnet-sdk-6.0`|Build .NET apps|.NET & ASP.NET Core Runtimes|
 <!-- Add new releases here -->
 
 ### Update installed packages
@@ -202,16 +203,16 @@ apt list --installed 'dotnet-*' 'aspnetcore-runtime-*'
 
 ### Operating systems and .NET releases
 <!-- Add new releases here -->
-|Raspberry Pi OS|OS architecture|.NET 10|.NET 9|.NET 8|.NET 7|.NET 6|
-|-:|-:|:-|:-|:-|:-|:-|
-|Trixie (13)|ARM64|✅|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Trixie (13)|ARM32|✅|✅|❌<sup>4</sup>|❌<sup>4</sup>|☑<sup>1</sup>|
-|Bookworm (12)|ARM64|✅|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Bookworm (12)|ARM32|✅|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Bullseye (11)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Bullseye (11)|ARM32|❌<sup>3</sup>|❌<sup>3</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|
-|Buster (10)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
-|Buster (10)|ARM32|❌<sup>3</sup>|❌<sup>3</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Raspberry Pi OS|OS architecture|.NET 11|.NET 10|.NET 9|.NET 8|.NET 7|.NET 6|
+|-:|-:|:-|:-|:-|:-|:-|:-|
+|Trixie (13)|ARM64|✅|✅|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Trixie (13)|ARM32|✅|✅|☑<sup>1</sup>|❌<sup>4</sup>|❌<sup>4</sup>|☑<sup>1</sup>|
+|Bookworm (12)|ARM64|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bookworm (12)|ARM32|☑<sup>2</sup>|✅|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bullseye (11)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Bullseye (11)|ARM32|❌<sup>3</sup>|❌<sup>3</sup>|❌<sup>3</sup>|☑<sup>1</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Buster (10)|ARM64|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
+|Buster (10)|ARM32|❌<sup>3</sup>|❌<sup>3</sup>|❌<sup>3</sup>|☑<sup>2</sup>|☑<sup>1</sup>|☑<sup>1</sup>|
 
 ✅ = Available, compatible, and currently officially supported<br>
 ☑ = Available and compatible, but not currently officially supported<br>
