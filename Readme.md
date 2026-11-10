@@ -165,7 +165,7 @@ When a new .NET patch version is released, you can update the installed packages
 
 ```sh
 sudo apt-get update
-sudo apt-get full-upgrade
+sudo apt-get upgrade
 ```
 
 > [!IMPORTANT]  
@@ -175,10 +175,15 @@ sudo apt-get full-upgrade
 #### Major and minor versions
 
 ##### Latest or Latest LTS installed
-If you want to update to a new major or minor version, you will need to have one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`, before you `sudo apt-get update && sudo apt-get full-upgrade`.
+If you want to update to a new major or minor version, you will need to have one of the [`latest[-lts]`](#latest-version) packages installed, such as `dotnet-runtime-latest` or `aspnetcore-runtime-latest-lts`. Then, run
+```sh
+sudo apt-get update
+sudo apt-get full-upgrade --autoremove
+```
 
-Using `full-upgrade` instead of `upgrade` is recommended because `full-upgrade` allows removal of packages and thus enables major and minor version upgrades, in addition to patch upgrades. The difference is shown in the following example where you had .NET Runtime 9.0.10 installed with `dotnet-runtime-latest` when .NET 10.0.0 was released on 2025-11-11.
-- **`apt-get full-upgrade`**: installs .NET Runtime **10.0.0** and removes .NET Runtime 9.0.10, which is possible because `full-upgrade` allows 9.0 to be removed in favor of 10.0
+Using `full-upgrade --autoremove` instead of `upgrade` is recommended for major and minor version upgrades because `full-upgrade --autoremove` allows removal of packages, in addition to patch upgrades. The difference is shown in the following example where you had .NET Runtime 9.0.10 installed with `dotnet-runtime-latest` when .NET 10.0.0 was released on 2025-11-11.
+- **`apt-get full-upgrade --autoremove`**: installs .NET Runtime **10.0.0** and removes .NET Runtime 9.0.10, which is possible because `full-upgrade --autoremove` allows 9.0 to be removed in favor of 10.0
+- **`apt-get full-upgrade`**: installs .NET Runtime **10.0.0** and marks .NET Runtime 9.0.10 as auto-removable, the latter of which will remain installed until you run `apt autoremove`
 - **`apt-get upgrade`**: installs .NET Runtime **9.0.11** and removes .NET Runtime 9.0.10, because `upgrade` does not allow 9.0 to be removed in favor of 10.0
 
 If any unneeded, automatically installed packages are left installed after upgrading, you may remove them with `sudo apt autoremove`.
