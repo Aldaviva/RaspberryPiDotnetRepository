@@ -18,12 +18,10 @@ jobs:
       run: git config set --global core.autocrlf false
 
     - name: Standardize editorconfig
-      run: |
-          curl https://raw.githubusercontent.com/Aldaviva/.github/refs/heads/master/.editorconfig -o ../.editorconfig
-          ls ..
+      run: curl https://raw.githubusercontent.com/Aldaviva/.github/refs/heads/master/.editorconfig -o ../.editorconfig
 
     - name: Clone
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7.0.1
         
     - name: Restore
       run: dotnet restore ${{ env.ProjectName }} --locked-mode --runtime ${{ env.TargetPlatform }}
@@ -35,7 +33,7 @@ jobs:
       run: dotnet publish ${{ env.ProjectName }} --no-build --configuration Release -p:PublishSingleFile=true --runtime ${{ env.TargetPlatform }} --self-contained false
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: ${{ env.ProjectName }}.exe
         path: ${{ env.ProjectName }}/bin/Release/net10.0/${{ env.TargetPlatform }}/publish/*.exe

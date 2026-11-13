@@ -13,7 +13,10 @@ using RaspberryPiDotnetRepository.Debian.Repository;
 using RaspberryPiDotnetRepository.DotnetUpstream;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 using Unfucked.HTTP;
+using Unfucked.HTTP.Config;
+using Unfucked.HTTP.Serialization;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 using PGP = Unfucked.PGP;
 
@@ -46,7 +49,11 @@ appConfig.Services
     .SetExitCodeOnBackgroundServiceException()
 
     // HTTP client
-    .AddSingleton<HttpClient>(new UnfuckedHttpClient(new SocketsHttpHandler { MaxConnectionsPerServer = 16 }) { Timeout = TimeSpan.FromSeconds(30) })
+    .AddSingleton<HttpClient>(new UnfuckedHttpClient()
+        .Property(PropertyKey.Timeout, TimeSpan.FromSeconds(30))
+        .Property(PropertyKey.JsonSerializerOptions, new JsonSerializerOptions(JsonBodyReader.DefaultJsonOptions) {
+            PropertyNamingPolicy = new UpperSnakeCaseAwareJsonNamingPolicy(JsonNamingPolicy.KebabCaseLower)
+        }))
 
     // Azure Blob Storage
     .AddSingleton(provider => new BlobServiceClient(provider.options.storageConnection,
@@ -55,8 +62,8 @@ appConfig.Services
     .AddSingleton<BlobStorageClient, BlobStorageClientImpl>()
 
     // Azure CDN
-    .AddSingleton<ArmClient?>(provider => provider.options is { cdnTenantId: {} tenantId, cdnClientId: {} clientId, cdnCertFilePath: {} certPath } opts
-        ? new ArmClient(new ClientCertificateCredential(tenantId, clientId, X509CertificateLoader.LoadPkcs12FromFile(certPath, opts.cdnCertPassword))) : null)
+    .AddSingleton<ArmClient?>(provider => provider.options is { cdnTenantId: {} tenantId, cdnClientId: {} clientId, cdnCertFilePath: {} certPath } opts ?
+        new ArmClient(new ClientCertificateCredential(tenantId, clientId, X509CertificateLoader.LoadPkcs12FromFile(certPath, opts.cdnCertPassword))) : null)
     .AddSingleton<CdnEndpointResource?>(provider => provider.options is { cdnSubscriptionId: {} s, cdnResourceGroup: {} r, cdnProfile: {} p, cdnEndpointName: {} e } ?
         provider.GetService<ArmClient>()?.GetCdnEndpointResource(CdnEndpointResource.CreateResourceIdentifier(s, r, p, e)).Get().AsNullable : null)
     .AddSingleton<CdnClient, CdnClientImpl>()

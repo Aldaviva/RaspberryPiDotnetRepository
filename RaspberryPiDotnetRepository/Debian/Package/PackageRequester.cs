@@ -20,7 +20,7 @@ public class PackageRequesterImpl: PackageRequester {
     private static readonly RuntimeType[] DOTNET_RUNTIMES = Enum.GetValues<RuntimeType>();
 
     public IEnumerable<PackageRequest> listPackagesToRequest(IEnumerable<DotnetRelease> upstreamReleases) {
-        upstreamReleases = upstreamReleases.ToList();
+        upstreamReleases = upstreamReleases.AsEager;
         IList<PackageRequest> packageRequests = [];
         foreach (CpuArchitecture cpuArchitecture in CPU_ARCHITECTURES) {
             foreach (DotnetRelease dotnetRelease in upstreamReleases) {

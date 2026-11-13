@@ -47,10 +47,8 @@ public class BlobStorageClientImpl(BlobContainerClient container, UploadProgress
         }
     }
 
-    public async Task<IEnumerable<BlobItem>> listFiles(string? baseDir = null, CancellationToken ct = default) {
-        await using IAsyncEnumerator<BlobItem> enumerator = container.GetBlobsAsync(new GetBlobsOptions { Prefix = baseDir }, cancellationToken: ct).GetAsyncEnumerator(ct);
-        return await enumerator.ToList();
-    }
+    public async Task<IEnumerable<BlobItem>> listFiles(string? baseDir = null, CancellationToken ct = default) =>
+        await container.GetBlobsAsync(new GetBlobsOptions { Prefix = baseDir }, cancellationToken: ct).ToListAsync(ct);
 
     protected async Task<BlobContentInfo?> uploadFile(Stream source, string destinationBlobFilePath, string? contentType = null, CancellationToken ct = default) {
         destinationBlobFilePath = Path.Dos2UnixSlashes(destinationBlobFilePath);

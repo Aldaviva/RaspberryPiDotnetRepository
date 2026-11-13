@@ -1,10 +1,13 @@
+using Corvus.Text.Json;
 using DataSizeUnits;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
 using System.Diagnostics;
 using System.Security.Cryptography;
-using System.Text.Json.Nodes;
 using Unfucked.HTTP;
+using static RaspberryPiDotnetRepository.Data.DotnetReleases;
+using static RaspberryPiDotnetRepository.Data.DotnetReleasesIndex;
+using File = System.IO.File;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 
 namespace RaspberryPiDotnetRepository.DotnetUpstream;
@@ -21,41 +24,46 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
 
     // Found on https://github.com/dotnet/core#release-information
     // #34: Use the new Azure Traffic Manager domain name instead of the Azure Blob Storage domain for performance, as recommended by https://devblogs.microsoft.com/dotnet/critical-dotnet-install-links-are-changing/#call-to-action
-    private static readonly Uri DOTNET_RELEASE_INDEX = new("https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json");
+    private static readonly Uri DOTNET_RELEASES_INDEX = new("https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json");
 
     private readonly CpuArchitecture[] allCpuArchitectures = Enum.GetValues<CpuArchitecture>();
 
     /// <param name="minMinorVersion">The oldest upstream minor version we want to package. Should be 6.0.</param>
     /// <param name="ct"></param>
-    private async Task<IEnumerable<JsonNode>> listReleasesToPackage(Version minMinorVersion, CancellationToken ct = default) =>
-        (await httpClient.Target(DOTNET_RELEASE_INDEX).Get<JsonNode>(ct))
-        ["releases-index"]!
-        .AsArray()
-        .Compact()
-        .Where(release => release["support-phase"]!.GetValue<string>() is "active" or "maintenance" or "eol"
-            && Version.Parse(release["channel-version"]!.GetValue<string>()).AsMinor >= minMinorVersion.AsMinor);
+    private async Task<(IEnumerable<Product> releases, IDisposable response)> listReleasesToPackage(Version minMinorVersion, CancellationToken ct = default) {
+        DotnetReleasesIndex dotnetReleasesIndex = await httpClient
+            .Target(DOTNET_RELEASES_INDEX)
+            .Get<DotnetReleasesIndex>(ct);
+        return (dotnetReleasesIndex.ReleasesIndex.EnumerateArray()
+                    .Where(release => release.SupportPhaseValue.TryGetKnownValue(out var supportPhase) && supportPhase is
+                        DotnetReleasesIndex.SupportPhase.KnownValues.Active or
+                        DotnetReleasesIndex.SupportPhase.KnownValues.Maintenance or
+                        DotnetReleasesIndex.SupportPhase.KnownValues.Eol)
+                    .Where(release => {
+                        using var version = release.ChannelVersion.GetUtf8String();
+                        return Version.Parse(version.Span).AsMinor >= minMinorVersion.AsMinor;
+                    }), dotnetReleasesIndex);
+    }
 
     public async Task<UpstreamReleasesState> downloadSdks(Version minMinorVersion, CancellationToken ct = default) {
         Directory.CreateDirectory(options.Value.tempDir);
-        List<DotnetRelease> dotnetReleases = (await Task.WhenAll((await listReleasesToPackage(minMinorVersion, ct))
-            .Select(async upstreamRelease => {
-                Uri      patchVersionUrl     = new(upstreamRelease["releases.json"]!.GetValue<string>());
-                bool     isSupportedLongTerm = upstreamRelease["release-type"]!.GetValue<string>() == "lts";
-                JsonNode patchVersions       = await httpClient.Target(patchVersionUrl).Get<JsonNode>(ct);
+        (IEnumerable<Product> releasesToPackage, IDisposable releaseIndexResponse) = await listReleasesToPackage(minMinorVersion, ct);
+        using (releaseIndexResponse) {
+            List<DotnetRelease> dotnetReleases = (await Task.WhenAll(releasesToPackage.Select(async upstreamRelease => {
+                Uri            patchVersionUrl     = ((Utf8UriValue) upstreamRelease.ReleasesJson).Uri.GetUri();
+                bool           isSupportedLongTerm = upstreamRelease.ReleaseTypeValue.Equals(DotnetReleasesIndex.ReleaseType.EnumValues.Lts);
+                DotnetReleases patchVersions       = await httpClient.Target(patchVersionUrl).Get<DotnetReleases>(ct);
 
                 // this will always find at least one because we're excluding preview support phases from releasesToPackage above
-                JsonNode latestSdk = patchVersions["releases"]!.AsArray().First(isStableVersion)!["sdk"]!;
-                DotnetRelease dotnetRelease = new(
-                    Version.Parse(latestSdk["version"]!.GetValue<string>()),
-                    Version.Parse(latestSdk["runtime-version"]!.GetValue<string>()),
-                    isSupportedLongTerm);
+                Sdk           latestSdk     = patchVersions.releases.First(isStableVersion).sdk;
+                DotnetRelease dotnetRelease = new(Version.Parse(latestSdk.version), Version.Parse(latestSdk.runtimeVersion), isSupportedLongTerm);
 
                 await Task.WhenAll(allCpuArchitectures.Select(async cpuArchitecture => {
-                    string   rid                   = "linux-" + cpuArchitecture.toRuntimeIdentifierSuffix();
-                    JsonNode archSpecificFiles     = latestSdk["files"]!.AsArray().First(file => file?["rid"]?.GetValue<string>() == rid)!;
-                    Uri      sdkDownloadUrl        = new(archSpecificFiles["url"]!.GetValue<string>());
-                    byte[]   expectedSdkSha512Hash = Convert.FromHexString(archSpecificFiles["hash"]!.GetValue<string>());
-                    byte[]   actualSdkSha512Hash   = [];
+                    string              rid                   = "linux-" + cpuArchitecture.toRuntimeIdentifierSuffix();
+                    DotnetReleases.File archSpecificFile      = latestSdk.files.First(file => file.runtimeIdentifier == rid);
+                    Uri                 sdkDownloadUrl        = archSpecificFile.url;
+                    byte[]              expectedSdkSha512Hash = archSpecificFile.sha512Hash;
+                    byte[]              actualSdkSha512Hash   = [];
 
                     Stopwatch downloadTimer             = new();
                     string    downloadedSdkFilename     = Path.Combine(options.Value.tempDir, Path.GetFileName(sdkDownloadUrl.LocalPath));
@@ -88,7 +96,7 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
                                 Failed to verify .NET SDK {version} {arch}!
                                 Expected SHA-512 hash of {url}: {expected}
                                 Actual SHA-512 hash of {filename}: {actual}
-                                """, dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix(), sdkDownloadUrl, Convert.ToHexString(expectedSdkSha512Hash),
+                                """, dotnetRelease.sdkVersion.ToString(3), cpuArchitecture.toRuntimeIdentifierSuffix(), sdkDownloadUrl, archSpecificFile.sha512HashString,
                                 downloadedSdkFilename, Convert.ToHexString(actualSdkSha512Hash));
                             throw new ApplicationException($"Verification failed after downloading {sdkDownloadUrl}");
                         }
@@ -100,16 +108,17 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
                 return dotnetRelease;
             }))).Compact().OrderByDescending(release => release.sdkVersion).ToList();
 
-        dotnetReleases.First().isLatestMinorVersion                                        = true;
-        dotnetReleases.First(release => release.isSupportedLongTerm).isLatestOfSupportTerm = true;
-        if (dotnetReleases.FirstOrDefault(release => !release.isSupportedLongTerm) is {} latestShortTerm) {
-            latestShortTerm.isLatestOfSupportTerm = true;
-        }
+            dotnetReleases.First().isLatestMinorVersion                                        = true;
+            dotnetReleases.First(release => release.isSupportedLongTerm).isLatestOfSupportTerm = true;
+            if (dotnetReleases.FirstOrDefault(release => !release.isSupportedLongTerm) is {} latestShortTerm) {
+                latestShortTerm.isLatestOfSupportTerm = true;
+            }
 
-        return new UpstreamReleasesState(dotnetReleases, new UpstreamReleasesSecondaryInfo(
-            knownReleaseMinorRuntimeVersions: dotnetReleases.Select(release => release.runtimeVersion.AsMinor).ToList().AsReadOnly(),
-            knownReleaseSdkVersions: dotnetReleases.Select(release => release.sdkVersion).ToList().AsReadOnly(),
-            leastProvidedReleaseMinorVersion: dotnetReleases.Last().sdkVersion.AsMinor));
+            return new UpstreamReleasesState(dotnetReleases, new UpstreamReleasesSecondaryInfo(
+                knownReleaseMinorRuntimeVersions: dotnetReleases.Select(release => release.runtimeVersion.AsMinor).ToList().AsReadOnly(),
+                knownReleaseSdkVersions: dotnetReleases.Select(release => release.sdkVersion).ToList().AsReadOnly(),
+                leastProvidedReleaseMinorVersion: dotnetReleases.Last().sdkVersion.AsMinor));
+        }
     }
 
     public void deleteSdksExcept(IEnumerable<DotnetRelease> sdksToKeep) {
@@ -127,8 +136,8 @@ public class SdkDownloaderImpl(HttpClient httpClient, IOptions<Options> options,
         }
     }
 
-    private static bool isStableVersion(JsonNode? release) {
-        string patchVersionNumber = release!["release-version"]!.GetValue<string>();
+    private static bool isStableVersion(Release release) {
+        string patchVersionNumber = release.releaseVersion;
         return !patchVersionNumber.Contains("-preview.") && !patchVersionNumber.Contains("-rc.");
     }
 
