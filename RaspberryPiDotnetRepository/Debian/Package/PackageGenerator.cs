@@ -70,8 +70,9 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
 
                 // #32: when attempting to install multiple Runtime packages, dpkg will fail because they all contain ThirdPartyNotices.txt with the same path, so rename them.
                 if (generatedPackage.runtime == RuntimeType.RUNTIME && sourcePath is "ThirdPartyNotices.txt" or "LICENSE.txt") {
-                    sourcePath = $"{Path.GetFileNameWithoutExtension(sourcePath)}-{generatedPackage.minorVersion}{Path.GetExtension(sourcePath)}";
-                    fileMode   = o(644);
+                    sourcePath = Path.Dos2UnixSlashes(Path.Combine(Path.GetDirectoryName(sourcePath)!,
+                        $"{Path.GetFileNameWithoutExtension(sourcePath)}-{generatedPackage.minorVersion}{Path.GetExtension(sourcePath)}"));
+                    fileMode = o(644);
                 }
 
                 if (fileMode != null) {
@@ -91,15 +92,20 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
 
                     DateTime lastModified = entry.LastModifiedTime ?? entry.CreatedTime ?? entry.ArchivedTime ?? DateTime.Now;
 
-                    // It is critical to dispose each EntryStream, otherwise the IReader will randomly throw an IncompleteArchiveException on a later file in the archive
-                    await using EntryStream downloadedInnerFileStream = await downloadReader.OpenEntryStreamAsync();
-                    dataArchiveWriter.WriteFile(destinationPath, downloadedInnerFileStream, lastModified, entry.Size, fileMode);
-                    generatedPackage.installationSize += entry.Size;
-
                     if (sourcePath is "dotnet" or "dnx") {
-                        // can't figure out how to make absolute symlinks in deb packages, so making it relative
-                        dataArchiveWriter.WriteSymLink($"./usr/bin/{sourcePath}", $"../share/dotnet/{sourcePath}", lastModified);
-                        generatedPackage.installationSize += 22;
+                        // Can't figure out how to make absolute symlinks in deb packages, so making it relative
+                        string symlinkTarget = $"../share/dotnet/{sourcePath}";
+                        dataArchiveWriter.WriteSymLink($"./usr/bin/{sourcePath}", symlinkTarget, lastModified);
+                        generatedPackage.installationSize += symlinkTarget.Length;
+                    } else if (entry.LinkTarget is {} symlinkTarget) {
+                        // Upstream SDK tarball contained a symlink for deduplication purposes, so preserve that link
+                        dataArchiveWriter.WriteSymLink(destinationPath, symlinkTarget, lastModified);
+                        generatedPackage.installationSize += symlinkTarget.Length;
+                    } else {
+                        // It is critical to dispose each EntryStream, otherwise the IReader will randomly throw an IncompleteArchiveException on a later file in the archive
+                        await using EntryStream downloadedInnerFileStream = await downloadReader.OpenEntryStreamAsync();
+                        dataArchiveWriter.WriteFile(destinationPath, downloadedInnerFileStream, lastModified, entry.Size, fileMode);
+                        generatedPackage.installationSize += entry.Size;
                     }
                 }
             }

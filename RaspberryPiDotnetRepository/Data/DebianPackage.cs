@@ -7,12 +7,12 @@ namespace RaspberryPiDotnetRepository.Data;
 
 public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version sdkVersion, CpuArchitecture architecture): IEquatable<DebianPackage> {
 
-    public const string VERSION_SUFFIX = "-5";
+    public const string VERSION_SUFFIX = "-6";
 
     /// <summary>
     /// The name of the Debian package, such as <c>dotnet-runtime-8.0</c> or <c>aspnetcore-runtime-latest-lts</c>.
     /// </summary>
-    public string nameWithMinorVersion => string.Join('-', ((string?[]) [
+    public string nameWithMinorVersion => string.Join('-', ((IEnumerable<string?>) [
         runtime.getPackageName(), isMetaPackage ? "latest" : null, isMetaPackageSupportedLongTerm ? "lts" : null,
         !isMetaPackage && runtime != RuntimeType.CLI ? minorVersion : null
     ]).Compact());
@@ -131,7 +131,7 @@ public class DebianPackage(RuntimeType runtime, Version runtimeVersion, Version 
     public IEnumerable<Dependency> dependencyPackages => runtime switch {
         _ when isMetaPackage => [new DependencyPackage($"{runtime.getPackageName()}-{minorVersion}")],
         RuntimeType.CLI      => [],
-        RuntimeType.RUNTIME => ((List<Dependency?>) [
+        RuntimeType.RUNTIME => ((IEnumerable<Dependency?>) [
             new DependencyPackage(RuntimeType.CLI.getPackageName(), Inequality.GREATER_THAN_OR_EQUAL_TO, $"{runtimeVersion.ToString(3)}{versionSuffix}"),
             new DependencyPackage("libc6"),
             new DependencyAlternatives(new DependencyPackage("libgcc-s1"), new DependencyPackage("libgcc1")),

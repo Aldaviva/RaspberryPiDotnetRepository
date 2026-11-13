@@ -51,7 +51,7 @@ appConfig.Services
     // HTTP client
     .AddSingleton<HttpClient>(new UnfuckedHttpClient()
         .Property(PropertyKey.Timeout, TimeSpan.FromSeconds(30))
-        .Property(PropertyKey.JsonSerializerOptions, new JsonSerializerOptions(JsonBodyReader.DefaultJsonOptions) {
+        .Property(PropertyKey.JsonSerializerOptions, new JsonSerializerOptions(JsonBodyReader.DefaultOptions) {
             PropertyNamingPolicy = new UpperSnakeCaseAwareJsonNamingPolicy(JsonNamingPolicy.KebabCaseLower)
         }))
 
