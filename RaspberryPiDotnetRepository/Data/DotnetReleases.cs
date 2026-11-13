@@ -22,7 +22,7 @@ public readonly record struct DotnetReleases {
         public LocalDate releaseDate { get; init; }
         public string releaseVersion { get; init; }
         public bool security { get; init; }
-        [JsonPropertyName("cve-list")] public IReadOnlyCollection<Cve> cveRecords { get; init; }
+        [JsonPropertyName("cve-list")] public IReadOnlyCollection<CveRecord> cveRecords { get; init; }
         public Uri releaseNotes { get; init; }
 
         public Runtime runtime { get; init; }
@@ -45,10 +45,10 @@ public readonly record struct DotnetReleases {
 
     }
 
-    public readonly record struct Cve {
+    public readonly record struct CveRecord {
 
-        [JsonPropertyName("cve-id")] public string cveRecordId { get; init; }
-        [JsonPropertyName("cve-url")] public Uri cveRecordUrl { get; init; }
+        [JsonPropertyName("cve-id")] public string id { get; init; }
+        [JsonPropertyName("cve-url")] public Uri pageUrl { get; init; }
 
     }
 
@@ -79,8 +79,8 @@ public readonly record struct DotnetReleases {
 
     public record AspNetCoreRuntime: AbstractRuntime {
 
-        [JsonPropertyName("vs-ersion")] public required string visualStudioVersion { get; init; }
-        [JsonPropertyName("version-spnetcoremodule")] public required IReadOnlyCollection<string> aspNetCoreModuleVersion { get; init; }
+        [JsonPropertyName("vs-version")] public required string visualStudioVersion { get; init; }
+        [JsonPropertyName("version-aspnetcoremodule")] public required IReadOnlyCollection<string> aspNetCoreModuleVersion { get; init; }
 
     }
 
