@@ -1,13 +1,7 @@
 using LibObjectFile.Ar;
 using RaspberryPiDotnetRepository.Data.ControlMetadata;
-using SharpCompress.Common;
-using SharpCompress.Compressors;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Readers;
-using SharpCompress.Writers;
-using SharpCompress.Writers.GZip;
-using SharpCompress.Writers.Tar;
-using TarWriter = Unfucked.Compression.Writers.Tar.TarWriter;
+using System.Formats.Tar;
+using System.IO.Compression;
 
 namespace RaspberryPiDotnetRepository.Debian.Package;
 
@@ -24,15 +18,15 @@ public class PackageBuilderImpl: PackageBuilder {
 
     public const string CONTROL_ARCHIVE_FILENAME = "control.tar.gz";
 
-    public CompressionLevel gzipCompressionLevel { get; set; } = CompressionLevel.Default;
+    public CompressionLevel gzipCompressionLevel { get; set; } = CompressionLevel.Optimal;
     public TarWriter data { get; }
 
     private readonly Stream     dataArchiveStream = new MemoryStream();
     private readonly GZipStream dataGzipStream;
 
     public PackageBuilderImpl() {
-        dataGzipStream = new GZipStream(new IndisposableStream(dataArchiveStream), CompressionMode.Compress, gzipCompressionLevel, new ReaderOptions { LeaveStreamOpen = true });
-        data           = new TarWriter(dataGzipStream, new TarWriterOptions(CompressionType.None, true));
+        dataGzipStream = new GZipStream(dataArchiveStream, gzipCompressionLevel, leaveOpen: true);
+        data           = new TarWriter(dataGzipStream, TarEntryFormat.Gnu, leaveOpen: true);
     }
 
     public async Task build(Control control, Stream output) {
@@ -41,10 +35,13 @@ public class PackageBuilderImpl: PackageBuilder {
         dataArchiveStream.Position = 0;
 
         await using Stream controlArchiveStream = new MemoryStream();
-        await using (IAsyncWriter controlArchiveWriter =
-                     await WriterFactory.OpenAsyncWriter(controlArchiveStream, ArchiveType.Tar, new TarWriterOptions(new GZipWriterOptions { CompressionLevel = (int) gzipCompressionLevel }))) {
-            await using Stream controlFileBuffer = control.serialize().ToByteStream();
-            await controlArchiveWriter.WriteAsync("./control", controlFileBuffer);
+
+        {
+            await using GZipStream controlGzipStream    = new(controlArchiveStream, gzipCompressionLevel, leaveOpen: true);
+            await using TarWriter  controlArchiveWriter = new(controlGzipStream, TarEntryFormat.Gnu);
+            await using Stream     controlFileBuffer    = control.serialize().ToByteStream();
+
+            await controlArchiveWriter.WriteEntryAsync(new GnuTarEntry(TarEntryType.RegularFile, "./control") { DataStream = controlFileBuffer });
         }
 
         controlArchiveStream.Position = 0;
@@ -82,6 +79,7 @@ public class PackageBuilderImpl: PackageBuilder {
 
 }
 
+/*
 internal sealed class IndisposableStream(Stream inner): Stream {
 
     public override void Flush() => inner.Flush();
@@ -99,4 +97,4 @@ internal sealed class IndisposableStream(Stream inner): Stream {
         set => inner.Position = value;
     }
 
-}
+}*/

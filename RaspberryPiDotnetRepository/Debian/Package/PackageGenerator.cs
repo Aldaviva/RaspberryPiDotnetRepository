@@ -2,11 +2,9 @@ using DataSizeUnits;
 using Microsoft.Extensions.Options;
 using RaspberryPiDotnetRepository.Data;
 using RaspberryPiDotnetRepository.DotnetUpstream;
-using SharpCompress.Common;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Readers;
+using System.Formats.Tar;
+using System.IO.Compression;
 using System.Security.Cryptography;
-using Unfucked.Compression.Writers.Tar;
 using Options = RaspberryPiDotnetRepository.Data.Options;
 
 namespace RaspberryPiDotnetRepository.Debian.Package;
@@ -23,7 +21,7 @@ public interface PackageGenerator {
 
 public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService statistics, ILogger<PackageGeneratorImpl> logger): PackageGenerator {
 
-    private const CompressionLevel DEB_TGZ_COMPRESSION = CompressionLevel.Default;
+    private const CompressionLevel DEB_TGZ_COMPRESSION = CompressionLevel.SmallestSize;
 
     public async Task<DebianPackage> generateDebPackage(PackageRequest packageToGenerate, UpstreamReleasesSecondaryInfo secondaryInfo, RepositoryManifest? oldManifest) => packageToGenerate switch {
         DotnetPackageRequest r => await generateDebPackage(r, secondaryInfo, oldManifest),
@@ -49,15 +47,17 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
 
         await using PackageBuilder debPackageBuilder = new PackageBuilderImpl { gzipCompressionLevel = DEB_TGZ_COMPRESSION };
 
-        await using (FileStream sdkArchiveStream = File.OpenRead(packageToGenerate.sdkArchivePath))
-        await using (IAsyncReader downloadReader = await ReaderFactory.OpenAsyncReader(sdkArchiveStream))
-        await using (TarWriter dataArchiveWriter = debPackageBuilder.data) {
-            while (await downloadReader.MoveToNextEntryAsync()) {
-                IEntry entry = downloadReader.Entry;
-                if (entry.IsDirectory || entry.Key == null) continue;
+        {
+            await using FileStream sdkArchiveStream  = File.OpenRead(packageToGenerate.sdkArchivePath);
+            await using GZipStream gzipReadStream    = new(sdkArchiveStream, CompressionMode.Decompress);
+            await using TarReader  tarReader         = new(gzipReadStream);
+            await using TarWriter  dataArchiveWriter = debPackageBuilder.data;
 
-                string sourcePath = entry.Key.TrimStart("./");
-                int? fileMode = generatedPackage.runtime switch {
+            while (await tarReader.GetNextEntryAsync(true) is {} entry) {
+                if (entry.EntryType == TarEntryType.Directory) continue;
+
+                string sourcePath = entry.Name.TrimStart("./");
+                UnixFileMode? fileMode = generatedPackage.runtime switch {
                     RuntimeType.CLI when sourcePath is "dotnet" or "dnx" => o(755),
                     RuntimeType.RUNTIME when sourcePath.StartsWith("shared/Microsoft.NETCore.App/") =>
                         Path.GetExtension(sourcePath) == ".so" || Path.GetFileName(sourcePath) == "createdump" ? o(755) : o(644),
@@ -86,26 +86,32 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
                     }
 
                     foreach (string directoryToAdd in directoriesToAdd.Reverse()) {
-                        dataArchiveWriter.WriteDirectory(directoryToAdd, null, o(755));
+                        await dataArchiveWriter.WriteEntryAsync(new GnuTarEntry(TarEntryType.Directory, directoryToAdd) { Mode = o(755) });
                         generatedPackage.installationSize += 4096;
                     }
 
-                    DateTime lastModified = entry.LastModifiedTime ?? entry.CreatedTime ?? entry.ArchivedTime ?? DateTime.Now;
-
                     if (sourcePath is "dotnet" or "dnx") {
-                        // Can't figure out how to make absolute symlinks in deb packages, so making it relative
                         string symlinkTarget = $"../share/dotnet/{sourcePath}";
-                        dataArchiveWriter.WriteSymLink($"./usr/bin/{sourcePath}", symlinkTarget, lastModified);
+                        await dataArchiveWriter.WriteEntryAsync(new GnuTarEntry(TarEntryType.SymbolicLink, $"./usr/bin/{sourcePath}") {
+                            LinkName         = symlinkTarget,
+                            ModificationTime = entry.ModificationTime
+                        });
                         generatedPackage.installationSize += symlinkTarget.Length;
-                    } else if (entry.LinkTarget is {} symlinkTarget) {
+                    } else if (entry is { EntryType: TarEntryType.SymbolicLink, LinkName: {} symlinkTarget }) {
                         // Upstream SDK tarball contained a symlink for deduplication purposes, so preserve that link
-                        dataArchiveWriter.WriteSymLink(destinationPath, symlinkTarget, lastModified);
+                        await dataArchiveWriter.WriteEntryAsync(new GnuTarEntry(TarEntryType.SymbolicLink, destinationPath) {
+                            LinkName         = symlinkTarget,
+                            ModificationTime = entry.ModificationTime
+                        });
                         generatedPackage.installationSize += symlinkTarget.Length;
                     } else {
-                        // It is critical to dispose each EntryStream, otherwise the IReader will randomly throw an IncompleteArchiveException on a later file in the archive
-                        await using EntryStream downloadedInnerFileStream = await downloadReader.OpenEntryStreamAsync();
-                        dataArchiveWriter.WriteFile(destinationPath, downloadedInnerFileStream, lastModified, entry.Size, fileMode);
-                        generatedPackage.installationSize += entry.Size;
+                        await using Stream? downloadedInnerFileStream = entry.DataStream;
+                        await dataArchiveWriter.WriteEntryAsync(new GnuTarEntry(TarEntryType.RegularFile, destinationPath) {
+                            DataStream       = downloadedInnerFileStream,
+                            Mode             = fileMode.Value,
+                            ModificationTime = entry.ModificationTime
+                        });
+                        generatedPackage.installationSize += entry.Length;
                     }
                 }
             }
@@ -114,7 +120,9 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
         Directory.CreateDirectory(Path.GetDirectoryName(debFileAbsolutePath)!);
         await using (Stream debStream = File.Create(debFileAbsolutePath)) {
             await debPackageBuilder.build(generatedPackage.getControl(secondaryInfo), debStream);
-            generatedPackage.fileHashSha256 = await hashStream(debStream);
+            await debStream.FlushAsync();
+            debStream.Position              = 0;
+            generatedPackage.fileHashSha256 = Convert.ToHexString(await SHA256.HashDataAsync(debStream)).ToLowerInvariant();
             generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).FileSize;
         }
 
@@ -144,10 +152,12 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
 
         await using PackageBuilder debPackageBuilder = new PackageBuilderImpl();
         Directory.CreateDirectory(Path.GetDirectoryName(debFileAbsolutePath)!);
-        await using (Stream debStream = File.Create(debFileAbsolutePath)) {
+        await using (FileStream debStream = File.Create(debFileAbsolutePath)) {
             await debPackageBuilder.build(generatedPackage.getControl(secondaryInfo), debStream);
+            await debStream.FlushAsync();
 
-            generatedPackage.fileHashSha256 = await hashStream(debStream);
+            debStream.Position              = 0;
+            generatedPackage.fileHashSha256 = Convert.ToHexString(await SHA256.HashDataAsync(debStream)).ToLowerInvariant();
             generatedPackage.downloadSize   = new FileInfo(debFileAbsolutePath).Length;
         }
 
@@ -157,13 +167,7 @@ public class PackageGeneratorImpl(IOptions<Options> options, StatisticsService s
         return generatedPackage;
     }
 
-    private static async Task<string> hashStream(Stream stream) {
-        await stream.FlushAsync();
-        stream.Position = 0;
-        return Convert.ToHexString(await SHA256.HashDataAsync(stream)).ToLowerInvariant();
-    }
-
-    public static int o(string octal) => Convert.ToInt32(octal, 8);
-    public static int o(int octal) => o(octal.ToString());
+    public static UnixFileMode o(string octal) => (UnixFileMode) Convert.ToInt32(octal, 8);
+    public static UnixFileMode o(int octal) => o(octal.ToString());
 
 }

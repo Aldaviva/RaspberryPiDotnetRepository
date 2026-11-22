@@ -5,7 +5,7 @@
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.5.1</Version>
+        <Version>1.6.0</Version>
         <Authors>Ben Hutchison</Authors>
         <Copyright>© 2026 $(Authors)</Copyright>
         <Company>$(Authors)</Company>
@@ -25,10 +25,10 @@
     <ItemGroup>
         <PackageReference Include="Azure.Identity" Version="1.21.0" />
         <PackageReference Include="Azure.ResourceManager.Cdn" Version="1.6.0" />
-        <PackageReference Include="Azure.Storage.Blobs" Version="12.30.1" />
-        <PackageReference Include="Bom.Squad" Version="0.3.0" />
-        <PackageReference Include="Corvus.Text.Json" Version="5.8.8" />
-        <PackageReference Include="Corvus.Text.Json.SourceGenerator" Version="5.8.8" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.30.2" />
+        <PackageReference Include="Bom.Squad" Version="0.4.0" />
+        <PackageReference Include="Corvus.Text.Json" Version="5.8.12" />
+        <PackageReference Include="Corvus.Text.Json.SourceGenerator" Version="5.8.12" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
         <PackageReference Include="DataSizeUnits" Version="4.0.1" />
         <PackageReference Include="LibObjectFile" Version="2.3.1" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="11.0.0" />
@@ -36,7 +36,6 @@
         <PackageReference Include="PgpCore" Version="8.1.1" />
         <PackageReference Include="ThrottleDebounce" Version="3.0.0" />
         <PackageReference Include="Unfucked" Version="0.0.1-beta.62" />
-        <PackageReference Include="Unfucked.Compression" Version="0.0.1-beta.6" />
         <PackageReference Include="Unfucked.DI" Version="0.0.1-beta.21" />
         <PackageReference Include="Unfucked.HTTP" Version="0.0.1-beta.42" />
         <PackageReference Include="Unfucked.PGP" Version="0.0.1-beta.4" />
